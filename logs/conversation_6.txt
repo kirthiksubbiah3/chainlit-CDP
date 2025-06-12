@@ -1,0 +1,276 @@
+ SystemMessage 
+You are an AI agent designed to automate browser tasks. Your goal is to accomplish the ultimate task following the rules.
+
+# Input Format
+
+Task
+Previous steps
+Current URL
+Open Tabs
+Interactive Elements
+[index]<type>text</type>
+
+- index: Numeric identifier for interaction
+- type: HTML element type (button, input, etc.)
+- text: Element description
+  Example:
+  [33]<div>User form</div>
+  \t*[35]*<button aria-label='Submit form'>Submit</button>
+
+- Only elements with numeric indexes in [] are interactive
+- (stacked) indentation (with \t) is important and means that the element is a (html) child of the element above (with a lower index)
+- Elements with \* are new elements that were added after the previous step (if url has not changed)
+
+# Response Rules
+
+1. RESPONSE FORMAT: You must ALWAYS respond with valid JSON in this exact format:
+   {"current_state": {"evaluation_previous_goal": "Success|Failed|Unknown - Analyze the current elements and the image to check if the previous goals/actions are successful like intended by the task. Mention if something unexpected happened. Shortly state why/why not",
+   "memory": "Description of what has been done and what you need to remember. Be very specific. Count here ALWAYS how many times you have done something and how many remain. E.g. 0 out of 10 websites analyzed. Continue with abc and xyz",
+   "next_goal": "What needs to be done with the next immediate action"},
+   "action":[{"one_action_name": {// action-specific parameter}}, // ... more actions in sequence]}
+
+2. ACTIONS: You can specify multiple actions in the list to be executed in sequence. But always specify only one action name per item. Use maximum 10 actions per sequence.
+Common action sequences:
+
+- Form filling: [{"input_text": {"index": 1, "text": "username"}}, {"input_text": {"index": 2, "text": "password"}}, {"click_element": {"index": 3}}]
+- Navigation and extraction: [{"go_to_url": {"url": "https://example.com"}}, {"extract_content": {"goal": "extract the names"}}]
+- Actions are executed in the given order
+- If the page changes after an action, the sequence is interrupted and you get the new state.
+- Only provide the action sequence until an action which changes the page state significantly.
+- Try to be efficient, e.g. fill forms at once, or chain actions where nothing changes on the page
+- only use multiple actions if it makes sense.
+
+3. ELEMENT INTERACTION:
+
+- Only use indexes of the interactive elements
+
+4. NAVIGATION & ERROR HANDLING:
+
+- If no suitable elements exist, use other functions to complete the task
+- If stuck, try alternative approaches - like going back to a previous page, new search, new tab etc.
+- Handle popups/cookies by accepting or closing them
+- Use scroll to find elements you are looking for
+- If you want to research something, open a new tab instead of using the current tab
+- If captcha pops up, try to solve it - else try a different approach
+- If the page is not fully loaded, use wait action
+
+5. TASK COMPLETION:
+
+- Use the done action as the last action as soon as the ultimate task is complete
+- Dont use "done" before you are done with everything the user asked you, except you reach the last step of max_steps.
+- If you reach your last step, use the done action even if the task is not fully finished. Provide all the information you have gathered so far. If the ultimate task is completely finished set success to true. If not everything the user asked for is completed set success in done to false!
+- If you have to do something repeatedly for example the task says for "each", or "for all", or "x times", count always inside "memory" how many times you have done it and how many remain. Don't stop until you have completed like the task asked you. Only call done after the last step.
+- Don't hallucinate actions
+- Make sure you include everything you found out for the ultimate task in the done text parameter. Do not just say you are done, but include the requested information of the task.
+
+6. VISUAL CONTEXT:
+
+- When an image is provided, use it to understand the page layout
+- Bounding boxes with labels on their top right corner correspond to element indexes
+
+7. Form filling:
+
+- If you fill an input field and your action sequence is interrupted, most often something changed e.g. suggestions popped up under the field.
+
+8. Long tasks:
+
+- Keep track of the status and subresults in the memory.
+- You are provided with procedural memory summaries that condense previous task history (every N steps). Use these summaries to maintain context about completed actions, current progress, and next steps. The summaries appear in chronological order and contain key information about navigation history, findings, errors encountered, and current state. Refer to these summaries to avoid repeating actions and to ensure consistent progress toward the task goal.
+
+9. Extraction:
+
+- If your task is to find information - call extract_content on the specific pages to get and store the information.
+  Your responses must be always JSON with the specified format.
+
+ HumanMessage 
+Context for the taskAvailable actions: Complete task - with return text and if the task is finished (success=True) or not yet  completely finished (success=False), because last step is reached: 
+{done: {'text': {'type': 'string'}, 'success': {'type': 'boolean'}}}
+Search the query in Google, the query should be a search query like humans search in Google, concrete and not vague or super long.: 
+{search_google: {'query': {'type': 'string'}}}
+Navigate to URL in the current tab: 
+{go_to_url: {'url': {'type': 'string'}}}
+Go back: 
+{go_back: {}}
+Wait for x seconds default 3: 
+{wait: {'seconds': {'default': 3, 'type': 'integer'}}}
+Click element by index: 
+{click_element_by_index: {'index': {'type': 'integer'}, 'xpath': {'anyOf': [{'type': 'string'}, {'type': 'null'}], 'default': None}}}
+Input text into a input interactive element: 
+{input_text: {'index': {'type': 'integer'}, 'text': {'type': 'string'}, 'xpath': {'anyOf': [{'type': 'string'}, {'type': 'null'}], 'default': None}}}
+Save the current page as a PDF file: 
+{save_pdf: {}}
+Switch tab: 
+{switch_tab: {'page_id': {'type': 'integer'}}}
+Open a specific url in new tab: 
+{open_tab: {'url': {'type': 'string'}}}
+Close an existing tab: 
+{close_tab: {'page_id': {'type': 'integer'}}}
+Extract page content to retrieve specific information from the page, e.g. all company names, a specific description, all information about xyc, 4 links with companies in structured format. Use include_links true if the goal requires links: 
+{extract_content: {'goal': {'type': 'string'}, 'include_links': {'default': False, 'type': 'boolean'}}}
+Get the accessibility tree of the page in the format "role name" with the number_of_elements to return: 
+{get_ax_tree: {'number_of_elements': {'type': 'integer'}}}
+Scroll down the page by pixel amount - if none is given, scroll one page: 
+{scroll_down: {'amount': {'anyOf': [{'type': 'integer'}, {'type': 'null'}], 'default': None}}}
+Scroll up the page by pixel amount - if none is given, scroll one page: 
+{scroll_up: {'amount': {'anyOf': [{'type': 'integer'}, {'type': 'null'}], 'default': None}}}
+Send strings of special keys like Escape,Backspace, Insert, PageDown, Delete, Enter, Shortcuts such as `Control+o`, `Control+Shift+T` are supported as well. This gets used in keyboard.press. : 
+{send_keys: {'keys': {'type': 'string'}}}
+If you dont find something which you want to interact with, scroll to it: 
+{scroll_to_text: {'text': {'type': 'string'}}}
+Get all options from a native dropdown: 
+{get_dropdown_options: {'index': {'type': 'integer'}}}
+Select dropdown option for interactive element index by the text of the option you want to select: 
+{select_dropdown_option: {'index': {'type': 'integer'}, 'text': {'type': 'string'}}}
+Drag and drop elements or between coordinates on the page - useful for canvas drawing, sortable lists, sliders, file uploads, and UI rearrangement: 
+{drag_drop: {'element_source': {'anyOf': [{'type': 'string'}, {'type': 'null'}], 'default': None, 'description': 'CSS selector or XPath of the element to drag from'}, 'element_target': {'anyOf': [{'type': 'string'}, {'type': 'null'}], 'default': None, 'description': 'CSS selector or XPath of the element to drop onto'}, 'element_source_offset': {'anyOf': [{'$ref': '#/$defs/Position'}, {'type': 'null'}], 'default': None, 'description': 'Precise position within the source element to start drag (in pixels from top-left corner)'}, 'element_target_offset': {'anyOf': [{'$ref': '#/$defs/Position'}, {'type': 'null'}], 'default': None, 'description': 'Precise position within the target element to drop (in pixels from top-left corner)'}, 'coord_source_x': {'anyOf': [{'type': 'integer'}, {'type': 'null'}], 'default': None, 'description': 'Absolute X coordinate on page to start drag from (in pixels)'}, 'coord_source_y': {'anyOf': [{'type': 'integer'}, {'type': 'null'}], 'default': None, 'description': 'Absolute Y coordinate on page to start drag from (in pixels)'}, 'coord_target_x': {'anyOf': [{'type': 'integer'}, {'type': 'null'}], 'default': None, 'description': 'Absolute X coordinate on page to drop at (in pixels)'}, 'coord_target_y': {'anyOf': [{'type': 'integer'}, {'type': 'null'}], 'default': None, 'description': 'Absolute Y coordinate on page to drop at (in pixels)'}, 'steps': {'anyOf': [{'type': 'integer'}, {'type': 'null'}], 'default': 10, 'description': 'Number of intermediate points for smoother movement (5-20 recommended)'}, 'delay_ms': {'anyOf': [{'type': 'integer'}, {'type': 'null'}], 'default': 5, 'description': 'Delay in milliseconds between steps (0 for fastest, 10-20 for more natural)'}}}
+
+ HumanMessage 
+Your ultimate task is: """Navigate to the following url https://sydneymember.demoportal.anthem.com/member/public/demo-login and the following credentials to login: username: demoportaluser1, password: support1Navigate to the default URL, log in with the default credentials, and then check the status of the Pharmacy page by navigating to it.""". If you achieved your ultimate task, stop everything and use the done action in the next step to complete the task. If not, continue as usual.
+
+ HumanMessage 
+Example output:
+
+ AIMessage 
+
+
+ ToolMessage 
+Browser started
+
+ HumanMessage 
+[Your task history memory starts here]
+
+ AIMessage 
+
+
+ ToolMessage 
+
+
+ HumanMessage 
+Action result: 🔗  Navigated to https://sydneymember.demoportal.anthem.com/member/public/demo-login
+
+ AIMessage 
+
+
+ ToolMessage 
+
+
+ HumanMessage 
+Action result: ⌨️  Input demoportaluser1 into index 1
+
+ HumanMessage 
+Action result: ⌨️  Input support1 into index 3
+
+ HumanMessage 
+Action result: 🖱️  Clicked button with index 5: Log In
+
+ AIMessage 
+
+
+ ToolMessage 
+
+
+ HumanMessage 
+Action result: 🖱️  Clicked button with index 4: Prescriptions
+
+ AIMessage 
+
+
+ ToolMessage 
+
+
+ HumanMessage 
+Action result: 🖱️  Clicked button with index 0: ok
+
+ HumanMessage 
+[Task history memory ends]
+[Current state starts here]
+The following is one-time information - if you need to remember it write it to memory:
+Current url: https://sydneymember.demoportal.anthem.com/member/dashboard
+Available tabs:
+[TabInfo(page_id=0, url='https://sydneymember.demoportal.anthem.com/member/dashboard', title='Member Secure Application', parent_page_id=None)]
+Interactive elements from top layer of the current page inside the viewport:
+[Start of page]
+[0]<a  />
+*[1]*<button aria-label='Traducir el contenido del sitio al Español'>Español />
+*[2]*<a title='Home Page' />
+*[3]*<a aria-label='My Plan menu, select enter to begin, then tab through My Plan Menu'>My Plans />
+*[4]*<a aria-label='Claims and Payments menu, select enter to begin, then tab through Claims and Payments Menu'>Claims & Payments />
+*[5]*<a aria-label='Care menu, select enter to begin, then tab through Care Menu'>Care />
+*[6]*<a aria-label='Prescriptions, select enter to begin, then tab through Prescriptions Menu'>Prescriptions />
+*[7]*<a aria-label='My health dashboard menu, select enter to begin, then tab through My health dashboard Menu'>My Health Dashboard />
+*[8]*<a aria-label='Support menu, select enter to begin, then tab through Support Menu'>Support />
+*[9]*<li >6
+Messages />
+	*[10]*<a aria-label='6Messages'>Messages />
+*[11]*<li >Profile />
+	*[12]*<a >Profile />
+*[13]*<li  />
+	*[14]*<a >Log Out />
+WELCOME
+Mary Appleseed
+*[15]*<button role='link'>ID Cards />
+*[16]*<button role='link'>Find Care & Costs />
+*[17]*<button role='link'>Prescriptions />
+Get the most value out of your plan. Complete these recommended actions today.
+*[18]*<button aria-label='View all action items'>View All
+5 />
+Understand Your Benefits
+Know what is covered and how much you may save.
+*[19]*<button title='Go to Benefits' aria-label='Know what is covered and how much you may save. Go to Benefits'>Go to Benefits />
+*[20]*<button aria-label='Remove Action Item. Know what is covered and how much you may save' />
+Get Personalized Health Care
+Download the Sydney Health app and keep your health care needs in the palm of your hand.
+*[21]*<button title='Download now' role='link' aria-label='Download the Sydney Health app and keep your health care needs in the palm of your hand.  Download now'>Download now />
+*[22]*<button aria-label='Remove action item. Download the Sydney Health app and keep your health care needs in the palm of your hand.' />
+Download Your Digital ID Card
+Your member ID card is available for download.
+*[23]*<button title='View ID card' role='link' aria-label='Your member ID card is available for download. View ID card'>View ID card />
+*[24]*<button aria-label='Remove action item. Your member ID card is available for download.' />
+Need help?
+Connect with your Family Advocate at no additional cost to you.
+*[25]*<button title='Contact Us' role='link' aria-label='Connect with your Family Advocate at no additional cost to you.  Contact Us'>Contact Us />
+*[26]*<button aria-label='Remove Action Item. Connect with your Family Advocate at no additional cost to you.' />
+My Benefits
+WEB CDH TEST DEMO - DO NOT TERM !!
+COLORADO LUMENOS HEALTH SAVINGS ACCOUNT
+Medical, Pharmacy, Dental, Vision
+ACTIVE
+Mary
+(In-Network)
+Deductible
+$0.00 paid out of $3,000.00
+$0.00
+$3,000.00
+Out-of-Pocket Maximum
+$0.00 paid out of $6,000.00
+*[27]*<div role='button' />
+	*[28]*<div >Plans
+Deductibles, copays and more />
+Understand Your Benefits
+*[29]*<button type='button'>Go to Benefits />
+*[30]*<button aria-label='Remove Action Item. Know what is covered and how much you may save' />
+*[31]*<div role='button' />
+	*[32]*<div >Personalize Your Care
+Take the next step and sign up for programs and services that can connect you to the best possible care. />
+*[33]*<button >Hi, Mary, I see you’re on the Dashboard page.
+Is there anything I can help you with? />
+*[34]*<button title='Close chat message' aria-label='Close chat message' />
+*[35]*<button title='Show Sydney Health Chat' aria-label='Open Sydney Chat'>1 />
+... 2720 pixels below - scroll or extract content to see more ...
+Current step: 5/100Current date and time: 2025-06-06 19:05
+
+ RESPONSE
+{
+  "current_state": {
+    "evaluation_previous_goal": "Success - I clicked on the 'ok' button to dismiss the popup that appeared after clicking on the Prescriptions menu. I am now back on the member dashboard and can continue to navigate to the Pharmacy page.",
+    "memory": "I have navigated to https://sydneymember.demoportal.anthem.com/member/public/demo-login and successfully logged in with username: demoportaluser1 and password: support1. I clicked on the 'Prescriptions' menu option which triggered a popup that I dismissed. Now I'm on the dashboard page and need to navigate to the Pharmacy page to check its status.",
+    "next_goal": "Click on the 'Prescriptions' button in the main content area to navigate to the Pharmacy page and check its status"
+  },
+  "action": [
+    {
+      "click_element_by_index": {
+        "index": 17
+      }
+    }
+  ]
+}

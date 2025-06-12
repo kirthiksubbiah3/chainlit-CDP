@@ -1,0 +1,41 @@
+# Environment
+.env
+.venv/
+
+# Python caches
+**/__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# IDE/editor
+.vscode/
+.idea/
+
+# Streamlit
+.streamlit/
+
+# Logs and data
+# logs/
+*.log
+
+# Test and coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Playwright browsers (if you end up checking in artifacts)
+.playwright/
+
+# Build / packaging
+dist/
+build/
+*.egg-info/
+
+# test files
+tasks.py
+test.py
