@@ -1,13 +1,15 @@
+# %%
 import logging
 import threading
 import time
 import io
-from dotenv import load_dotenv
-from agents.supervisor import supervisor
 import streamlit as st
+from dotenv import load_dotenv
+from agents.supervisor import Supervisor
 
 load_dotenv()
 
+# %%
 st.title("🤖 Sentinel Mind")
 
 # Initialize chat history
@@ -53,14 +55,16 @@ if user_input:
     result_placeholder = st.empty()
 
     # 🧠 Run supervisor in thread to avoid blocking UI
+    result_holder = {"value": None}
+
     def run_supervisor_workflow():
-        global result
-        supervisor_instance = supervisor()
+        supervisor_instance = Supervisor()
         workflow = supervisor_instance.workflow()
         app = workflow.compile()
-        result = app.invoke({"messages": [{"role": "user", "content": user_input}]})
+        result_holder["value"] = app.invoke(
+            {"messages": [{"role": "user", "content": user_input}]}
+        )
 
-    result = None
     thread = threading.Thread(target=run_supervisor_workflow)
     thread.start()
 
@@ -75,17 +79,17 @@ if user_input:
     log_placeholder.code(logs, language="log")
 
     # Display and store assistant response
-    for m in result["messages"]:
-        # Skip assistant messages that just repeat the user's input or are too short
-        # if m.content.lower() == user_input.lower() or len(m.content.strip()) < 5:
-        # continue
-        st.chat_message("assistant").markdown(m.content)
-        st.session_state.chat_history.append(
-            {"role": "assistant", "content": m.content}
-        )
+    # pylint: disable=E1136, E1135
+    result_value = result_holder["value"]  # pylint: disable=invalid-name
+    if isinstance(result_value, dict) and "messages" in result_value:
+        for m in result_value["messages"]:
+            st.chat_message("assistant").markdown(m.content)
+            st.session_state.chat_history.append(
+                {"role": "assistant", "content": m.content}
+            )
 
 # Prepare chat history text
-chat_text = ""
+chat_text = "" # pylint: disable=invalid-name
 for entry in st.session_state.chat_history:
     chat_text += f"{entry['role']}: {entry['content']}\n"
 
