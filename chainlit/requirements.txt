@@ -1,0 +1,4 @@
+chainlit==2.5.5
+langchain-aws==0.2.25
+langchain-core==0.3.65
+python-dotenv==1.1.0

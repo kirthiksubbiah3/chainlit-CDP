@@ -39,3 +39,7 @@ build/
 # test files
 tasks.py
 test.py
+
+# chainlit
+**/.chainlit
+**/chainlit.md
