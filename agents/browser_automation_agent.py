@@ -1,70 +1,39 @@
 # %%
 import os
-import asyncio
-import warnings
-
 from dotenv import load_dotenv
-from browser_use import Agent
 from langgraph.prebuilt import create_react_agent
 from models.bedrock import Bedrock
+from agents.tools import get_instructions, run_browser_task
 
-warnings.filterwarnings("ignore", category=DeprecationWarning)
-warnings.filterwarnings("ignore", category=SyntaxWarning)
-
-# Load .env variables
+# Load environment variables
 load_dotenv()
 
-# Read credentials and URL from env
-anthem_username = os.getenv("anthem_username")
-anthem_password = os.getenv("anthem_password")
-login_url = os.getenv("ANTHEM_LOGIN_URL",
-                      "https://sydneymember.demoportal.anthem.com/member/public/demo-login")
+# Load the URL to make the agent aware of its authorized domain
+LOGIN_URL = os.getenv("ANTHEM_LOGIN_URL")
 
-# Disable telemetry
-os.environ["LANGCHAIN_ENDPOINT"] = "disabled"
-
-# Load Claude model with tool support (no thinking!)
+# Initialize the model for the agent's brain
 model_browser = Bedrock().get_model_details()
-
-# %%
-def run_browser_agent(task: str) -> str:
-    """
-    Use the Claude-powered browser agent to log in and perform task-related checks.
-    URL and credentials are loaded from environment.
-    """
-    async def _inner():
-        agent = Agent(
-            task=(
-                f"Navigate to the following url {login_url} "
-                f"and the following credentials to login: "
-                f"username {anthem_username}, password {anthem_password} ."
-                f"Perform the task: {task}"
-            ),
-            llm=model_browser,
-            use_vision=True,
-            max_failures=8,
-            # save_conversation_path="logs/conversation",  # Optional
-        )
-        history = await agent.run()
-        return history.extracted_content()
-
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    return loop.run_until_complete(_inner())
-
 
 # ✅ LangGraph-compatible React Agent
 browser_agent = create_react_agent(
     model=model_browser,
-    tools=[run_browser_agent],
-    name="browser_expert",
-    prompt = (
-        "You are an expert in browser automation and intelligent web interaction. "
-        "Your task is to use the available browser tool to perform actions such as logging in, "
-        "navigating pages, submitting forms, and verifying page content. "
-        "Always read the user's task carefully and reason step-by-step before deciding what to do. "
-        "Prioritize reliability, precision, and clarity when interacting with the webpage. "
-        "If the task involves checking for errors, "
-        "verify whether error messages are visible after interaction."
+    tools=[get_instructions, run_browser_task],  # Provide the imported tools
+    name="browser_expert", # The Supervisor will use this name to call the agent
+    prompt=(
+        "You are an expert browser automation specialist with a STRICT and FOCUSED role.\n\n"
+        f"**CRITICAL RULE: Your ONLY authorized domain of operation is '{LOGIN_URL}'. "
+        "You MUST refuse any request that involves navigating to a different website.**\n\n"
+        "Your process is as follows:\n"
+        "1.  **GET INSTRUCTIONS**: First, use the `get_instructions` tool to retrieve "
+        "the step-by-step plan for the user's request.\n"
+        "2.  **DECIDE ON NEXT STEP**:\n"
+        "    - If `get_instructions` returns a JSON with `\"status\": \"SUCCESS\"`, "
+        "you MUST pass the `instructions` to the `run_browser_task` tool.\n"
+        "    - If `get_instructions` returns `\"STATUS: NO_INSTRUCTIONS_FOUND\"`, "
+        "it means there are no pre-written steps. "
+        "You will then use the **original user query** as the task for "
+        "the `run_browser_task` tool, but ONLY IF it is a request related to "
+        "your authorized domain. If it's for another website, "
+        "you must state that you cannot fulfill the request."
     ),
 )
