@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from langchain_community.document_loaders import PyMuPDFLoader
 from langchain_community.vectorstores import Chroma
 from langchain_aws import BedrockEmbeddings
+from tqdm import tqdm
 
 # Load environment variables from .env file in the project root
 load_dotenv()
@@ -16,7 +17,7 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 # Get the project root directory (one level up from data/)
 PROJECT_ROOT = SCRIPT_DIR.parent
 
-KNOWLEDGE_BASE_PATH = PROJECT_ROOT / "data" / "knowledge_base.pdf"
+KNOWLEDGE_BASE_PATH = PROJECT_ROOT / "data"
 CHROMA_DB_DIRECTORY = PROJECT_ROOT / "chroma_db"
 AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
 
@@ -27,22 +28,46 @@ def build_vector_store():
     """
     print("--- Starting Knowledge Base Ingestion ---")
 
-    if not KNOWLEDGE_BASE_PATH.exists():
-        print(f"❌ Error: Knowledge base file not found at '{KNOWLEDGE_BASE_PATH}'")
+    # 1. Check if the source directory exists
+    if not KNOWLEDGE_BASE_PATH.is_dir():
+        print(f"❌ Error: Source PDF directory not found at '{KNOWLEDGE_BASE_PATH}'")
         return
 
+    # 2. Find all PDF files in the source directory
+    print(f"📚 Scanning for PDF files in '{KNOWLEDGE_BASE_PATH}'...")
+    pdf_files = list(KNOWLEDGE_BASE_PATH.glob("*.pdf"))
+
+    if not pdf_files:
+        print(f"❌ Error: No PDF files found in '{KNOWLEDGE_BASE_PATH}'.")
+        return
+
+    print(f"✅ Found {len(pdf_files)} PDF file(s) to process.")
+
+    # 3. Load all documents from all PDF files
+    all_documents = []
+    print("📖 Loading documents from each PDF file (each page becomes a document)...")
+    for pdf_path in tqdm(pdf_files, desc="Loading PDFs"):
+        try:
+            loader = PyMuPDFLoader(str(pdf_path))
+            documents_from_file = loader.load()
+            all_documents.extend(documents_from_file)
+            tqdm.write(f"  -> Loaded {len(documents_from_file)} pages from '{pdf_path.name}'")
+        except Exception as e: # pylint: disable=W0718
+            tqdm.write(f"  -> ⚠️  Warning: Could not load '{pdf_path.name}'. Skipping. Error: {e}")
+
+    if not all_documents:
+        print("""❌ Error: No documents could be loaded from any of the PDF files.
+              Are they empty or corrupt?""")
+        return
+
+    print(f"\n✅ Total of {len(all_documents)} pages/documents loaded from all files.")
+
+    # 4. Clean up existing database if it exists
     if CHROMA_DB_DIRECTORY.exists():
         print(f"🧹 Found existing database. Deleting '{CHROMA_DB_DIRECTORY}' to rebuild.")
         shutil.rmtree(CHROMA_DB_DIRECTORY)
 
-    print(f"📚 Loading documents from '{KNOWLEDGE_BASE_PATH}'...")
-    loader = PyMuPDFLoader(str(KNOWLEDGE_BASE_PATH))
-    documents = loader.load()
-    if not documents:
-        print("❌ Error: No documents were loaded from the PDF. Is it empty?")
-        return
-    print(f"✅ Loaded {len(documents)} pages/documents.")
-
+    # 5. Initialize Bedrock embeddings
     print("🧠 Initializing Bedrock embeddings model...")
     embeddings = BedrockEmbeddings(
         region_name=AWS_REGION,
@@ -50,15 +75,15 @@ def build_vector_store():
     )
     print("✅ Embeddings model initialized.")
 
+    # 6. Create and persist the vector store using the combined documents
     print(f"💾 Creating and persisting vector store at '{CHROMA_DB_DIRECTORY}'...")
     Chroma.from_documents(
-        documents=documents,
+        documents=all_documents,  # Use the combined list of documents from all PDFs
         embedding=embeddings,
         persist_directory=str(CHROMA_DB_DIRECTORY)
     )
-    print(f"✅ Vector store created successfully with {len(documents)} documents.")
+    print(f"✅ Vector store created successfully with {len(all_documents)} documents.")
     print("--- Ingestion Complete ---")
-
 
 if __name__ == "__main__":
     # To run this script, navigate to the data folder in your terminal

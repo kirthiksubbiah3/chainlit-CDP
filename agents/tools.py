@@ -91,8 +91,8 @@ def get_instructions(user_query: str) -> str:
     print("TOOL (Stage 3 - Decision): Document IS relevant. Formatting instructions.")
 
     # Substitute placeholders with actual credentials
-    final_instructions = retrieved_text.replace("{{anthem_username}}", anthem_username)
-    final_instructions = final_instructions.replace("{{anthem_password}}", anthem_password)
+    final_instructions = retrieved_text.replace("{{ANTHEM_USERNAME}}", anthem_username)
+    final_instructions = final_instructions.replace("{{ANTHEM_PASSWORD}}", anthem_password)
     final_instructions = final_instructions.replace("{{ANTHEM_LOGIN_URL}}", login_url)
 
     # Return a structured JSON string. This is more robust than parsing plain text.
