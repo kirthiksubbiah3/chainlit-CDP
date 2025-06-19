@@ -12,24 +12,21 @@ from langgraph.prebuilt import create_react_agent
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
+import yaml
 import chainlit as cl
 
 load_dotenv()
 
+with open("config.yaml", "r", encoding="utf-8") as f:
+    config = yaml.safe_load(f)
+
+mcp_servers_config = config['mcp']['servers']
+llm_bedrock_config = config['llm']['bedrock']
+
 # Initialize the Claude model via Bedrock
 # Credentials are in .env
-llm = ChatBedrockConverse(
-    model="us.anthropic.claude-3-7-sonnet-20250219-v1:0",
-    temperature=0.0,
-)
-
-server_params = StdioServerParameters(
-    command="npx",
-    args=["@playwright/mcp@latest", "--ignore-https-errors"],
-    env={
-        "DISPLAY": ":1"
-    }
-)
+llm = ChatBedrockConverse(**llm_bedrock_config)
+server_params = StdioServerParameters(**mcp_servers_config['playwright'])
 
 async def mcp_call(messages: HumanMessage) -> None:
     """Function to call mcp servers"""
