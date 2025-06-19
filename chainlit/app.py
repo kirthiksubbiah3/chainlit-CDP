@@ -2,6 +2,8 @@
 LLM agent made with langchain and chainlit
 """
 
+from typing import Dict, Optional
+
 from dotenv import load_dotenv
 
 from langchain_aws import ChatBedrockConverse
@@ -54,6 +56,21 @@ async def mcp_call(messages: HumanMessage) -> None:
                             await cl.Message(content=f"🤖 {chunk['text']}").send()
                 else:
                     await cl.Message(content=f"🤖 {message.content}").send()
+
+@cl.oauth_callback
+def auth_callback(
+    provider_id: str,
+    token: str,
+    raw_user_data: Dict[str, str],
+    default_app_user: cl.User
+) -> Optional[cl.User]:
+    """Chainlit hook for oauth call back"""
+
+    if provider_id == "keycloak" and token and raw_user_data:
+        return default_app_user
+    raise ValueError(
+        "401, Authentication failed: Unsupported provider or invalid token.",
+    )
 
 @cl.on_chat_start
 async def on_chat_start():

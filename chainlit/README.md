@@ -26,5 +26,5 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 pip install -r requirements.txt
 
-chainlit run main.py -w
+chainlit run app.py -w
 ```
