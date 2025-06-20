@@ -6,7 +6,7 @@ from typing import Dict, List, Optional
 from dotenv import load_dotenv
 
 from langchain_aws import ChatBedrockConverse
-from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
+from langchain_core.messages import AIMessage, HumanMessage
 from langchain_mcp_adapters.tools import load_mcp_tools
 from langgraph.prebuilt import create_react_agent
 
@@ -40,12 +40,15 @@ llm_bedrock_config = config['llm']['bedrock']
 llm = ChatBedrockConverse(**llm_bedrock_config)
 
 async def mcp_call(
-        messages: List[BaseMessage],
+        messages: List[HumanMessage],
         server_params: StdioServerParameters
-    ) -> List[BaseMessage]:
+    ) -> None:
     """Function to call mcp servers"""
     async with stdio_client(server_params) as (read, write):
         async with ClientSession(read, write) as session:
+            msg_processing = cl.Message(content="Processing...")
+            await msg_processing.send()
+
             # Initialize the connection
             await session.initialize()
 
@@ -54,25 +57,27 @@ async def mcp_call(
 
             # Create and run the agent
             agent = create_react_agent(llm, tools)
-            agent_response = await agent.ainvoke({
-                "messages": messages
-            })
 
-            response = []
-
-            for message in agent_response['messages']:
-                response.append(message)
-                if not isinstance(message, AIMessage):
+            async for chunk in agent.astream(
+                {"messages": messages},
+                stream_mode='updates'
+            ):
+                await msg_processing.send()
+                if not 'agent' in chunk:
                     continue
 
-                if message.tool_calls and isinstance(message.content, list):
-                    for chunk in message.content:
-                        if isinstance(chunk, dict) and chunk['type'] == 'text':
-                            await cl.Message(content=f"🤖 {chunk['text']}").send()
-                else:
-                    await cl.Message(content=f"🤖 {message.content}").send()
-
-            return response
+                for message in chunk['agent']['messages']:
+                    if not isinstance(message, AIMessage):
+                        continue
+                    msg = cl.Message(content="")
+                    if message.tool_calls and isinstance(message.content, list):
+                        for chunk in message.content:
+                            if isinstance(chunk, dict) and chunk['type'] == 'text':
+                                await msg.stream_token(f"🤖 {chunk['text']}")
+                    else:
+                        await msg.stream_token(f"🤖 {message.content}")
+                    await msg.send()
+                    await msg_processing.remove()
 
 @cl.oauth_callback
 def auth_callback(
@@ -102,6 +107,7 @@ async def on_message(msg: cl.Message):
     """Hook to handle incoming messages"""
     messages = [HumanMessage(content=msg.content)]
     start_time = time.perf_counter()
+
     # fetch mcp server to be used when msg.command is None by default
     server_params = StdioServerParameters(**mcp_servers_config['fetch'])
     if msg.command == 'Browser':
