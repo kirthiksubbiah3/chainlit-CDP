@@ -1,8 +1,10 @@
 """
 LLM agent made with langchain and chainlit
 """
+
 import time
 from typing import Dict, List, Optional
+import logging
 from dotenv import load_dotenv
 
 from langchain_aws import ChatBedrockConverse
@@ -14,7 +16,12 @@ from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
 import yaml
+from data_layer import CustomDataLayer
+
 import chainlit as cl
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 
@@ -48,7 +55,6 @@ async def mcp_call(
         async with ClientSession(read, write) as session:
             msg_processing = cl.Message(content="Processing...")
             await msg_processing.send()
-
             # Initialize the connection
             await session.initialize()
 
@@ -57,13 +63,12 @@ async def mcp_call(
 
             # Create and run the agent
             agent = create_react_agent(llm, tools)
-
             async for chunk in agent.astream(
                 {"messages": messages},
                 stream_mode='updates'
             ):
                 await msg_processing.send()
-                if not 'agent' in chunk:
+                if 'agent' not in chunk:
                     continue
 
                 for message in chunk['agent']['messages']:
@@ -93,6 +98,11 @@ def auth_callback(
     raise ValueError(
         "401, Authentication failed: Unsupported provider or invalid token.",
     )
+
+@cl.on_chat_resume
+async def on_chat_resume():
+    """Hook for chat resume"""
+
 
 @cl.on_chat_start
 async def on_chat_start():
@@ -126,3 +136,9 @@ async def on_message(msg: cl.Message):
     )
 
     await cl.Message(content=content).send()
+
+# DATA LAYER
+@cl.data_layer
+def get_data_layer():
+    """get data layer function for chat history persistence"""
+    return CustomDataLayer()

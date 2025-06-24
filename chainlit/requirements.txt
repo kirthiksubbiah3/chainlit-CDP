@@ -1,10 +1,8 @@
 chainlit==2.5.5
+chromadb==1.0.13
 langchain-aws==0.2.25
 langchain-core==0.3.65
 langchain-mcp-adapters==0.1.7
 langgraph==0.4.8
 mcp==1.9.4
 python-dotenv==1.1.0
-
-# for linting during development
-pylint==3.3.7
