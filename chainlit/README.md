@@ -24,7 +24,7 @@ python -m venv venv
 
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-pip install -r dev-requirements.txt # when developing locally, use requirements.txt for deployments
+pip install -r dev_requirements.txt # when developing locally, use requirements.txt for deployments
 
 chainlit run app.py -w
 ```

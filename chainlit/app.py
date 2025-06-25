@@ -32,24 +32,24 @@ COMMANDS = [
         "icon": "globe",
         "description": "Search through browser",
         "button": True,
-        "persistent": True
+        "persistent": True,
     },
 ]
 
 with open("./config.yaml", "r", encoding="utf-8") as f:
     config = yaml.safe_load(f)
 
-mcp_servers_config = config['mcp']['servers']
-llm_bedrock_config = config['llm']['bedrock']
+mcp_servers_config = config["mcp"]["servers"]
+llm_bedrock_config = config["llm"]["bedrock"]
 
 # Initialize the Claude model via Bedrock
 # Credentials are in .env
 llm = ChatBedrockConverse(**llm_bedrock_config)
 
+
 async def mcp_call(
-        messages: List[HumanMessage],
-        server_params: StdioServerParameters
-    ) -> None:
+    messages: List[HumanMessage], server_params: StdioServerParameters
+) -> None:
     """Function to call mcp servers"""
     async with stdio_client(server_params) as (read, write):
         async with ClientSession(read, write) as session:
@@ -64,32 +64,38 @@ async def mcp_call(
             # Create and run the agent
             agent = create_react_agent(llm, tools)
             async for chunk in agent.astream(
-                {"messages": messages},
-                stream_mode='updates'
+                {"messages": messages}, stream_mode="updates"
             ):
                 await msg_processing.send()
-                if 'agent' not in chunk:
+                if "agent" not in chunk:
                     continue
 
-                for message in chunk['agent']['messages']:
+                for message in chunk["agent"]["messages"]:
                     if not isinstance(message, AIMessage):
                         continue
                     msg = cl.Message(content="")
-                    if message.tool_calls and isinstance(message.content, list):
+                    if (
+                        message.tool_calls and
+                        isinstance(message.content, list)
+                    ):
                         for chunk in message.content:
-                            if isinstance(chunk, dict) and chunk['type'] == 'text':
+                            if (
+                                isinstance(chunk, dict) and
+                                chunk["type"] == "text"
+                            ):
                                 await msg.stream_token(f"🤖 {chunk['text']}")
                     else:
                         await msg.stream_token(f"🤖 {message.content}")
                     await msg.send()
                     await msg_processing.remove()
 
+
 @cl.oauth_callback
 def auth_callback(
     provider_id: str,
     token: str,
     raw_user_data: Dict[str, str],
-    default_app_user: cl.User
+    default_app_user: cl.User,
 ) -> Optional[cl.User]:
     """Chainlit hook for oauth call back"""
 
@@ -98,6 +104,7 @@ def auth_callback(
     raise ValueError(
         "401, Authentication failed: Unsupported provider or invalid token.",
     )
+
 
 @cl.on_chat_resume
 async def on_chat_resume():
@@ -109,8 +116,9 @@ async def on_chat_start():
     """Hook to initialize the chat session"""
     await cl.context.emitter.set_commands(COMMANDS)
     await cl.Message(
-        content='🤖 Hello, welcome to Sentinel Mind! How can I help you?'
+        content="🤖 Hello, welcome to Sentinel Mind! How can I help you?"
     ).send()
+
 
 @cl.on_message
 async def on_message(msg: cl.Message):
@@ -119,9 +127,11 @@ async def on_message(msg: cl.Message):
     start_time = time.perf_counter()
 
     # fetch mcp server to be used when msg.command is None by default
-    server_params = StdioServerParameters(**mcp_servers_config['fetch'])
-    if msg.command == 'Browser':
-        server_params = StdioServerParameters(**mcp_servers_config['playwright'])
+    server_params = StdioServerParameters(**mcp_servers_config["fetch"])
+    if msg.command == "Browser":
+        server_params = StdioServerParameters(
+            **mcp_servers_config["playwright"]
+        )
 
     await mcp_call(messages, server_params)
 
@@ -129,13 +139,17 @@ async def on_message(msg: cl.Message):
     time_taken = int(end_time - start_time)
     minutes, seconds = divmod(time_taken, 60)
 
-    content = (
-        f"🤖 Time taken for this response: "
-        f"{f'{minutes} minute{"s" if minutes != 1 else ""} ' if minutes > 0 else ''}"
-        f"{seconds} second{'s' if seconds != 1 else ''}"
-    )
+    if minutes > 0:
+        minute_str = f"{minutes} minute{'s' if minutes != 1 else ''} "
+    else:
+        minute_str = ""
+
+    second_str = f"{seconds} second{'s' if seconds != 1 else ''}"
+
+    content = f"🤖 Time taken for this response: {minute_str}{second_str}"
 
     await cl.Message(content=content).send()
+
 
 # DATA LAYER
 @cl.data_layer

@@ -9,7 +9,12 @@ from chromadb import PersistentClient
 import chainlit as cl
 import chainlit.data as cl_data
 from chainlit.types import (
-    Feedback, ThreadDict, Pagination, PageInfo, PaginatedResponse, ThreadFilter
+    Feedback,
+    ThreadDict,
+    Pagination,
+    PageInfo,
+    PaginatedResponse,
+    ThreadFilter,
 )
 from chainlit.element import Element, ElementDict
 from chainlit.step import StepDict
@@ -17,25 +22,36 @@ from chainlit.step import StepDict
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-logger.info("📁 ChromaDB instance is running in: %s", os.path.abspath(".chromadb"))
+logger.info(
+    "📁 ChromaDB instance is running in: %s",
+    os.path.abspath(".chromadb"),
+)
+
 
 def utc_now_str():
     """return current utc time"""
     return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
+
 def doc_id(thread_id: str, step_id: str):
     """return thread and step id"""
     return f"{thread_id}_{step_id}"
 
+
 class CustomDataLayer(cl_data.BaseDataLayer):
     """class for custom data layer"""
+
     def __init__(self):
         self.chroma_client = PersistentClient(path=".chromadb")
-        self.collection = self.chroma_client.get_or_create_collection(name="chat_history")
+        self.collection = self.chroma_client.get_or_create_collection(
+            name="chat_history"
+        )
 
     async def get_user(self, identifier: str) -> Optional[cl.PersistedUser]:
         logger.info("User logged in: %s", identifier)
-        return cl.PersistedUser(id=identifier, createdAt=utc_now_str(), identifier=identifier)
+        return cl.PersistedUser(
+            id=identifier, createdAt=utc_now_str(), identifier=identifier
+        )
 
     async def create_user(self, user: cl.User) -> Optional[cl.PersistedUser]:
         logger.info("Creating user in db: %s", user.identifier)
@@ -43,7 +59,7 @@ class CustomDataLayer(cl_data.BaseDataLayer):
         return cl.PersistedUser(
             id=user.identifier,
             createdAt=utc_now_str(),
-            identifier=user.identifier
+            identifier=user.identifier,
         )
 
     async def delete_feedback(self, feedback_id: str) -> bool:
@@ -53,36 +69,53 @@ class CustomDataLayer(cl_data.BaseDataLayer):
         return ""
 
     async def create_element(self, element: "Element"):
-        pass  # Not used in your app
+        pass  # Not used
 
-    async def get_element(self, thread_id: str, element_id: str) -> Optional["ElementDict"]:
-        return None  # Not used in your app
+    async def get_element(
+        self, thread_id: str, element_id: str
+    ) -> Optional["ElementDict"]:
+        return None  # Not used
 
-    async def delete_element(self, element_id: str, thread_id: Optional[str] = None):
-        pass  # Not used in your app
+    async def delete_element(
+            self,
+            element_id: str,
+            thread_id: Optional[str] = None
+    ):
+        pass  # Not used
 
     async def create_step(self, step_dict: "StepDict"):
-        if step_dict['output'] == '🤖 Hello, welcome to Sentinel Mind! How can I help you?':
+        if (
+            step_dict["output"]
+            == "🤖 Hello, welcome to Sentinel Mind! How can I help you?"
+        ):
             return
 
-        logger.info('Creating step_id %s for %s', step_dict["id"], step_dict["threadId"])
+        logger.info(
+            "Creating step_id %s for %s",
+            step_dict["id"],
+            step_dict["threadId"],
+        )
         metadata = {
             "thread_id": step_dict["threadId"],
             "step_id": step_dict["id"],
             "type": step_dict["type"],
             "name": step_dict["name"],
             "createdAt": step_dict["createdAt"],
-            "user_id": cl.user_session.get("user").identifier
+            "user_id": cl.user_session.get("user").identifier,
         }
 
         self.collection.add(
             ids=[doc_id(step_dict["threadId"], step_dict["id"])],
             documents=[step_dict["output"]],
-            metadatas=[metadata]
+            metadatas=[metadata],
         )
 
     async def update_step(self, step_dict: "StepDict"):
-        logger.info('Creating step_id %s for %s', step_dict["id"], step_dict["threadId"])
+        logger.info(
+            "Creating step_id %s for %s",
+            step_dict["id"],
+            step_dict["threadId"],
+        )
         # Just delete and re-add the step for simplicity
         await self.delete_step(step_dict["id"])
         await self.create_step(step_dict)
@@ -113,14 +146,12 @@ class CustomDataLayer(cl_data.BaseDataLayer):
             self.collection.delete(ids=ids_to_delete)
 
     async def list_threads(
-            self,
-            pagination: Pagination,
-            filters: ThreadFilter
+        self, pagination: Pagination, filters: ThreadFilter
     ) -> PaginatedResponse[ThreadDict]:
         all_data = self.collection.get()
         thread_map = {}
 
-        # other keys (['ids', 'embeddings', 'documents', 'uris', 'included', 'data', 'metadatas'])
+        # keys: ids embeddings documents uris included data metadatas
         for meta in all_data["metadatas"]:
             thread_id = meta["thread_id"]
 
@@ -138,7 +169,11 @@ class CustomDataLayer(cl_data.BaseDataLayer):
 
         return PaginatedResponse(
             data=list(thread_map.values()),
-            pageInfo=PageInfo(hasNextPage=False, startCursor=None, endCursor=None),
+            pageInfo=PageInfo(
+                hasNextPage=False,
+                startCursor=None,
+                endCursor=None,
+            ),
         )
 
     async def get_thread(self, thread_id: str) -> Optional[ThreadDict]:
@@ -152,7 +187,7 @@ class CustomDataLayer(cl_data.BaseDataLayer):
                 "name": meta["name"],
                 "type": meta["type"],
                 "createdAt": meta["createdAt"],
-                "output": doc  
+                "output": doc,
             }
             for doc, meta in zip(results["documents"], results["metadatas"])
         ]
@@ -167,7 +202,7 @@ class CustomDataLayer(cl_data.BaseDataLayer):
         }
 
     # pylint: disable=too-many-arguments
-    # pylint: disable=too-many-positional-arguments
+    # pylint: disable=R0917
     async def update_thread(
         self,
         thread_id: str,
@@ -176,7 +211,7 @@ class CustomDataLayer(cl_data.BaseDataLayer):
         metadata: Optional[Dict] = None,
         tags: Optional[List[str]] = None,
     ):
-        pass  # You can store metadata in Chroma if needed
+        logger.info("Updating thread %s", thread_id)
 
     async def build_debug_url(self) -> str:
         return ""
