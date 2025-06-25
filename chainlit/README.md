@@ -28,3 +28,12 @@ pip install -r dev_requirements.txt # when developing locally, use requirements.
 
 chainlit run app.py -w
 ```
+
+## Instructions to run Browser automation with playwright using modified playwright mcp server
+1. Go to the playwright-mcp directory
+2. Execute npm install
+3. Execute npm run build, if there are any issues run the below three commands. Else the commands can be skipped
+4. npm install zod-to-json-schema
+5. npm link @modelcontextprotocol/sdk
+6. npm install --save-dev @types/mime
+7. Execute npm run build after resolving the errors 
