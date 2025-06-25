@@ -1,0 +1,28 @@
+name: Semgrep SAST Scan
+
+on:
+  push:
+    branches:
+      - feature/*
+    paths:
+      - '**/*.py'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '**/*.py'
+
+jobs:
+  semgrep-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Run Semgrep Scan
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: p/ci 
+          output-format: 'txt' # Output format for results
+          paths: '**/*.py'
