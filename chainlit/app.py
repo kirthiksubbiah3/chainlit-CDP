@@ -1,29 +1,20 @@
 """
-LLM agent made with langchain and chainlit
+This module servers as the starting point of the chainlit app,
+It defines Chainlit hooks for authentication, chat session management,
+command handling, and data layer integration.It customizes user experience,
+manages chat commands, handles OAuth, and persists chat history using a custom
+data layer.
 """
 
+from typing import Dict, Optional
 import time
-from typing import Dict, List, Optional
 import logging
-from dotenv import load_dotenv
-
-from langchain_aws import ChatBedrockConverse
-from langchain_core.messages import AIMessage, HumanMessage
-from langchain_mcp_adapters.tools import load_mcp_tools
-from langgraph.prebuilt import create_react_agent
-
-from mcp import ClientSession, StdioServerParameters
-from mcp.client.stdio import stdio_client
-
-import yaml
+from langchain_core.messages import HumanMessage
+from mcp import StdioServerParameters
+from mcp_agent import mcp_call, mcp_servers_config
+from utils import get_username
 from data_layer import CustomDataLayer
-
 import chainlit as cl
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-load_dotenv(override=True)
 
 # Available commands in the UI
 COMMANDS = [
@@ -36,58 +27,8 @@ COMMANDS = [
     },
 ]
 
-with open("./config.yaml", "r", encoding="utf-8") as f:
-    config = yaml.safe_load(f)
-
-mcp_servers_config = config["mcp"]["servers"]
-llm_bedrock_config = config["llm"]["bedrock"]
-
-# Initialize the Claude model via Bedrock
-# Credentials are in .env
-llm = ChatBedrockConverse(**llm_bedrock_config)
-
-
-async def mcp_call(
-    messages: List[HumanMessage], server_params: StdioServerParameters
-) -> None:
-    """Function to call mcp servers"""
-    async with stdio_client(server_params) as (read, write):
-        async with ClientSession(read, write) as session:
-            msg_processing = cl.Message(content="Processing...")
-            await msg_processing.send()
-            # Initialize the connection
-            await session.initialize()
-
-            # Get tools
-            tools = await load_mcp_tools(session)
-
-            # Create and run the agent
-            agent = create_react_agent(llm, tools)
-            async for chunk in agent.astream(
-                {"messages": messages}, {"recursion_limit": 100}, stream_mode="updates"
-            ):
-                await msg_processing.send()
-                if "agent" not in chunk:
-                    continue
-
-                for message in chunk["agent"]["messages"]:
-                    if not isinstance(message, AIMessage):
-                        continue
-                    msg = cl.Message(content="")
-                    if (
-                        message.tool_calls and
-                        isinstance(message.content, list)
-                    ):
-                        for chunk in message.content:
-                            if (
-                                isinstance(chunk, dict) and
-                                chunk["type"] == "text"
-                            ):
-                                await msg.stream_token(f"🤖 {chunk['text']}")
-                    else:
-                        await msg.stream_token(f"🤖 {message.content}")
-                    await msg.send()
-                    await msg_processing.remove()
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 @cl.oauth_callback
@@ -100,6 +41,13 @@ def auth_callback(
     """Chainlit hook for oauth call back"""
 
     if provider_id == "keycloak" and token and raw_user_data:
+        username = (
+            raw_user_data.get("name") or
+            raw_user_data.get("preferred_username")
+        )
+
+        if username:
+            default_app_user.display_name = username
         return default_app_user
     raise ValueError(
         "401, Authentication failed: Unsupported provider or invalid token.",
@@ -115,8 +63,14 @@ async def on_chat_resume():
 async def on_chat_start():
     """Hook to initialize the chat session"""
     await cl.context.emitter.set_commands(COMMANDS)
+    user = cl.user_session.get("user")
+
+    username = get_username(user)
+    logger.info("user display name is %s", username)
     await cl.Message(
-        content="🤖 Hello, welcome to Sentinel Mind! How can I help you?"
+        content=(
+            f"🤖 Hi {username}, welcome to Sentinel Mind!, How can I help you?"
+        )
     ).send()
 
 
@@ -126,14 +80,14 @@ async def on_message(msg: cl.Message):
     messages = [HumanMessage(content=msg.content)]
     start_time = time.perf_counter()
 
-    # fetch mcp server to be used when msg.command is None by default
+    # Determine which MCP server to use
     server_params = StdioServerParameters(**mcp_servers_config["fetch"])
+
+    # msg.command is None by default
     if msg.command == "Browser":
-      
         server_params = StdioServerParameters(
             **mcp_servers_config["playwright"]
         )
-
 
     await mcp_call(messages, server_params)
 
@@ -149,8 +103,31 @@ async def on_message(msg: cl.Message):
     second_str = f"{seconds} second{'s' if seconds != 1 else ''}"
 
     content = f"🤖 Time taken for this response: {minute_str}{second_str}"
-
     await cl.Message(content=content).send()
+
+
+@cl.on_stop
+async def on_stop():
+    """Chainlit to stop the task  in between messages."""
+    user = cl.user_session.get("user")
+    username = get_username(user)
+
+    logger.info("Task stopped by %s", username)
+
+
+@cl.on_logout
+async def on_logout():
+    """
+    logs a message indicating that the user has logged out
+    of the session.
+    """
+    logger.info("User has logged out of the session.")
+
+
+@cl.on_chat_end
+async def on_chat_end():
+    """Hook for chat end"""
+    logger.info("Chat session has ended.")
 
 
 # DATA LAYER
