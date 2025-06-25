@@ -23,7 +23,7 @@ import chainlit as cl
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-load_dotenv()
+load_dotenv(override=True)
 
 # Available commands in the UI
 COMMANDS = [
@@ -64,7 +64,7 @@ async def mcp_call(
             # Create and run the agent
             agent = create_react_agent(llm, tools)
             async for chunk in agent.astream(
-                {"messages": messages}, stream_mode="updates"
+                {"messages": messages}, {"recursion_limit": 100}, stream_mode="updates"
             ):
                 await msg_processing.send()
                 if "agent" not in chunk:
@@ -129,9 +129,11 @@ async def on_message(msg: cl.Message):
     # fetch mcp server to be used when msg.command is None by default
     server_params = StdioServerParameters(**mcp_servers_config["fetch"])
     if msg.command == "Browser":
+      
         server_params = StdioServerParameters(
             **mcp_servers_config["playwright"]
         )
+
 
     await mcp_call(messages, server_params)
 

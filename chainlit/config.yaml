@@ -9,7 +9,7 @@ mcp:
       command: "uvx"
       args: ["mcp-server-fetch"]
     playwright:
-      command: "npx"
-      args: ["@playwright/mcp@latest", "--ignore-https-errors"]
+      command: "node"
+      args: ["playwright-mcp//cli.js"]
       env:
         DISPLAY: ":1"
