@@ -25,6 +25,13 @@ COMMANDS = [
         "button": True,
         "persistent": True,
     },
+    {
+        "id": "github",
+        "icon": "github",
+        "description": "Search through GitHub",
+        "button": True,
+        "persistent": True
+    }
 ]
 
 logger = logging.getLogger(__name__)
@@ -83,6 +90,8 @@ async def on_message(msg: cl.Message):
     # msg.command is None by default
     if msg.command == "Browser":
         server_params = StdioServerParameters(**mcp_servers_config["playwright"])
+    elif msg.command == "github":
+        server_params = StdioServerParameters(**mcp_servers_config["github"])
 
     usage_totals = await mcp_call(messages, server_params)
 
