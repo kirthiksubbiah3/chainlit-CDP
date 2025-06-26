@@ -1,0 +1,41 @@
+
+name: markdownlint Github Action
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '**/*.md'
+
+jobs:
+  markdownlint:
+    name: Run markdownlint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Git (if missing)
+        run: sudo apt-get update && sudo apt-get install -y git
+
+      - name: Get Changed md Files
+        id: changed-files
+        run: |
+          git fetch --no-tags --depth=50  # Ensure enough history for diff
+          FILES=$(git diff --name-only origin/main..HEAD -- '*.md')
+          if [ -n "$FILES" ]; then
+            echo "MD_FILES=$(echo "$FILES" | tr '\n' ' ')" >> "$GITHUB_ENV"
+          else
+            echo "MD_FILES=" >> $GITHUB_ENV
+          fi
+          echo $FILES
+
+      - name: Run markdownlint on changed .md files
+        if: env.MD_FILES != ''
+        uses: DavidAnson/markdownlint-cli2-action@v19
+        with:
+          globs: "${{ env.MD_FILES }}"
+          separator: ' '
+

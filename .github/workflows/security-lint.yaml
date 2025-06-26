@@ -3,7 +3,8 @@ name: Security and Lint Checks
 on:
   pull_request:
     branches: [ main ]
-
+    paths: 
+      - 'chainlit/*'
 jobs:
   trivy-dependency-scan:
     name: Trivy Scan requirements.txt
