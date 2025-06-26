@@ -26,7 +26,9 @@ user_input = st.chat_input("Type your message...")
 
 if user_input:
     st.chat_message("user").markdown(user_input)
-    st.session_state.chat_history.append({"role": "user", "content": user_input})
+    st.session_state.chat_history.append(
+        {"role": "user", "content": user_input}
+    )
 
     # 📋 Setup log capture to display automation logs
     log_stream = io.StringIO()
@@ -89,7 +91,7 @@ if user_input:
             )
 
 # Prepare chat history text
-chat_text = "" # pylint: disable=invalid-name
+chat_text = ""  # pylint: disable=invalid-name
 for entry in st.session_state.chat_history:
     chat_text += f"{entry['role']}: {entry['content']}\n"
 

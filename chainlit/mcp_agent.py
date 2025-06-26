@@ -2,8 +2,8 @@
 LLM agent made with langchain and chainlit
 """
 
-from typing import List
-from dotenv import load_dotenv
+from typing import List, Dict
+import logging
 
 import yaml
 from langchain_aws import ChatBedrockConverse
@@ -12,10 +12,12 @@ from langchain_mcp_adapters.tools import load_mcp_tools
 from langgraph.prebuilt import create_react_agent
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
-
 import chainlit as cl
+from utils import get_log_level
 
-load_dotenv(override=True)
+logger = logging.getLogger(__name__)
+if not logger.level:
+    logger.setLevel(get_log_level())
 
 # Load config
 with open("./config.yaml", "r", encoding="utf-8") as f:
@@ -32,8 +34,14 @@ llm = ChatBedrockConverse(**llm_bedrock_config)
 async def mcp_call(
     messages: List[HumanMessage],
     server_params: StdioServerParameters,
-) -> None:
+) -> Dict[str, int]:
     """Function to call mcp servers"""
+    stream_tokens = {
+        "total_input_tokens": 0,
+        "total_output_tokens": 0,
+        "total_tokens": 0,
+    }
+
     async with stdio_client(server_params) as (read, write):
         async with ClientSession(read, write) as session:
             msg_processing = cl.Message(content="Processing...")
@@ -61,17 +69,38 @@ async def mcp_call(
                         continue
 
                     msg = cl.Message(content="")
-                    if (
-                        message.tool_calls and
-                        isinstance(message.content, list)
-                    ):
+                    if message.tool_calls and isinstance(message.content, list):
                         for chunk in message.content:
-                            if (
-                                isinstance(chunk, dict) and
-                                chunk["type"] == "text"
-                            ):
+                            if isinstance(chunk, dict) and chunk["type"] == "text":
                                 await msg.stream_token(f"🤖 {chunk['text']}")
                     else:
                         await msg.stream_token(f"🤖 {message.content}")
                     await msg.send()
+                    if hasattr(message, "usage_metadata") and message.usage_metadata:
+                        usage = message.usage_metadata
+                        msg_tokens = {
+                            "input_tokens": usage.get("input_tokens", 0),
+                            "output_tokens": usage.get("output_tokens", 0),
+                            "total_tokens": usage.get("total_tokens", 0),
+                        }
+
+                        stream_tokens["total_input_tokens"] += msg_tokens['input_tokens']
+                        stream_tokens["total_output_tokens"] += msg_tokens['output_tokens']
+                        stream_tokens["total_tokens"] += msg_tokens['total_tokens']
+
+                        logger.debug(
+                            (
+                                "Input tokens: %d, Output tokens: %d, "
+                                "Total tokens: %d"
+                            ),
+                            msg_tokens["input_tokens"],
+                            msg_tokens["output_tokens"],
+                            msg_tokens["total_tokens"],
+                        )
+
                     await msg_processing.remove()
+    return {
+        "input_tokens": stream_tokens["total_input_tokens"],
+        "output_tokens": stream_tokens["total_output_tokens"],
+        "total_tokens": stream_tokens["total_tokens"],
+    }

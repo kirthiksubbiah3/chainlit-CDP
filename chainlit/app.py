@@ -12,7 +12,7 @@ import logging
 from langchain_core.messages import HumanMessage
 from mcp import StdioServerParameters
 from mcp_agent import mcp_call, mcp_servers_config
-from utils import get_username
+from utils import get_log_level, get_username
 from data_layer import CustomDataLayer
 import chainlit as cl
 
@@ -27,8 +27,9 @@ COMMANDS = [
     },
 ]
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+if not logger.level:
+    logger.setLevel(get_log_level())
 
 
 @cl.oauth_callback
@@ -41,10 +42,7 @@ def auth_callback(
     """Chainlit hook for oauth call back"""
 
     if provider_id == "keycloak" and token and raw_user_data:
-        username = (
-            raw_user_data.get("name") or
-            raw_user_data.get("preferred_username")
-        )
+        username = raw_user_data.get("name") or raw_user_data.get("preferred_username")
 
         if username:
             default_app_user.display_name = username
@@ -68,13 +66,12 @@ async def on_chat_start():
     username = get_username(user)
     logger.info("user display name is %s", username)
     await cl.Message(
-        content=(
-            f"🤖 Hi {username}, welcome to Sentinel Mind!, How can I help you?"
-        )
+        content=(f"🤖 Hi {username}, welcome to Sentinel Mind!, How can I help you?")
     ).send()
 
 
 @cl.on_message
+# pylint: disable=too-many-locals
 async def on_message(msg: cl.Message):
     """Hook to handle incoming messages"""
     messages = [HumanMessage(content=msg.content)]
@@ -85,11 +82,9 @@ async def on_message(msg: cl.Message):
 
     # msg.command is None by default
     if msg.command == "Browser":
-        server_params = StdioServerParameters(
-            **mcp_servers_config["playwright"]
-        )
+        server_params = StdioServerParameters(**mcp_servers_config["playwright"])
 
-    await mcp_call(messages, server_params)
+    usage_totals = await mcp_call(messages, server_params)
 
     end_time = time.perf_counter()
     time_taken = int(end_time - start_time)
@@ -104,6 +99,38 @@ async def on_message(msg: cl.Message):
 
     content = f"🤖 Time taken for this response: {minute_str}{second_str}"
     await cl.Message(content=content).send()
+
+    input_tokens = usage_totals["input_tokens"]
+    output_tokens = usage_totals["output_tokens"]
+
+    input_cost = (input_tokens / 1000) * 0.003
+    output_cost = (output_tokens / 1000) * 0.015
+    total_cost = input_cost + output_cost
+    await cl.Message(
+        content=(
+            "📦 Token usage and approximate cost for this session. "
+            "The cost is calculated with 0.003$ per 1000 input token and "
+            "0.015$ per 1000 output token. Refer aws official documentation "
+            "for updated one\n"
+            f"- Total Input tokens: {usage_totals['input_tokens']}\n"
+            f"- Total Output tokens: {usage_totals['output_tokens']}\n"
+            f"- Total tokens: {usage_totals['total_tokens']}\n"
+            f"- Input cost: ${input_cost:.4f}\n"
+            f"- Output cost: ${output_cost:.4f}\n"
+            f"- Total cost: ${total_cost:.4f}"
+        )
+    ).send()
+
+    logger.debug(
+        "Total Input tokens: %d, Total Output tokens: %d, Total tokens: %d, "
+        "Input cost: %.4f, Output cost: %.4f, Total cost: %.4f",
+        usage_totals["input_tokens"],
+        usage_totals["output_tokens"],
+        usage_totals["total_tokens"],
+        input_cost,
+        output_cost,
+        total_cost,
+    )
 
 
 @cl.on_stop

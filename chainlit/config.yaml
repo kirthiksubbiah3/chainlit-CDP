@@ -6,8 +6,8 @@ llm:
 mcp:
   servers:
     fetch:
-      command: "uvx"
-      args: ["mcp-server-fetch"]
+      command: "npx"
+      args: ["@playwright/mcp@latest", "--ignore-https-errors", "--headless"]
     playwright:
       command: "node"
       args: ["playwright-mcp//cli.js"]

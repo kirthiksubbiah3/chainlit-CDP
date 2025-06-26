@@ -13,8 +13,12 @@ load_dotenv()
 
 # %%
 # pylint: disable=R0903
+
+
 class Bedrock:
-    """Bedrock wrapper for initializing Claude models using ChatBedrockConverse."""
+    """
+    Bedrock wrapper for initializing Claude models using ChatBedrockConverse.
+    """
 
     def __init__(self):
         self.model_name = os.getenv(

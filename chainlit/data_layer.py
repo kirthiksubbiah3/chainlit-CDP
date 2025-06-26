@@ -76,11 +76,7 @@ class CustomDataLayer(cl_data.BaseDataLayer):
     ) -> Optional["ElementDict"]:
         return None  # Not used
 
-    async def delete_element(
-            self,
-            element_id: str,
-            thread_id: Optional[str] = None
-    ):
+    async def delete_element(self, element_id: str, thread_id: Optional[str] = None):
         pass  # Not used
 
     async def create_step(self, step_dict: "StepDict"):
