@@ -37,7 +37,6 @@ build/
 *.egg-info/
 
 # test files
-tasks.py
 test.py
 
 # chainlit
