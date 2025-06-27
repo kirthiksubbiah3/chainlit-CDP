@@ -6,3 +6,6 @@ langchain-mcp-adapters==0.1.7
 langgraph==0.4.8
 mcp==1.9.4
 python-dotenv==1.1.0
+
+# mcp
+mcp-server-fetch==2025.4.7

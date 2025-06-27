@@ -3,22 +3,43 @@ llm:
     max_tokens: 2000
     model: "us.anthropic.claude-3-7-sonnet-20250219-v1:0"
     temperature: 0.0
+  agent:
+    recursion_limit: 50
 mcp:
   servers:
-    fetch:
+    default:
+      command: "python"
+      args: ["-m", "mcp_server_fetch"]
+    playwright_hl:
       command: "npx"
       args: ["@playwright/mcp@latest", "--ignore-https-errors", "--headless"]
+      chainlit_command:
+        id: "Browser HL"
+        icon: "globe"
+        description: "Search through browser(headless)"
     playwright:
       command: "node"
       args: ["playwright-mcp//cli.js"]
       env:
         DISPLAY: ":1"
-    cloudwatch_logs_mcp_server:
+      chainlit_command:
+        id: "Browser"
+        icon: "globe"
+        description: "Search through browser"
+    cloudwatch_logs:
       command: "uvx"
       args: ["awslabs.cloudwatch-logs-mcp-server@latest"]
-    cost_explorer_mcp_server:
+      chainlit_command:
+        id: "Cloudwatch"
+        icon: "cloud"
+        description: "Search through aws cloudwatch logs"
+    cost_explorer:
       command: "uvx"
       args: ["awslabs.cost-explorer-mcp-server@latest"]
+      chainlit_command:
+        id: "AWS cost"
+        icon: "dollar-sign"
+        description: "Analyze AWS costs and usage data through the AWS Cost Explorer API."
     github:
       command: docker
       args:
@@ -30,3 +51,7 @@ mcp:
         - ghcr.io/github/github-mcp-server
       env:
         GITHUB_PERSONAL_ACCESS_TOKEN: ${GITHUB_PERSONAL_ACCESS_TOKEN}
+      chainlit_command:
+        id: "GitHub"
+        icon: "github"
+        description: "Search through GitHub"

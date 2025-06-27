@@ -11,6 +11,17 @@ import chainlit as cl
 load_dotenv(override=True)
 
 
+def get_config():
+    """get config from yaml files"""
+    # Load both files
+    config = load_yaml_file("config.yaml")
+    secrets = load_yaml_file("secrets.yaml")
+
+    # Merge secrets into config
+    config = merge_dict(config, secrets)
+    return config or {}
+
+
 def get_log_level() -> int:
     """get log level from env var"""
     log_levels = {

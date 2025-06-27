@@ -12,21 +12,17 @@ from langgraph.prebuilt import create_react_agent
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 import chainlit as cl
-from utils import merge_dict, get_log_level, load_yaml_file
+from utils import get_config, get_log_level
 
 logger = logging.getLogger(__name__)
 if not logger.level:
     logger.setLevel(get_log_level())
 
-# Load both files
-config = load_yaml_file("config.yaml")
-secrets = load_yaml_file("secrets.yaml")
-
-# Merge secrets into config
-config = merge_dict(config, secrets)
+config = get_config()
 
 mcp_servers_config = config["mcp"]["servers"]
 llm_bedrock_config = config["llm"]["bedrock"]
+llm_agent_config = config["llm"]["agent"]
 
 # Initialize the Claude model via Bedrock
 # Credentials are in .env
@@ -59,7 +55,7 @@ async def mcp_call(
             agent = create_react_agent(llm, tools)
             async for chunk in agent.astream(
                 {"messages": messages},
-                {"recursion_limit": 100},
+                {"recursion_limit": llm_agent_config['recursion_limit']},
                 stream_mode="updates",
             ):
                 await msg_processing.send()

@@ -11,42 +11,26 @@ import time
 import logging
 from langchain_core.messages import HumanMessage
 from mcp import StdioServerParameters
-from mcp_agent import mcp_call, mcp_servers_config
-from utils import get_log_level, get_username
+from mcp_agent import mcp_call
+from utils import get_config, get_log_level, get_username
 from data_layer import CustomDataLayer
 import chainlit as cl
 
-# Available commands in the UI
-COMMANDS = [
-    {
-        "id": "Browser",
-        "icon": "globe",
-        "description": "Search through browser",
+mcp_servers_config = get_config()["mcp"]["servers"]
+
+commands = []
+for key in mcp_servers_config.keys():
+
+    if "chainlit_command" not in mcp_servers_config[key]:
+        continue
+
+    command = mcp_servers_config[key]["chainlit_command"]
+    command = command | {
         "button": True,
         "persistent": True,
-    },
-    {
-        "id": "Cloudwatch",
-        "icon": "cloud",
-        "description": "Search through aws cloudwatch logs",
-        "button": True,
-        "persistent": True,
-    },
-    {
-        "id": "AWS cost",
-        "icon": "dollar-sign",
-        "description": "Analyze AWS costs and usage data through the AWS Cost Explorer API.",
-        "button": True,
-        "persistent": True,
-    },
-    {
-        "id": "github",
-        "icon": "github",
-        "description": "Search through GitHub",
-        "button": True,
-        "persistent": True
     }
-]
+    commands.append(command)
+
 
 logger = logging.getLogger(__name__)
 if not logger.level:
@@ -81,7 +65,7 @@ async def on_chat_resume():
 @cl.on_chat_start
 async def on_chat_start():
     """Hook to initialize the chat session"""
-    await cl.context.emitter.set_commands(COMMANDS)
+    await cl.context.emitter.set_commands(commands)
     user = cl.user_session.get("user")
 
     username = get_username(user)
@@ -97,20 +81,20 @@ async def on_message(msg: cl.Message):
     """Hook to handle incoming messages"""
     messages = [HumanMessage(content=msg.content)]
     start_time = time.perf_counter()
-    # fetch mcp server to be used when msg.command is None by default
-    server_params = StdioServerParameters(**mcp_servers_config["fetch"])
-    if msg.command == "Browser":
-        server_params = StdioServerParameters(**mcp_servers_config["playwright"])
-    elif msg.command == "Cloudwatch":
-        server_params = StdioServerParameters(
-            **mcp_servers_config["cloudwatch_logs_mcp_server"]
-        )
-    elif msg.command == "AWS cost":
-        server_params = StdioServerParameters(
-            **mcp_servers_config["cost_explorer_mcp_server"]
-        )
-    elif msg.command == "github":
-        server_params = StdioServerParameters(**mcp_servers_config["github"])
+    # msg.command is None by default
+    server_params = StdioServerParameters(**mcp_servers_config["default"])
+
+    for server_cfg in mcp_servers_config.values():
+        chainlit_cmd = server_cfg.get("chainlit_command")
+        if not chainlit_cmd:
+            continue
+
+        if msg.command == chainlit_cmd.get("id"):
+            mcp_config = server_cfg.copy()
+            mcp_config.pop("chainlit_command", None)
+
+            server_params = StdioServerParameters(**mcp_config)
+            break
 
     usage_totals = await mcp_call(messages, server_params)
 
