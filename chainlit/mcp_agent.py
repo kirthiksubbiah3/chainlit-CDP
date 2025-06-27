@@ -5,7 +5,6 @@ LLM agent made with langchain and chainlit
 from typing import List, Dict
 import logging
 
-import yaml
 from langchain_aws import ChatBedrockConverse
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_mcp_adapters.tools import load_mcp_tools
@@ -13,15 +12,18 @@ from langgraph.prebuilt import create_react_agent
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 import chainlit as cl
-from utils import get_log_level
+from utils import merge_dict, get_log_level, load_yaml_file
 
 logger = logging.getLogger(__name__)
 if not logger.level:
     logger.setLevel(get_log_level())
 
-# Load config
-with open("./config.yaml", "r", encoding="utf-8") as f:
-    config = yaml.safe_load(f)
+# Load both files
+config = load_yaml_file("config.yaml")
+secrets = load_yaml_file("secrets.yaml")
+
+# Merge secrets into config
+config = merge_dict(config, secrets)
 
 mcp_servers_config = config["mcp"]["servers"]
 llm_bedrock_config = config["llm"]["bedrock"]
@@ -84,9 +86,13 @@ async def mcp_call(
                             "total_tokens": usage.get("total_tokens", 0),
                         }
 
-                        stream_tokens["total_input_tokens"] += msg_tokens['input_tokens']
-                        stream_tokens["total_output_tokens"] += msg_tokens['output_tokens']
-                        stream_tokens["total_tokens"] += msg_tokens['total_tokens']
+                        stream_tokens["total_input_tokens"] += msg_tokens[
+                            "input_tokens"
+                        ]
+                        stream_tokens["total_output_tokens"] += msg_tokens[
+                            "output_tokens"
+                        ]
+                        stream_tokens["total_tokens"] += msg_tokens["total_tokens"]
 
                         logger.debug(
                             (

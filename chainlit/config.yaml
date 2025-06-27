@@ -13,6 +13,12 @@ mcp:
       args: ["playwright-mcp//cli.js"]
       env:
         DISPLAY: ":1"
+    cloudwatch_logs_mcp_server:
+      command: "uvx"
+      args: ["awslabs.cloudwatch-logs-mcp-server@latest"]
+    cost_explorer_mcp_server:
+      command: "uvx"
+      args: ["awslabs.cost-explorer-mcp-server@latest"]
     github:
       command: docker
       args:
@@ -24,5 +30,3 @@ mcp:
         - ghcr.io/github/github-mcp-server
       env:
         GITHUB_PERSONAL_ACCESS_TOKEN: ${GITHUB_PERSONAL_ACCESS_TOKEN}
-
-

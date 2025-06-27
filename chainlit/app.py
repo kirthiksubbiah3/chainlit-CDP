@@ -26,6 +26,20 @@ COMMANDS = [
         "persistent": True,
     },
     {
+        "id": "Cloudwatch",
+        "icon": "cloud",
+        "description": "Search through aws cloudwatch logs",
+        "button": True,
+        "persistent": True,
+    },
+    {
+        "id": "AWS cost",
+        "icon": "dollar-sign",
+        "description": "Analyze AWS costs and usage data through the AWS Cost Explorer API.",
+        "button": True,
+        "persistent": True,
+    },
+    {
         "id": "github",
         "icon": "github",
         "description": "Search through GitHub",
@@ -83,13 +97,18 @@ async def on_message(msg: cl.Message):
     """Hook to handle incoming messages"""
     messages = [HumanMessage(content=msg.content)]
     start_time = time.perf_counter()
-
-    # Determine which MCP server to use
+    # fetch mcp server to be used when msg.command is None by default
     server_params = StdioServerParameters(**mcp_servers_config["fetch"])
-
-    # msg.command is None by default
     if msg.command == "Browser":
         server_params = StdioServerParameters(**mcp_servers_config["playwright"])
+    elif msg.command == "Cloudwatch":
+        server_params = StdioServerParameters(
+            **mcp_servers_config["cloudwatch_logs_mcp_server"]
+        )
+    elif msg.command == "AWS cost":
+        server_params = StdioServerParameters(
+            **mcp_servers_config["cost_explorer_mcp_server"]
+        )
     elif msg.command == "github":
         server_params = StdioServerParameters(**mcp_servers_config["github"])
 

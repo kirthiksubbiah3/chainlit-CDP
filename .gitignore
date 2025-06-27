@@ -43,3 +43,4 @@ test.py
 # chainlit
 **/.chainlit
 **/.chromadb
+**/secrets.yaml
