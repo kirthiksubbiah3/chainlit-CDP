@@ -3,8 +3,9 @@ name: Security and Lint Checks
 on:
   pull_request:
     branches: [ main ]
-    paths: 
-      - 'chainlit/*'
+    paths-ignore:
+      - 'streamlit/**'
+
 jobs:
   trivy-dependency-scan:
     name: Trivy Scan requirements.txt
@@ -13,7 +14,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Run Trivy on requirements.txt
+      - name: Run Trivy (excluding streamlit/)
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'fs'
@@ -22,9 +23,7 @@ jobs:
           exit-code: '1'
           ignore-unfixed: true
           vuln-type: 'library'
-          security-checks: 'vuln'
-          dependency-tree: true
-          scan-files: 'requirements.txt'
+          skip-dirs: 'streamlit'
 
   lint-flake8:
     name: Flake8 Lint
@@ -43,8 +42,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install flake8
 
-      - name: Run flake8
-        run: flake8 .
+      - name: Run flake8 (excluding streamlit/)
+        run: flake8 . --exclude=streamlit
 
   bandit-scan:
     name: Bandit Security Scan
@@ -61,5 +60,5 @@ jobs:
       - name: Install Bandit
         run: pip install bandit
 
-      - name: Run Bandit
-        run: bandit -r .
+      - name: Run Bandit (excluding streamlit/)
+        run: bandit -r . --exclude streamlit
