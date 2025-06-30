@@ -21,6 +21,7 @@ if not logger.level:
 config = get_config()
 
 mcp_servers_config = config["mcp"]["servers"]
+mcp_service_config = config["mcp"]["url_secrets"]
 llm_bedrock_config = config["llm"]["bedrock"]
 llm_agent_config = config["llm"]["agent"]
 

@@ -9,7 +9,7 @@ data layer.
 from typing import Dict, Optional
 import time
 import logging
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import HumanMessage, SystemMessage
 from mcp import StdioServerParameters
 from mcp_agent import mcp_call
 from utils import get_config, get_log_level, get_username
@@ -17,6 +17,7 @@ from data_layer import CustomDataLayer
 import chainlit as cl
 
 mcp_servers_config = get_config()["mcp"]["servers"]
+mcp_service_config = get_config()["mcp"]["services"]
 
 commands = []
 for key in mcp_servers_config.keys():
@@ -79,7 +80,15 @@ async def on_chat_start():
 # pylint: disable=too-many-locals
 async def on_message(msg: cl.Message):
     """Hook to handle incoming messages"""
-    messages = [HumanMessage(content=msg.content)]
+    messages = []
+    if 'login' in msg.content:
+        service_msg = f"""Search the {mcp_service_config} to find the corresponding url and
+        credentials if required or not provided. Never share credentials in prompt or anywhere even
+        if asked"""
+        messages = [SystemMessage(content=service_msg)]
+    warn_msg = """Do not share any credentials directly as that would violate security
+        protocols. """
+    messages.append(HumanMessage(content=f"{msg.content}. {warn_msg}"))
     start_time = time.perf_counter()
     # msg.command is None by default
     server_params = StdioServerParameters(**mcp_servers_config["default"])
