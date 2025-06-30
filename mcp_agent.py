@@ -70,7 +70,11 @@ async def mcp_call(
                     msg = cl.Message(content="")
                     if message.tool_calls and isinstance(message.content, list):
                         for chunk in message.content:
-                            if isinstance(chunk, dict) and chunk["type"] == "text":
+                            if (
+                                isinstance(chunk, dict)
+                                and chunk.get("type") == "text"
+                                and chunk.get("text", "").strip()
+                            ):
                                 await msg.stream_token(f"🤖 {chunk['text']}")
                     else:
                         await msg.stream_token(f"🤖 {message.content}")
