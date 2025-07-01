@@ -5,12 +5,9 @@ LLM agent made with langchain and chainlit
 from typing import List, Dict
 import logging
 
-from langchain_aws import ChatBedrockConverse
 from langchain_core.messages import AIMessage, HumanMessage
-from langchain_mcp_adapters.tools import load_mcp_tools
-from langgraph.prebuilt import create_react_agent
-from mcp import ClientSession, StdioServerParameters
-from mcp.client.stdio import stdio_client
+
+
 import chainlit as cl
 from utils import get_config, get_log_level
 
@@ -21,18 +18,12 @@ if not logger.level:
 config = get_config()
 
 mcp_servers_config = config["mcp"]["servers"]
-mcp_service_config = config["mcp"]["url_secrets"]
-llm_bedrock_config = config["llm"]["bedrock"]
 llm_agent_config = config["llm"]["agent"]
-
-# Initialize the Claude model via Bedrock
-# Credentials are in .env
-llm = ChatBedrockConverse(**llm_bedrock_config)
 
 
 async def mcp_call(
+    agent,
     messages: List[HumanMessage],
-    server_params: StdioServerParameters,
 ) -> Dict[str, int]:
     """Function to call mcp servers"""
     stream_tokens = {
@@ -41,71 +32,54 @@ async def mcp_call(
         "total_tokens": 0,
     }
 
-    async with stdio_client(server_params) as (read, write):
-        async with ClientSession(read, write) as session:
-            msg_processing = cl.Message(content="Processing...")
-            await msg_processing.send()
+    msg_processing = cl.Message(content="Processing...")
+    await msg_processing.send()
 
-            # Initialize the connection
-            await session.initialize()
+    async for chunk in agent.astream(
+        {"messages": messages},
+        {"recursion_limit": llm_agent_config["recursion_limit"]},
+        stream_mode="updates",
+    ):
+        await msg_processing.send()
+        if "agent" not in chunk:
+            continue
 
-            # Get tools
-            tools = await load_mcp_tools(session)
+        for message in chunk["agent"]["messages"]:
+            if not isinstance(message, AIMessage):
+                continue
 
-            # Create and run the agent
-            agent = create_react_agent(llm, tools)
-            async for chunk in agent.astream(
-                {"messages": messages},
-                {"recursion_limit": llm_agent_config['recursion_limit']},
-                stream_mode="updates",
-            ):
-                await msg_processing.send()
-                if "agent" not in chunk:
-                    continue
+            msg = cl.Message(content="")
+            if message.tool_calls and isinstance(message.content, list):
+                for chunk in message.content:
+                    if (
+                        isinstance(chunk, dict)
+                        and chunk.get("type") == "text"
+                        and chunk.get("text", "").strip()
+                    ):
+                        await msg.stream_token(f"🤖 {chunk['text']}")
+            else:
+                await msg.stream_token(f"🤖 {message.content}")
+            await msg.send()
+            if hasattr(message, "usage_metadata") and message.usage_metadata:
+                usage = message.usage_metadata
+                msg_tokens = {
+                    "input_tokens": usage.get("input_tokens", 0),
+                    "output_tokens": usage.get("output_tokens", 0),
+                    "total_tokens": usage.get("total_tokens", 0),
+                }
 
-                for message in chunk["agent"]["messages"]:
-                    if not isinstance(message, AIMessage):
-                        continue
+                stream_tokens["total_input_tokens"] += msg_tokens["input_tokens"]
+                stream_tokens["total_output_tokens"] += msg_tokens["output_tokens"]
+                stream_tokens["total_tokens"] += msg_tokens["total_tokens"]
 
-                    msg = cl.Message(content="")
-                    if message.tool_calls and isinstance(message.content, list):
-                        for chunk in message.content:
-                            if (
-                                isinstance(chunk, dict)
-                                and chunk.get("type") == "text"
-                                and chunk.get("text", "").strip()
-                            ):
-                                await msg.stream_token(f"🤖 {chunk['text']}")
-                    else:
-                        await msg.stream_token(f"🤖 {message.content}")
-                    await msg.send()
-                    if hasattr(message, "usage_metadata") and message.usage_metadata:
-                        usage = message.usage_metadata
-                        msg_tokens = {
-                            "input_tokens": usage.get("input_tokens", 0),
-                            "output_tokens": usage.get("output_tokens", 0),
-                            "total_tokens": usage.get("total_tokens", 0),
-                        }
+                logger.debug(
+                    "Input tokens: %d, Output tokens: %d, Total tokens: %d",
+                    msg_tokens["input_tokens"],
+                    msg_tokens["output_tokens"],
+                    msg_tokens["total_tokens"],
+                )
 
-                        stream_tokens["total_input_tokens"] += msg_tokens[
-                            "input_tokens"
-                        ]
-                        stream_tokens["total_output_tokens"] += msg_tokens[
-                            "output_tokens"
-                        ]
-                        stream_tokens["total_tokens"] += msg_tokens["total_tokens"]
-
-                        logger.debug(
-                            (
-                                "Input tokens: %d, Output tokens: %d, "
-                                "Total tokens: %d"
-                            ),
-                            msg_tokens["input_tokens"],
-                            msg_tokens["output_tokens"],
-                            msg_tokens["total_tokens"],
-                        )
-
-                    await msg_processing.remove()
+            await msg_processing.remove()
     return {
         "input_tokens": stream_tokens["total_input_tokens"],
         "output_tokens": stream_tokens["total_output_tokens"],

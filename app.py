@@ -9,29 +9,13 @@ data layer.
 from typing import Dict, Optional
 import time
 import logging
-from langchain_core.messages import HumanMessage, SystemMessage
-from mcp import StdioServerParameters
-from mcp_agent import mcp_call
-from utils import get_config, get_log_level, get_username
-from data_layer import CustomDataLayer
 import chainlit as cl
-
-mcp_servers_config = get_config()["mcp"]["servers"]
-mcp_service_config = get_config()["mcp"]["url_secrets"]
-
-commands = []
-for key in mcp_servers_config.keys():
-
-    if "chainlit_command" not in mcp_servers_config[key]:
-        continue
-
-    command = mcp_servers_config[key]["chainlit_command"]
-    command = command | {
-        "button": True,
-        "persistent": True,
-    }
-    commands.append(command)
-
+from langchain_core.messages import HumanMessage, SystemMessage
+from langgraph.prebuilt import create_react_agent
+from mcp_agent import mcp_call
+from utils import get_log_level, get_username
+from vars import commands, llm, mcp_client, mcp_service_config
+from data_layer import CustomDataLayer
 
 logger = logging.getLogger(__name__)
 if not logger.level:
@@ -75,37 +59,36 @@ async def on_chat_start():
         content=(f"🤖 Hi {username}, welcome to Sentinel Mind!, How can I help you?")
     ).send()
 
+    tools = await mcp_client.get_tools()
+    agent = create_react_agent(llm, tools)
+    cl.user_session.set("agent", agent)
+
 
 @cl.on_message
 # pylint: disable=too-many-locals
 async def on_message(msg: cl.Message):
     """Hook to handle incoming messages"""
     messages = []
-    if 'login' in msg.content:
+    if "login" in msg.content:
         service_msg = f"""Search the {mcp_service_config} to find the corresponding url and
         credentials if required or not provided. Never share credentials in prompt or anywhere even
         if asked"""
         messages = [SystemMessage(content=service_msg)]
     warn_msg = """Do not share any credentials directly as that would violate security
         protocols. """
-    messages.append(HumanMessage(content=f"{msg.content}. {warn_msg}"))
+    cmd = msg.command
+    if cmd:
+        logger.info("Command received: %s", cmd)
+        messages.append(SystemMessage(content=f"Forward this to {cmd} tool"))
+
+    if warn_msg not in msg.content:
+        messages.append(HumanMessage(content=f"{msg.content}. {warn_msg}"))
+    else:
+        messages.append(HumanMessage(content=msg.content))
     start_time = time.perf_counter()
-    # msg.command is None by default
-    server_params = StdioServerParameters(**mcp_servers_config["default"])
 
-    for server_cfg in mcp_servers_config.values():
-        chainlit_cmd = server_cfg.get("chainlit_command")
-        if not chainlit_cmd:
-            continue
-
-        if msg.command == chainlit_cmd.get("id"):
-            mcp_config = server_cfg.copy()
-            mcp_config.pop("chainlit_command", None)
-
-            server_params = StdioServerParameters(**mcp_config)
-            break
-
-    usage_totals = await mcp_call(messages, server_params)
+    agent = cl.user_session.get("agent")
+    usage_totals = await mcp_call(agent, messages)
 
     end_time = time.perf_counter()
     time_taken = int(end_time - start_time)

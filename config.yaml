@@ -8,27 +8,31 @@ llm:
 mcp:
   servers:
     default:
-      command: "python"
+      command: "python3"
       args: ["-m", "mcp_server_fetch"]
+      transport: "stdio"
     playwright_hl:
       command: "npx"
       args: ["@playwright/mcp@latest", "--ignore-https-errors", "--headless"]
+      transport: "stdio"
       chainlit_command:
         id: "Browser HL"
         icon: "globe"
         description: "Search through browser(headless)"
-    playwright:
-      command: "node"
-      args: ["playwright-mcp//cli.js"]
-      env:
-        DISPLAY: ":1"
-      chainlit_command:
-        id: "Browser"
-        icon: "globe"
-        description: "Search through browser"
+    # playwright:
+    #   command: "node"
+    #   args: ["playwright-mcp//cli.js"]
+    #   env:
+    #     DISPLAY: ":1"
+    #   transport: "stdio"
+    #   chainlit_command:
+    #     id: "Browser"
+    #     icon: "globe"
+    #     description: "Search through browser"
     cloudwatch_logs:
       command: "uvx"
       args: ["awslabs.cloudwatch-logs-mcp-server@latest"]
+      transport: "stdio"
       chainlit_command:
         id: "Cloudwatch"
         icon: "cloud"
@@ -36,6 +40,7 @@ mcp:
     cost_explorer:
       command: "uvx"
       args: ["awslabs.cost-explorer-mcp-server@latest"]
+      transport: "stdio"
       chainlit_command:
         id: "AWS cost"
         icon: "dollar-sign"
@@ -49,6 +54,7 @@ mcp:
         - -e
         - GITHUB_PERSONAL_ACCESS_TOKEN
         - ghcr.io/github/github-mcp-server
+      transport: "stdio"
       chainlit_command:
         id: "GitHub"
         icon: "github"
