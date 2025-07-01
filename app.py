@@ -17,7 +17,7 @@ from data_layer import CustomDataLayer
 import chainlit as cl
 
 mcp_servers_config = get_config()["mcp"]["servers"]
-mcp_service_config = get_config()["mcp"]["services"]
+mcp_service_config = get_config()["mcp"]["url_secrets"]
 
 commands = []
 for key in mcp_servers_config.keys():
