@@ -59,3 +59,11 @@ mcp:
         id: "GitHub"
         icon: "github"
         description: "Search through GitHub"
+    jenkins:
+      type: "sse"
+      transport: "sse"
+      url: "https://app.ustpace.io/visioncheckout/jenkins/mcp-server/sse"
+      chainlit_command:
+        id: "Jenkins"
+        icon: "repeat-2"
+        description: "Search through Jenkins"
