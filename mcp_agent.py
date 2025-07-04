@@ -3,17 +3,14 @@ LLM agent made with langchain and chainlit
 """
 
 from typing import List, Dict
-import logging
 
 from langchain_core.messages import AIMessage, HumanMessage
 
 
 import chainlit as cl
-from utils import get_config, get_log_level
+from utils import get_config, get_logger
 
-logger = logging.getLogger(__name__)
-if not logger.level:
-    logger.setLevel(get_log_level())
+logger = get_logger(__name__)
 
 config = get_config()
 

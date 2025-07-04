@@ -8,18 +8,22 @@ data layer.
 
 from typing import Dict, Optional
 import time
-import logging
 import chainlit as cl
-from langchain_core.messages import HumanMessage, SystemMessage
 from langgraph.prebuilt import create_react_agent
+from langchain_core.messages import HumanMessage, SystemMessage
 from mcp_agent import mcp_call
-from utils import get_log_level, get_username
+from utils import (
+    get_username,
+    get_time_taken_message,
+    get_logger,
+    log_usage_details,
+    send_usage_cost_message,
+)
 from vars import commands, llm, mcp_client, mcp_service_config
 from data_layer import CustomDataLayer
 
-logger = logging.getLogger(__name__)
-if not logger.level:
-    logger.setLevel(get_log_level())
+
+logger = get_logger(__name__)
 
 
 @cl.oauth_callback
@@ -65,76 +69,39 @@ async def on_chat_start():
 
 
 @cl.on_message
-# pylint: disable=too-many-locals
 async def on_message(msg: cl.Message):
     """Hook to handle incoming messages"""
     messages = []
+
     if "login" in msg.content:
-        service_msg = f"""Search the {mcp_service_config} to find the corresponding url and
-        credentials if required or not provided. Never share credentials in prompt or anywhere even
-        if asked"""
-        messages = [SystemMessage(content=service_msg)]
-    warn_msg = """Do not share any credentials directly as that would violate security
-        protocols. """
-    cmd = msg.command
-    if cmd:
-        logger.info("Command received: %s", cmd)
-        messages.append(SystemMessage(content=f"Forward this to {cmd} tool"))
+        service_msg = (
+            f"Search the {mcp_service_config} to find the corresponding url and "
+            "credentials if required or not provided. "
+            "Never share credentials in prompt or anywhere even if asked."
+        )
+        messages.append(SystemMessage(content=service_msg))
+
+    warn_msg = "Do not share any credentials directly as that would violate security protocols."
+
+    if msg.command:
+        logger.info("Command received: %s", msg.command)
+        messages.append(SystemMessage(content=f"Forward this to {msg.command} tool"))
 
     if warn_msg not in msg.content:
         messages.append(HumanMessage(content=f"{msg.content}. {warn_msg}"))
     else:
         messages.append(HumanMessage(content=msg.content))
+
     start_time = time.perf_counter()
 
     agent = cl.user_session.get("agent")
     usage_totals = await mcp_call(agent, messages)
 
-    end_time = time.perf_counter()
-    time_taken = int(end_time - start_time)
-    minutes, seconds = divmod(time_taken, 60)
+    await cl.Message(content=get_time_taken_message(start_time)).send()
 
-    if minutes > 0:
-        minute_str = f"{minutes} minute{'s' if minutes != 1 else ''} "
-    else:
-        minute_str = ""
+    await cl.Message(content=send_usage_cost_message(usage_totals)).send()
 
-    second_str = f"{seconds} second{'s' if seconds != 1 else ''}"
-
-    content = f"🤖 Time taken for this response: {minute_str}{second_str}"
-    await cl.Message(content=content).send()
-
-    input_tokens = usage_totals["input_tokens"]
-    output_tokens = usage_totals["output_tokens"]
-
-    input_cost = (input_tokens / 1000) * 0.003
-    output_cost = (output_tokens / 1000) * 0.015
-    total_cost = input_cost + output_cost
-    await cl.Message(
-        content=(
-            "📦 Token usage and approximate cost for this session. "
-            "The cost is calculated with 0.003$ per 1000 input token and "
-            "0.015$ per 1000 output token. Refer aws official documentation "
-            "for updated one\n"
-            f"- Total Input tokens: {usage_totals['input_tokens']}\n"
-            f"- Total Output tokens: {usage_totals['output_tokens']}\n"
-            f"- Total tokens: {usage_totals['total_tokens']}\n"
-            f"- Input cost: ${input_cost:.4f}\n"
-            f"- Output cost: ${output_cost:.4f}\n"
-            f"- Total cost: ${total_cost:.4f}"
-        )
-    ).send()
-
-    logger.debug(
-        "Total Input tokens: %d, Total Output tokens: %d, Total tokens: %d, "
-        "Input cost: %.4f, Output cost: %.4f, Total cost: %.4f",
-        usage_totals["input_tokens"],
-        usage_totals["output_tokens"],
-        usage_totals["total_tokens"],
-        input_cost,
-        output_cost,
-        total_cost,
-    )
+    log_usage_details(usage_totals)
 
 
 @cl.on_stop
