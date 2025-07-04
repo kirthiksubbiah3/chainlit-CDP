@@ -45,6 +45,14 @@ mcp:
         id: "AWS cost"
         icon: "dollar-sign"
         description: "Analyze AWS costs and usage data through the AWS Cost Explorer API."
+    gitlab:
+      command: "npx"
+      args: ["-y", "@modelcontextprotocol/server-gitlab"]
+      transport: "stdio"
+      chainlit_command:
+        id: "GitLab"
+        icon: "gitlab"
+        description: "Search through GitLab"
     github:
       command: docker
       args:
