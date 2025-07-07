@@ -19,7 +19,8 @@ from utils import (
     log_usage_details,
     send_usage_cost_message,
 )
-from vars import commands, llm, mcp_client, mcp_service_config
+from tools_manager import initialize_tools
+from vars import commands, llm, mcp_service_config
 from data_layer import CustomDataLayer
 
 
@@ -63,7 +64,7 @@ async def on_chat_start():
         content=(f"🤖 Hi {username}, welcome to Sentinel Mind!, How can I help you?")
     ).send()
 
-    tools = await mcp_client.get_tools()
+    tools = await initialize_tools()
     agent = create_react_agent(llm, tools)
     cl.user_session.set("agent", agent)
 

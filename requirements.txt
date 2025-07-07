@@ -4,7 +4,7 @@ langchain-aws==0.2.25
 langchain-core==0.3.65
 langchain-mcp-adapters==0.1.7
 langgraph==0.5.0
-mcp==1.9.4
+mcp==1.10.0
 python-dotenv==1.1.0
 
 # mcp

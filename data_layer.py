@@ -87,7 +87,7 @@ class CustomDataLayer(cl_data.BaseDataLayer):
             return
 
         logger.info(
-            "Creating step_id %s for %s",
+            "Creating step_id %s for  thread_id %s",
             step_dict["id"],
             step_dict["threadId"],
         )
@@ -108,7 +108,7 @@ class CustomDataLayer(cl_data.BaseDataLayer):
 
     async def update_step(self, step_dict: "StepDict"):
         logger.info(
-            "Creating step_id %s for %s",
+            "Updating step_id %s for thread_id %s",
             step_dict["id"],
             step_dict["threadId"],
         )
