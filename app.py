@@ -50,6 +50,9 @@ def auth_callback(
 @cl.on_chat_resume
 async def on_chat_resume():
     """Hook for chat resume"""
+    tools = await initialize_tools()
+    agent = create_react_agent(llm, tools)
+    cl.user_session.set("agent", agent)
 
 
 @cl.on_chat_start
