@@ -1,3 +1,5 @@
+import os
+
 from langchain_aws import ChatBedrockConverse
 from langchain_mcp_adapters.client import MultiServerMCPClient
 
@@ -35,3 +37,7 @@ for key in mcp_servers_config.keys():
 
 # Initialize mcp client
 mcp_client = MultiServerMCPClient(mcp_servers_config_to_pass)
+
+local_username = os.getenv("LOCAL_USERNAME")
+local_password = os.getenv("LOCAL_PASSWORD")
+oauth_enabled = os.getenv("OAUTH_ENABLED", "false").lower() == "true"
