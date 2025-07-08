@@ -9,7 +9,6 @@ data layer.
 from typing import Dict, Optional
 import time
 import chainlit as cl
-from langgraph.prebuilt import create_react_agent
 from langchain_core.messages import HumanMessage, SystemMessage
 from mcp_agent import mcp_call
 from utils import (
@@ -19,8 +18,8 @@ from utils import (
     log_usage_details,
     send_usage_cost_message,
 )
-from tools_manager import initialize_tools
-from vars import commands, llm, mcp_service_config
+from agents.react_agent import agent
+from vars import commands, mcp_service_config
 from data_layer import CustomDataLayer
 
 
@@ -50,9 +49,7 @@ def auth_callback(
 @cl.on_chat_resume
 async def on_chat_resume():
     """Hook for chat resume"""
-    tools = await initialize_tools()
-    agent = create_react_agent(llm, tools)
-    cl.user_session.set("agent", agent)
+    logger.info("Chat session resumed for thread_id: %s", cl.context.session.thread_id)
 
 
 @cl.on_chat_start
@@ -66,10 +63,6 @@ async def on_chat_start():
     await cl.Message(
         content=(f"🤖 Hi {username}, welcome to Sentinel Mind!, How can I help you?")
     ).send()
-
-    tools = await initialize_tools()
-    agent = create_react_agent(llm, tools)
-    cl.user_session.set("agent", agent)
 
 
 @cl.on_message
@@ -98,8 +91,8 @@ async def on_message(msg: cl.Message):
 
     start_time = time.perf_counter()
 
-    agent = cl.user_session.get("agent")
-    usage_totals = await mcp_call(agent, messages)
+    thread_id = cl.context.session.thread_id
+    usage_totals = await mcp_call(agent, messages, thread_id)
 
     await cl.Message(content=get_time_taken_message(start_time)).send()
 

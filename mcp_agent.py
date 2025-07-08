@@ -5,7 +5,7 @@ LLM agent made with langchain and chainlit
 from typing import List, Dict
 
 from langchain_core.messages import AIMessage, HumanMessage
-
+from langchain_core.runnables.config import RunnableConfig
 
 import chainlit as cl
 from utils import get_config, get_logger
@@ -21,8 +21,12 @@ llm_agent_config = config["llm"]["agent"]
 async def mcp_call(
     agent,
     messages: List[HumanMessage],
+    thread_id: str,
 ) -> Dict[str, int]:
     """Function to call mcp servers"""
+
+    logger.info("Calling MCP servers for thread_id: %s", thread_id)
+
     stream_tokens = {
         "total_input_tokens": 0,
         "total_output_tokens": 0,
@@ -32,9 +36,14 @@ async def mcp_call(
     msg_processing = cl.Message(content="Processing...")
     await msg_processing.send()
 
+    runnable_config: RunnableConfig = {
+        "configurable": {"thread_id": thread_id},
+        "recursion_limit": llm_agent_config["recursion_limit"],
+    }
+
     async for chunk in agent.astream(
         {"messages": messages},
-        {"recursion_limit": llm_agent_config["recursion_limit"]},
+        runnable_config,
         stream_mode="updates",
     ):
         await msg_processing.send()
