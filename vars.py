@@ -1,15 +1,10 @@
 import os
-
-from langchain_aws import ChatBedrockConverse
 from langchain_mcp_adapters.client import MultiServerMCPClient
-
-from utils import get_config
+from utils import get_config, logger
 
 config = get_config()
-
-# get llm config
-llm_bedrock_config = config["llm"]["bedrock"]
-llm = ChatBedrockConverse(**llm_bedrock_config)
+logger.info("Loading chainlit profiles from config: %s", config)
+profiles = config["chainlit_profiles"]
 
 # get mcp config
 mcp_servers_config = get_config()["mcp"]["servers"]

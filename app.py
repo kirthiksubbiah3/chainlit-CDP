@@ -20,16 +20,17 @@ from utils import (
     log_usage_details,
     send_usage_cost_message,
 )
-from agents.react_agent import agent
 from vars import (
     commands,
     mcp_service_config,
     local_username,
     local_password,
     oauth_enabled,
+    profiles
 )
 from data_layer import CustomDataLayer
-
+from langchain_aws import ChatBedrockConverse
+from agents.react_agent import get_agent
 
 logger = get_logger(__name__)
 
@@ -103,9 +104,7 @@ async def on_message(msg: cl.Message):
             "Never share credentials in prompt or anywhere even if asked."
         )
         messages.append(SystemMessage(content=service_msg))
-
     warn_msg = "Do not share any credentials directly as that would violate security protocols."
-
     if msg.command:
         logger.info("Command received: %s", msg.command)
         messages.append(SystemMessage(content=f"Forward this to {msg.command} tool"))
@@ -114,17 +113,32 @@ async def on_message(msg: cl.Message):
         messages.append(HumanMessage(content=f"{msg.content}. {warn_msg}"))
     else:
         messages.append(HumanMessage(content=msg.content))
-
     start_time = time.perf_counter()
-
     thread_id = cl.context.session.thread_id
+    chat_profile_name = cl.user_session.get("chat_profile")
+    if not chat_profile_name or chat_profile_name not in profiles:
+        logger.warning("Invalid or missing chat profile: %s", chat_profile_name)
+        return await cl.Message(content="Error: Invalid chat profile selected.").send()
+    logger.info("Chat profile is %s", chat_profile_name)
+    llm_bedrock_config = profiles[chat_profile_name]["bedrock"]
+    llm = ChatBedrockConverse(**llm_bedrock_config)
+    agent = get_agent(llm)
+    input_token_cost = profiles[chat_profile_name]["cost"]["input_token_cost"]
+    output_token_cost = profiles[chat_profile_name]["cost"]["output_token_cost"]
+    logger.info("input token cost is %s", input_token_cost)
+    logger.info("output token cost is %s", output_token_cost)
     usage_totals = await mcp_call(agent, messages, thread_id)
-
     await cl.Message(content=get_time_taken_message(start_time)).send()
 
-    await cl.Message(content=send_usage_cost_message(usage_totals)).send()
+    await cl.Message(
+        content=send_usage_cost_message(
+            usage_totals,
+            input_token_cost,
+            output_token_cost,
+        )
+    ).send()
 
-    log_usage_details(usage_totals)
+    log_usage_details(usage_totals, input_token_cost, output_token_cost)
 
 
 @cl.on_stop
@@ -156,3 +170,18 @@ async def on_chat_end():
 def get_data_layer():
     """get data layer function for chat history persistence"""
     return CustomDataLayer()
+
+
+@cl.set_chat_profiles
+async def chat_profile():
+    chat_profiles = []
+    for key, value in profiles.items():
+        chat_profiles.append(
+            cl.ChatProfile(
+                name=key,
+                markdown_description=(
+                    f"The underlying model is **{value['description']}**."
+                ),
+            )
+        )
+    return chat_profiles

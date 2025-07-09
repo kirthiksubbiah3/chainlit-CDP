@@ -75,3 +75,31 @@ mcp:
         id: "Jenkins"
         icon: "repeat-2"
         description: "Search through Jenkins"
+chainlit_profiles:
+  nova_micro:
+    bedrock:
+      model: "amazon.nova-micro-v1:0"
+      max_tokens: 2000
+      temperature: 0.0
+    description: "Nova Micro. Model for text related tasks"
+    cost:
+      input_token_cost: 0.000035
+      output_token_cost: 0.00014
+  Claude_Sonnet_3.7:
+    bedrock:
+      model: "us.anthropic.claude-3-7-sonnet-20250219-v1:0"
+      max_tokens: 2000
+      temperature: 0.0
+    description: "Claude Sonnet 3.7. Model for browser related tasks"
+    cost:
+      input_token_cost: 0.003
+      output_token_cost: 0.015
+  nova_pro:
+    bedrock:
+      model: "amazon.nova-pro-v1:0"
+      max_tokens: 2000
+      temperature: 0.0
+    description: "Nova Pro. Model for text related tasks"
+    cost:
+      input_token_cost: 0.0008
+      output_token_cost: 0.0032
