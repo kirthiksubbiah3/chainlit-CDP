@@ -1,8 +1,4 @@
 llm:
-  bedrock:
-    max_tokens: 2000
-    model: "us.anthropic.claude-3-7-sonnet-20250219-v1:0"
-    temperature: 0.0
   agent:
     recursion_limit: 50
 mcp:
@@ -54,15 +50,9 @@ mcp:
         icon: "gitlab"
         description: "Search through GitLab"
     github:
-      command: docker
-      args:
-        - run
-        - -i
-        - --rm
-        - -e
-        - GITHUB_PERSONAL_ACCESS_TOKEN
-        - ghcr.io/github/github-mcp-server
-      transport: "stdio"
+      type: "streamable_http"
+      transport: "streamable_http"
+      url: "https://api.githubcopilot.com/mcp"
       chainlit_command:
         id: "GitHub"
         icon: "github"
