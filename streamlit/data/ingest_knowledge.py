@@ -22,6 +22,7 @@ PDF_SOURCE_DIR = PROJECT_ROOT / "data" / "page_reports"
 CHROMA_DB_DIRECTORY = PROJECT_ROOT / "chroma_db"
 AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
 
+
 def split_tasks_by_marker(text: str, source_name: str):
     """
     Splits raw PDF text into a list of LangChain Document objects based on the '# Task:' marker.
@@ -33,10 +34,11 @@ def split_tasks_by_marker(text: str, source_name: str):
         section = section.strip()
         if not section:
             continue
-        documents.append(Document(
-            page_content=section,
-            metadata={"source": f"{source_name} [Task {i+1}]"}
-        ))
+        documents.append(
+            Document(
+                page_content=section, metadata={"source": f"{source_name} [Task {i+1}]"}
+            )
+        )
 
     return documents
 
@@ -88,21 +90,19 @@ def build_vector_store():
     # Embed and persist
     print("🧠 Initializing Bedrock embeddings...")
     embeddings = BedrockEmbeddings(
-        region_name=AWS_REGION,
-        model_id=(
-            "amazon.titan-embed-text-v1"
-        )
+        region_name=AWS_REGION, model_id=("amazon.titan-embed-text-v1")
     )
 
     print(f"💾 Saving vector store to '{CHROMA_DB_DIRECTORY}'...")
     Chroma.from_documents(
         documents=all_documents,
         embedding=embeddings,
-        persist_directory=str(CHROMA_DB_DIRECTORY)
+        persist_directory=str(CHROMA_DB_DIRECTORY),
     )
 
     print(f"✅ Ingested {len(all_documents)} task documents into vector DB.")
     print("--- Ingestion Complete ---")
+
 
 if __name__ == "__main__":
     build_vector_store()

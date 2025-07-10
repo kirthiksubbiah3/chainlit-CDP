@@ -29,6 +29,7 @@ model = Bedrock().get_model_details()
 
 class Supervisor:
     """LangGraph Supervisor that routes tasks to the appropriate agent."""
+
     def __init__(self):
         pass
 
@@ -66,9 +67,10 @@ class Supervisor:
                 "('hi', 'hello') or questions about your purpose, respond "
                 "directly and helpfully, reminding them of your specialized "
                 "function."
-            )
+            ),
         )
 
         return workflow
+
 
 # %%

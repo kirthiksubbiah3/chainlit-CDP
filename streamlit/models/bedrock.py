@@ -41,4 +41,5 @@ class Bedrock:
         )
         return model
 
+
 # %%

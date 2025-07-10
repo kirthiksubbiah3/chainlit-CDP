@@ -33,6 +33,8 @@ mcp:
         id: "Cloudwatch"
         icon: "cloud"
         description: "Search through aws cloudwatch logs"
+      env:
+        AWS_REGION: "us-east-1"
     cost_explorer:
       command: "uvx"
       args: ["awslabs.cost-explorer-mcp-server@latest"]
@@ -41,6 +43,8 @@ mcp:
         id: "AWS cost"
         icon: "dollar-sign"
         description: "Analyze AWS costs and usage data through the AWS Cost Explorer API."
+      env:
+        AWS_REGION: "us-east-1"
     gitlab:
       command: "npx"
       args: ["-y", "@modelcontextprotocol/server-gitlab"]

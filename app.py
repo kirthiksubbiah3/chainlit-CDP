@@ -11,7 +11,7 @@ import time
 
 import chainlit as cl
 from langchain_core.messages import HumanMessage, SystemMessage
-from mcp_agent import mcp_call
+from mcp_agent import mcp_call, generate_chat_title_from_input
 
 from utils import (
     get_username,
@@ -26,7 +26,7 @@ from vars import (
     local_username,
     local_password,
     oauth_enabled,
-    profiles
+    profiles,
 )
 from data_layer import CustomDataLayer
 from langchain_aws import ChatBedrockConverse
@@ -95,7 +95,7 @@ async def on_chat_start():
 @cl.on_message
 async def on_message(msg: cl.Message):
     """Hook to handle incoming messages"""
-    messages = []
+    messages, usage_data_title = [], {}
 
     if "login" in msg.content:
         service_msg = (
@@ -114,6 +114,7 @@ async def on_message(msg: cl.Message):
     else:
         messages.append(HumanMessage(content=msg.content))
     start_time = time.perf_counter()
+
     thread_id = cl.context.session.thread_id
     chat_profile_name = cl.user_session.get("chat_profile")
     if not chat_profile_name or chat_profile_name not in profiles:
@@ -123,13 +124,26 @@ async def on_message(msg: cl.Message):
     llm_bedrock_config = profiles[chat_profile_name]["bedrock"]
     llm = ChatBedrockConverse(**llm_bedrock_config)
     agent = get_agent(llm)
+    # Setting thread title
+    thread_title = cl.user_session.get("thread_title")
+
+    if not thread_title:
+        if len(msg.content.split()) > 2:
+            thread_title, usage_data_title = await generate_chat_title_from_input(
+                llm, msg.content
+            )
+            cl.user_session.set("thread_title", thread_title)
+
     input_token_cost = profiles[chat_profile_name]["cost"]["input_token_cost"]
     output_token_cost = profiles[chat_profile_name]["cost"]["output_token_cost"]
     logger.info("input token cost is %s", input_token_cost)
     logger.info("output token cost is %s", output_token_cost)
     usage_totals = await mcp_call(agent, messages, thread_id)
     await cl.Message(content=get_time_taken_message(start_time)).send()
-
+    if usage_data_title:
+        usage_totals["input_tokens"] += usage_data_title["input_tokens"]
+        usage_totals["output_tokens"] += usage_data_title["output_tokens"]
+        usage_totals["total_tokens"] += usage_data_title["total_tokens"]
     await cl.Message(
         content=send_usage_cost_message(
             usage_totals,

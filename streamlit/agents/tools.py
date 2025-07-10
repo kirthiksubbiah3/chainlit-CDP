@@ -30,14 +30,10 @@ CHROMA_DB_DIRECTORY = PROJECT_ROOT / "chroma_db"  # Use absolute path
 # %% --- Bedrock and Vector Store Initialization ---
 model_tool = Bedrock().get_model_details()
 embeddings = BedrockEmbeddings(
-    region_name=AWS_REGION,
-    model_id=(
-        "amazon.titan-embed-text-v1"
-    )
+    region_name=AWS_REGION, model_id=("amazon.titan-embed-text-v1")
 )
 vector_store = Chroma(
-    persist_directory=str(CHROMA_DB_DIRECTORY),
-    embedding_function=embeddings
+    persist_directory=str(CHROMA_DB_DIRECTORY), embedding_function=embeddings
 )
 
 
@@ -64,9 +60,7 @@ def get_instructions(user_query: str) -> str:
     docs = retriever.invoke(user_query)
 
     if not docs:
-        print(
-            "TOOL (Stage 1 - Retrieval): No documents found in vector store."
-        )
+        print("TOOL (Stage 1 - Retrieval): No documents found in vector store.")
         return "STATUS: NO_INSTRUCTIONS_FOUND"
 
     retrieved_text = docs[0].page_content
@@ -93,44 +87,35 @@ def get_instructions(user_query: str) -> str:
         """
     )
     validation_chain = validation_prompt | model_tool | StrOutputParser()
-    response = validation_chain.invoke({
-        "query": user_query,
-        "document": retrieved_text
-    })
+    response = validation_chain.invoke(
+        {"query": user_query, "document": retrieved_text}
+    )
     # Clean up the response to be robust
-    is_relevant = response.strip().lower() == 'yes'
-    print(f"""TOOL (Stage 2 - Validation): LLM validation result:
-          '{response.strip()}' -> Is Relevant: {is_relevant}""")
+    is_relevant = response.strip().lower() == "yes"
+    print(
+        f"""TOOL (Stage 2 - Validation): LLM validation result:
+          '{response.strip()}' -> Is Relevant: {is_relevant}"""
+    )
 
     if not is_relevant:
-        print(
-            "TOOL (Stage 3 - Decision): Document is NOT relevant. Discarding."
-        )
+        print("TOOL (Stage 3 - Decision): Document is NOT relevant. Discarding.")
         return "STATUS: NO_INSTRUCTIONS_FOUND"
 
     # --- Stage 3: Formatting and Output ---
     print(
-        "TOOL (Stage 3 - Decision): Document IS relevant. "
-        "Formatting instructions."
+        "TOOL (Stage 3 - Decision): Document IS relevant. " "Formatting instructions."
     )
 
     # Substitute placeholders with actual credentials
-    final_instructions = retrieved_text.replace(
-        "{{ANTHEM_USERNAME}}", anthem_username
-    )
+    final_instructions = retrieved_text.replace("{{ANTHEM_USERNAME}}", anthem_username)
     final_instructions = final_instructions.replace(
         "{{ANTHEM_PASSWORD}}", anthem_password
     )
-    final_instructions = final_instructions.replace(
-        "{{ANTHEM_LOGIN_URL}}", login_url
-    )
+    final_instructions = final_instructions.replace("{{ANTHEM_LOGIN_URL}}", login_url)
 
     # Return a structured JSON string.
     # This is more robust than parsing plain text.
-    result = {
-        "status": "SUCCESS",
-        "instructions": final_instructions
-    }
+    result = {"status": "SUCCESS", "instructions": final_instructions}
     return json.dumps(result)
 
 
@@ -140,6 +125,7 @@ def run_browser_task(task: str) -> str:
     Uses the browser-use Agent to execute a task. The task can be either
     detailed instructions from the KB or the original user query.
     """
+
     async def _inner():
         agent = BrowserUseAgent(
             task=(

@@ -144,6 +144,9 @@ class CustomDataLayer(cl_data.BaseDataLayer):
     async def list_threads(
         self, pagination: Pagination, filters: ThreadFilter
     ) -> PaginatedResponse[ThreadDict]:
+
+        logger.info("Listing threads")
+
         all_data = self.collection.get()
         thread_map = {}
 
@@ -156,7 +159,7 @@ class CustomDataLayer(cl_data.BaseDataLayer):
             if thread_id not in thread_map:
                 thread_map[thread_id] = {
                     "id": thread_id,
-                    "name": f"Thread {thread_id[:6]}",
+                    "name": meta.get("thread_title", "New Chat"),
                     "userId": meta["user_id"],
                     "userIdentifier": meta["user_id"],
                     "createdAt": meta["createdAt"],
@@ -173,7 +176,10 @@ class CustomDataLayer(cl_data.BaseDataLayer):
         )
 
     async def get_thread(self, thread_id: str) -> Optional[ThreadDict]:
+        logger.info("Getting thread: %s", thread_id)
+
         results = self.collection.get(where={"thread_id": thread_id})
+
         if not results["metadatas"]:
             return None
 
@@ -208,6 +214,17 @@ class CustomDataLayer(cl_data.BaseDataLayer):
         tags: Optional[List[str]] = None,
     ):
         logger.info("Updating thread %s", thread_id)
+        thread_title = cl.user_session.get("thread_title", None)
+
+        # Updating the metadata with new thread_title
+        if thread_title:
+            results = self.collection.get(where={"thread_id": thread_id})
+            new_metadatas = []
+            for meta in results["metadatas"]:
+                updated_meta = meta.copy() if meta else {}
+                updated_meta["thread_title"] = thread_title
+                new_metadatas.append(updated_meta)
+            self.collection.update(ids=results["ids"], metadatas=new_metadatas)
 
     async def build_debug_url(self) -> str:
         return ""

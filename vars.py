@@ -1,8 +1,11 @@
 import os
 from langchain_mcp_adapters.client import MultiServerMCPClient
-from utils import get_config
+from utils import get_config, get_logger
+
+logger = get_logger(__name__)
 
 config = get_config()
+logger.info("Loading config")
 profiles = config["chainlit_profiles"]
 
 # get mcp config
