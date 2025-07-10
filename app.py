@@ -8,11 +8,9 @@ data layer.
 
 from typing import Dict, Optional
 import time
-
 import chainlit as cl
 from langchain_core.messages import HumanMessage, SystemMessage
-from mcp_agent import mcp_call, generate_chat_title_from_input
-
+from mcp_agent import generate_chat_title_from_input
 from utils import (
     get_username,
     get_time_taken_message,
@@ -30,7 +28,7 @@ from vars import (
 )
 from data_layer import CustomDataLayer
 from langchain_aws import ChatBedrockConverse
-from agents.react_agent import get_agent
+from agents.react_agent import server_session_agent, tools_session_agent
 
 logger = get_logger(__name__)
 
@@ -94,6 +92,19 @@ async def on_chat_start():
 
 @cl.on_message
 async def on_message(msg: cl.Message):
+    start_time = time.perf_counter()
+    thread_id = cl.context.session.thread_id
+    chat_profile_name = cl.user_session.get("chat_profile")
+    if not chat_profile_name or chat_profile_name not in profiles:
+        logger.warning("Invalid or missing chat profile: %s", chat_profile_name)
+        return await cl.Message(content="Error: Invalid chat profile selected.").send()
+    logger.info("Chat profile is %s", chat_profile_name)
+    llm_bedrock_config = profiles[chat_profile_name]["bedrock"]
+    llm = ChatBedrockConverse(**llm_bedrock_config)
+    input_token_cost = profiles[chat_profile_name]["cost"]["input_token_cost"]
+    output_token_cost = profiles[chat_profile_name]["cost"]["output_token_cost"]
+    logger.info("input token cost is %s", input_token_cost)
+    logger.info("output token cost is %s", output_token_cost)
     """Hook to handle incoming messages"""
     messages, usage_data_title = [], {}
 
@@ -104,26 +115,30 @@ async def on_message(msg: cl.Message):
             "Never share credentials in prompt or anywhere even if asked."
         )
         messages.append(SystemMessage(content=service_msg))
+
     warn_msg = "Do not share any credentials directly as that would violate security protocols."
+
+    if warn_msg not in msg.content:
+        if msg.content.endswith(('.', '!', '?')):
+            messages.append(HumanMessage(content=f"{msg.content} {warn_msg}"))
+        else:
+            messages.append(HumanMessage(content=f"{msg.content}. {warn_msg}"))
+    else:
+        messages.append(HumanMessage(content=msg.content))
     if msg.command:
         logger.info("Command received: %s", msg.command)
         messages.append(SystemMessage(content=f"Forward this to {msg.command} tool"))
+        if msg.command == "Browser-HL" or msg.command == "Browser":
+            logger.info("Using server session agent for Browser command")
+            usage_totals = await server_session_agent(messages, llm, thread_id)
+        else:
+            logger.info("Using tools session agent for command: %s", msg.command)
+            usage_totals = await tools_session_agent(messages, llm, thread_id)
 
-    if warn_msg not in msg.content:
-        messages.append(HumanMessage(content=f"{msg.content}. {warn_msg}"))
     else:
+        logger.info("No command received, using server session agent")
+        usage_totals = await server_session_agent(messages, llm, thread_id)
         messages.append(HumanMessage(content=msg.content))
-    start_time = time.perf_counter()
-
-    thread_id = cl.context.session.thread_id
-    chat_profile_name = cl.user_session.get("chat_profile")
-    if not chat_profile_name or chat_profile_name not in profiles:
-        logger.warning("Invalid or missing chat profile: %s", chat_profile_name)
-        return await cl.Message(content="Error: Invalid chat profile selected.").send()
-    logger.info("Chat profile is %s", chat_profile_name)
-    llm_bedrock_config = profiles[chat_profile_name]["bedrock"]
-    llm = ChatBedrockConverse(**llm_bedrock_config)
-    agent = get_agent(llm)
     # Setting thread title
     thread_title = cl.user_session.get("thread_title")
 
@@ -133,12 +148,6 @@ async def on_message(msg: cl.Message):
                 llm, msg.content
             )
             cl.user_session.set("thread_title", thread_title)
-
-    input_token_cost = profiles[chat_profile_name]["cost"]["input_token_cost"]
-    output_token_cost = profiles[chat_profile_name]["cost"]["output_token_cost"]
-    logger.info("input token cost is %s", input_token_cost)
-    logger.info("output token cost is %s", output_token_cost)
-    usage_totals = await mcp_call(agent, messages, thread_id)
     await cl.Message(content=get_time_taken_message(start_time)).send()
     if usage_data_title:
         usage_totals["input_tokens"] += usage_data_title["input_tokens"]

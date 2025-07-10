@@ -12,7 +12,7 @@ mcp:
       args: ["@playwright/mcp@latest", "--ignore-https-errors", "--headless"]
       transport: "stdio"
       chainlit_command:
-        id: "Browser HL"
+        id: "Browser-HL"
         icon: "globe"
         description: "Search through browser(headless)"
     # playwright:
