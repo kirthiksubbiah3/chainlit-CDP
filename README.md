@@ -37,3 +37,13 @@ chainlit run app.py -w
 5. npm link @modelcontextprotocol/sdk
 6. npm install --save-dev @types/mime
 7. Execute npm run build after resolving the errors 
+
+## Instructions to run Grafana mcp server
+- We use Streamable HTTP Mode
+- You must expose port 8000 using the -p flag.
+- Use the following commands to run the server
+
+```bash
+docker pull mcp/grafana
+docker run --rm -p 8000:8000 -e GRAFANA_URL=<Your GRAFANA_URL> -e GRAFANA_API_KEY=<Your GRAFANA_API_KEY> mcp/grafana -t streamable-http
+```

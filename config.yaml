@@ -69,6 +69,14 @@ mcp:
         id: "Jenkins"
         icon: "repeat-2"
         description: "Search through Jenkins"
+    grafana:
+      type: "streamable_http"
+      transport: "streamable_http"
+      url: "http://localhost:8000/mcp"
+      chainlit_command:
+        id: "Grafana"
+        icon: "bar-chart-2"
+        description: "Query Grafana dashboards and data sources"
 chainlit_profiles:
   nova_micro:
     bedrock:
