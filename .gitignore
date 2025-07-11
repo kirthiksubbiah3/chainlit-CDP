@@ -40,6 +40,7 @@ build/
 test.py
 
 # chainlit
-**/.chainlit
-**/.chromadb
-**/secrets.yaml
+.chainlit
+.chromadb
+.files
+secrets.yaml

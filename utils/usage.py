@@ -1,0 +1,58 @@
+"""Token usage and cost calculation utilities"""
+
+from .logging import get_logger
+
+logger = get_logger(__name__)
+
+
+def get_usage_cost_details(usage_totals: dict, input_token_cost, output_token_cost):
+    """Returns token usage and cost details as a dict"""
+    input_tokens = usage_totals["input_tokens"]
+    output_tokens = usage_totals["output_tokens"]
+    total_tokens = usage_totals["total_tokens"]
+
+    input_cost = (input_tokens / 1000) * input_token_cost
+    output_cost = (output_tokens / 1000) * output_token_cost
+    total_cost = input_cost + output_cost
+
+    return {
+        "input_tokens": input_tokens,
+        "output_tokens": output_tokens,
+        "total_tokens": total_tokens,
+        "input_cost": input_cost,
+        "output_cost": output_cost,
+        "total_cost": total_cost,
+    }
+
+
+def send_usage_cost_message(usage_totals: dict, input_token_cost, output_token_cost):
+    """Sends token usage and cost details"""
+    details = get_usage_cost_details(usage_totals, input_token_cost, output_token_cost)
+    msg = (
+        "📦 Token usage and approximate cost for this session. "
+        f"The cost is calculated with ${input_token_cost} per 1000 input token and "
+        f"${output_token_cost} per 1000 output token. Refer AWS official documentation "
+        "for updated pricing.\n"
+        f"- Total Input tokens: {details['input_tokens']}\n"
+        f"- Total Output tokens: {details['output_tokens']}\n"
+        f"- Total tokens: {details['total_tokens']}\n"
+        f"- Input cost: ${details['input_cost']:.6f}\n"
+        f"- Output cost: ${details['output_cost']:.6f}\n"
+        f"- Total cost: ${details['total_cost']:.6f}"
+    )
+    return msg
+
+
+def log_usage_details(usage_totals: dict, input_token_cost, output_token_cost):
+    """Logs usage statistics and cost"""
+    details = get_usage_cost_details(usage_totals, input_token_cost, output_token_cost)
+    logger.debug(
+        "Total Input tokens: %d, Total Output tokens: %d, Total tokens: %d, "
+        "Input cost: %.4f, Output cost: %.4f, Total cost: %.4f",
+        details["input_tokens"],
+        details["output_tokens"],
+        details["total_tokens"],
+        details["input_cost"],
+        details["output_cost"],
+        details["total_cost"],
+    )

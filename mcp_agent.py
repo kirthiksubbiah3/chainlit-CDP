@@ -1,14 +1,10 @@
-"""
-LLM agent made with langchain and chainlit
-"""
-
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.runnables.config import RunnableConfig
 
 import chainlit as cl
-from utils import get_config, get_logger
+from utils import generate_file_and_send, get_config, get_logger, strip_xml_tags
 
 logger = get_logger(__name__)
 
@@ -18,20 +14,11 @@ mcp_servers_config = config["mcp"]["servers"]
 llm_agent_config = config["llm"]["agent"]
 
 
-async def generate_chat_title_from_input(llm, conversation: str) -> tuple:
-    title_prompt = (
-        f"Create a short, descriptive title (3–5 words) without special characters and quotes "
-        f"summarizing this conversation: {conversation}. Title:"
-    )
-    response = llm.invoke(title_prompt)
-    title = response.content if hasattr(response, "content") else "New Chat"
-    return title, response.usage_metadata
-
-
 async def mcp_call(
     agent,
     messages: List[HumanMessage],
     thread_id: str,
+    file_format: Optional[str] = None,
 ) -> Dict[str, int]:
     """Function to call mcp servers"""
 
@@ -46,10 +33,15 @@ async def mcp_call(
     msg_processing = cl.Message(content="Processing...")
     await msg_processing.send()
 
+    msg_thinking = cl.Message(content="Thinking...")
+    await msg_thinking.send()
+
     runnable_config: RunnableConfig = {
         "configurable": {"thread_id": thread_id},
         "recursion_limit": llm_agent_config["recursion_limit"],
     }
+
+    full_response_text = ""
 
     async for chunk in agent.astream(
         {"messages": messages},
@@ -72,9 +64,14 @@ async def mcp_call(
                         and chunk.get("type") == "text"
                         and chunk.get("text", "").strip()
                     ):
-                        await msg.stream_token(f"🤖 {chunk['text']}")
+                        text = strip_xml_tags(chunk["text"])
+                        full_response_text += text + "\n"
+                        await msg.stream_token(f"🤖 {text}")
             else:
-                await msg.stream_token(f"🤖 {message.content}")
+                text = strip_xml_tags(message.content)
+                full_response_text += text + "\n"
+                await msg.stream_token(f"🤖 {text}")
+
             await msg.send()
             if hasattr(message, "usage_metadata") and message.usage_metadata:
                 usage = message.usage_metadata
@@ -94,8 +91,10 @@ async def mcp_call(
                     msg_tokens["output_tokens"],
                     msg_tokens["total_tokens"],
                 )
-
+            await msg_thinking.remove()
             await msg_processing.remove()
+            if file_format and full_response_text.strip():
+                await generate_file_and_send(full_response_text, file_format, msg.id)
     return {
         "input_tokens": stream_tokens["total_input_tokens"],
         "output_tokens": stream_tokens["total_output_tokens"],

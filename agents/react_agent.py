@@ -11,16 +11,16 @@ from mcp_agent import mcp_call
 memory = MemorySaver()
 
 
-async def tools_session_agent(messages, llm, threadid):
+async def tools_session_agent(messages, llm, threadid, file_format):
     agent = create_react_agent(llm, await initialize_tools(), checkpointer=memory)
-    usage_totals = await mcp_call(agent, messages, threadid)
+    usage_totals = await mcp_call(agent, messages, threadid, file_format)
     return usage_totals
 
 
-async def server_session_agent(messages, llm, threadid):
+async def server_session_agent(messages, llm, threadid, file_format):
     async with make_graph() as tools:
         agent = create_react_agent(llm, tools, checkpointer=memory)
-        usage_totals = await mcp_call(agent, messages, threadid)
+        usage_totals = await mcp_call(agent, messages, threadid, file_format)
         return usage_totals
 
 
