@@ -153,7 +153,8 @@ async def on_message(msg: cl.Message):
 
     logger.info("Getting llm for chat profile %s", chat_profile_name)
     llm = get_llm(chat_profile_name)
-
+    user = cl.user_session.get("user")
+    logger.info("User is %s", user.id)
     input_token_cost = profiles[chat_profile_name]["cost"]["input_token_cost"]
     output_token_cost = profiles[chat_profile_name]["cost"]["output_token_cost"]
     logger.info("input token cost is %s", input_token_cost)
@@ -232,7 +233,7 @@ async def on_message(msg: cl.Message):
         )
     ).send()
 
-    log_usage_details(usage_totals, input_token_cost, output_token_cost)
+    log_usage_details(usage_totals, input_token_cost, output_token_cost, user)
 
 
 @cl.on_stop

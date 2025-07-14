@@ -43,9 +43,10 @@ def send_usage_cost_message(usage_totals: dict, input_token_cost, output_token_c
     return msg
 
 
-def log_usage_details(usage_totals: dict, input_token_cost, output_token_cost):
+def log_usage_details(usage_totals: dict, input_token_cost, output_token_cost, user):
     """Logs usage statistics and cost"""
     details = get_usage_cost_details(usage_totals, input_token_cost, output_token_cost)
+    user_id = user.id if user else "unknown"
     logger.debug(
         "Total Input tokens: %d, Total Output tokens: %d, Total tokens: %d, "
         "Input cost: %.4f, Output cost: %.4f, Total cost: %.4f",
@@ -56,3 +57,4 @@ def log_usage_details(usage_totals: dict, input_token_cost, output_token_cost):
         details["output_cost"],
         details["total_cost"],
     )
+    logger.info("Logged in user: %s | Cost: $%.6f", user_id, details["total_cost"])
