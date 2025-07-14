@@ -1,7 +1,7 @@
 # rag_file_manager.py
 
 from langchain_aws import BedrockEmbeddings
-from langchain_community.vectorstores import Chroma
+from langchain_chroma import Chroma
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.docstore.document import Document
 from PyPDF2 import PdfReader
@@ -17,31 +17,31 @@ class RagFileManager:
         self.chroma_path = chroma_path
         self.collection_name = collection_name
 
-    async def upload_and_store_file(self, file_path: str):
-        logger.info(f"Starting upload and store process for file: {file_path}")
+    async def upload_and_store_file(self, filepath: str, filename: str):
+        logger.info(f"Starting upload and store process for file: {filepath}")
         text = ""
 
         # Extract text from PDF file
         try:
-            logger.debug(f"Attempting to read PDF file: {file_path}")
-            reader = PdfReader(file_path)
+            logger.debug(f"Attempting to read PDF file: {filepath}")
+            reader = PdfReader(filepath)
             for page in reader.pages:
                 extracted_text = page.extract_text()
                 if extracted_text:
                     text += extracted_text
             logger.info(
-                f"Extracted text from file: {file_path} (length: {len(text)} characters)"
+                f"Extracted text from file: {filepath} (length: {len(text)} characters)"
             )
         except Exception as e:
             logger.error(
-                f"Failed to read or extract text from PDF: {file_path}. Error: {e}"
+                f"Failed to read or extract text from PDF: {filepath}. Error: {e}"
             )
             return
 
         # Return early if no text was extracted
         if not text.strip():
             logger.warning(
-                f"No text extracted from file: {file_path}. Skipping processing."
+                f"No text extracted from file: {filepath}. Skipping processing."
             )
             return
 
@@ -53,7 +53,10 @@ class RagFileManager:
 
         # Create Document objects with metadata for vector storage
         docs = [
-            Document(page_content=chunk.page_content, metadata={"source": file_path})
+            Document(
+                page_content=chunk.page_content,
+                metadata={"filepath": filepath, "filename": filename},
+            )
             for chunk in chunks
         ]
         logger.debug(f"Created {len(docs)} Document objects for vector store ingestion")
@@ -76,12 +79,9 @@ class RagFileManager:
         logger.debug("Adding documents to vector store")
         vectorstore.add_documents(docs)
 
-        # Persist changes to disk
-        logger.info(f"Persisting vector store to: {self.chroma_path}")
-        vectorstore.persist()
-        logger.info(f"Completed upload and store for file: {file_path}")
+        logger.info(f"Completed upload and store for file: {filepath}")
 
-    async def get_all_documents(self) -> List[str]:
+    async def get_all_documents(self) -> list:
         embeddings = BedrockEmbeddings(
             model_id="amazon.titan-embed-text-v1", region_name="us-east-1"
         )
@@ -92,12 +92,13 @@ class RagFileManager:
         )
 
         all_docs = vectorstore.get(include=["metadatas"])
-        sources = {
-            metadata["source"]
+
+        filenames = {
+            metadata["filename"]
             for metadata in all_docs["metadatas"]
-            if "source" in metadata
+            if "filename" in metadata
         }
-        return sorted(sources)
+        return sorted(filenames)
 
     def getVectorStore(self) -> Chroma:
         embeddings = BedrockEmbeddings(
@@ -120,7 +121,7 @@ class RagFileManager:
             logger.info("Vectorstore created")
         return vectorstore
 
-    async def delete_file(self, file_name):
+    async def delete_file(self, filename):
         embeddings = BedrockEmbeddings(
             model_id="amazon.titan-embed-text-v1", region_name="us-east-1"
         )
@@ -137,4 +138,4 @@ class RagFileManager:
                 collection_name=self.collection_name,
                 persist_directory=self.chroma_path,
             )
-        vectorstore.delete(where={"source": file_name})
+        vectorstore.delete(where={"filename": filename})

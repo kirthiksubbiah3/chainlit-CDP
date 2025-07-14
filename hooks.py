@@ -15,6 +15,7 @@ from utils import generate_chat_title_from_input
 
 from llm import get_llm
 from rag.rag_file_manager import RagFileManager
+from rag.update_sidebar import update_sidebar
 from utils import (
     get_username,
     get_time_taken_message,
@@ -80,23 +81,12 @@ if oauth_enabled:
 async def on_chat_resume():
     """Hook for chat resume"""
     logger.info("Chat session resumed for thread_id: %s", cl.context.session.thread_id)
-    rag_docs = await rag_manager.get_all_documents()
-    logger.info("%d RAG documents found", len(rag_docs))
+    await cl.context.emitter.set_commands(commands)
 
-    props = {
-        "documents": rag_docs,
-    }
+    rag_filenames = await rag_manager.get_all_documents()
+    logger.info("%d RAG filenames found", len(rag_filenames))
 
-    elements = [
-        cl.CustomElement(
-            name="DocumentListComponent",
-            props=props,
-        ),
-    ]
-
-    logger.info("Setting sidebar elements")
-    await cl.ElementSidebar.set_elements(elements)
-    await cl.ElementSidebar.set_title("Stored docs")
+    await update_sidebar(rag_filenames)
 
 
 @cl.on_chat_start
@@ -111,52 +101,40 @@ async def on_chat_start():
         content=(f"🤖 Hi {username}, welcome to Sentinel Mind!, How can I help you?")
     ).send()
 
-    rag_docs = await rag_manager.get_all_documents()
-    logger.info("%d RAG documents found", len(rag_docs))
+    rag_filenames = await rag_manager.get_all_documents()
+    logger.info("%d RAG filenames found", len(rag_filenames))
 
-    props = {
-        "documents": rag_docs,
-        "documentsInprogress": [],
-    }
-
-    elements = [
-        cl.CustomElement(
-            name="DocumentListComponent",
-            props=props,
-        ),
-        cl.Text(
-            content="This is a custom sidebar element to display RAG documents.",
-        ),
-    ]
-
-    logger.info("Setting sidebar elements")
-    await cl.ElementSidebar.set_elements(elements)
-    await cl.ElementSidebar.set_title("RAG pdf docs")
-
+    await update_sidebar(rag_filenames)
 
 
 @cl.on_message
 async def on_message(msg: cl.Message):
     """Hook to handle incoming messages"""
 
+    rag_filenames = cl.user_session.get("rag_filenames", [])
     for element in msg.elements:
         if isinstance(element, cl.element.File):
-            file_path = element.path
-            await rag_manager.upload_and_store_file(file_path)
+            filepath = element.path
+            filename = element.name
+            logger.info(f"File received: {filename} at {filepath}")
+            await rag_manager.upload_and_store_file(filepath, filename)
+            rag_filenames.append(filename)
+
+    await update_sidebar(rag_filenames)
 
     start_time = time.perf_counter()
     thread_id = cl.context.session.thread_id
-    chat_profile_name = cl.user_session.get("chat_profile")
-    if not chat_profile_name or chat_profile_name not in profiles:
-        logger.warning("Invalid or missing chat profile: %s", chat_profile_name)
+    chat_profilename = cl.user_session.get("chat_profile")
+    if not chat_profilename or chat_profilename not in profiles:
+        logger.warning("Invalid or missing chat profile: %s", chat_profilename)
         return await cl.Message(content="Error: Invalid chat profile selected.").send()
 
-    logger.info("Getting llm for chat profile %s", chat_profile_name)
-    llm = get_llm(chat_profile_name)
+    logger.info("Getting llm for chat profile %s", chat_profilename)
+    llm = get_llm(chat_profilename)
     user = cl.user_session.get("user")
     logger.info("User is %s", user.id)
-    input_token_cost = profiles[chat_profile_name]["cost"]["input_token_cost"]
-    output_token_cost = profiles[chat_profile_name]["cost"]["output_token_cost"]
+    input_token_cost = profiles[chat_profilename]["cost"]["input_token_cost"]
+    output_token_cost = profiles[chat_profilename]["cost"]["output_token_cost"]
     logger.info("input token cost is %s", input_token_cost)
     logger.info("output token cost is %s", output_token_cost)
 
@@ -281,14 +259,19 @@ async def chat_profile():
         )
     return chat_profiles
 
+
 @cl.action_callback("delete_file")
 async def handle_delete_file(action: cl.Action):
     payload = action.payload
-    file_path = payload.get("file_path")
-    if file_path:
-        logger.info("Deleting file: %s", file_path)
-        await rag_manager.delete_file(file_path)
-        await cl.Message(content=f"File {file_path} deleted successfully.").send()
+    filename = payload.get("filename")
+    if filename:
+        logger.info("Deleting file: %s", filename)
+        await rag_manager.delete_file(filename)
+        await cl.Message(content=f"File {filename} deleted successfully.").send()
+
+        rag_filenames = cl.user_session.get("rag_filenames")
+        rag_filenames.remove(filename)
+        await update_sidebar(rag_filenames)
     else:
         logger.error("No file path provided for deletion.")
         await cl.Message(content="Error: No file path provided for deletion.").send()
