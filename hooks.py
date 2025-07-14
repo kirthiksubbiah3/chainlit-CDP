@@ -14,6 +14,7 @@ import chainlit as cl
 from utils import generate_chat_title_from_input
 
 from llm import get_llm
+from rag.rag_file_manager import RagFileManager
 from utils import (
     get_username,
     get_time_taken_message,
@@ -33,6 +34,8 @@ from data_layer import CustomDataLayer
 from agents.react_agent import server_session_agent, tools_session_agent
 
 logger = get_logger(__name__)
+
+rag_manager = RagFileManager(chroma_path=".chromadb", collection_name="rag_files")
 
 if local_username and local_password:
 
@@ -77,6 +80,23 @@ if oauth_enabled:
 async def on_chat_resume():
     """Hook for chat resume"""
     logger.info("Chat session resumed for thread_id: %s", cl.context.session.thread_id)
+    rag_docs = await rag_manager.get_all_documents()
+    logger.info("%d RAG documents found", len(rag_docs))
+
+    props = {
+        "documents": rag_docs,
+    }
+
+    elements = [
+        cl.CustomElement(
+            name="DocumentListComponent",
+            props=props,
+        ),
+    ]
+
+    logger.info("Setting sidebar elements")
+    await cl.ElementSidebar.set_elements(elements)
+    await cl.ElementSidebar.set_title("Stored docs")
 
 
 @cl.on_chat_start
@@ -91,10 +111,39 @@ async def on_chat_start():
         content=(f"🤖 Hi {username}, welcome to Sentinel Mind!, How can I help you?")
     ).send()
 
+    rag_docs = await rag_manager.get_all_documents()
+    logger.info("%d RAG documents found", len(rag_docs))
+
+    props = {
+        "documents": rag_docs,
+        "documentsInprogress": [],
+    }
+
+    elements = [
+        cl.CustomElement(
+            name="DocumentListComponent",
+            props=props,
+        ),
+        cl.Text(
+            content="This is a custom sidebar element to display RAG documents.",
+        ),
+    ]
+
+    logger.info("Setting sidebar elements")
+    await cl.ElementSidebar.set_elements(elements)
+    await cl.ElementSidebar.set_title("RAG pdf docs")
+
+
 
 @cl.on_message
 async def on_message(msg: cl.Message):
     """Hook to handle incoming messages"""
+
+    for element in msg.elements:
+        if isinstance(element, cl.element.File):
+            file_path = element.path
+            await rag_manager.upload_and_store_file(file_path)
+
     start_time = time.perf_counter()
     thread_id = cl.context.session.thread_id
     chat_profile_name = cl.user_session.get("chat_profile")
@@ -230,3 +279,15 @@ async def chat_profile():
             )
         )
     return chat_profiles
+
+@cl.action_callback("delete_file")
+async def handle_delete_file(action: cl.Action):
+    payload = action.payload
+    file_path = payload.get("file_path")
+    if file_path:
+        logger.info("Deleting file: %s", file_path)
+        await rag_manager.delete_file(file_path)
+        await cl.Message(content=f"File {file_path} deleted successfully.").send()
+    else:
+        logger.error("No file path provided for deletion.")
+        await cl.Message(content="Error: No file path provided for deletion.").send()

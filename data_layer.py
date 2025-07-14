@@ -19,7 +19,6 @@ from chainlit.types import (
 from chainlit.element import Element, ElementDict
 from chainlit.step import StepDict
 
-
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 logger.info(
@@ -63,20 +62,28 @@ class CustomDataLayer(cl_data.BaseDataLayer):
         )
 
     async def delete_feedback(self, feedback_id: str) -> bool:
+        logger.info("Deleting feedback with id: %s", feedback_id)
         return True
 
     async def upsert_feedback(self, feedback: Feedback) -> str:
+        logger.info(
+            "Upserting feedback for thread: %s",
+            getattr(feedback, "thread_id", "unknown"),
+        )
         return ""
 
     async def create_element(self, element: "Element"):
+        logger.debug("create_element called but not used")
         pass  # Not used
 
     async def get_element(
         self, thread_id: str, element_id: str
     ) -> Optional["ElementDict"]:
+        logger.debug("get_element called but not used")
         return None  # Not used
 
     async def delete_element(self, element_id: str, thread_id: Optional[str] = None):
+        logger.debug("delete_element called but not used")
         pass  # Not used
 
     async def create_step(self, step_dict: "StepDict"):
@@ -117,13 +124,16 @@ class CustomDataLayer(cl_data.BaseDataLayer):
         await self.create_step(step_dict)
 
     async def delete_step(self, step_id: str):
+        logger.info("Deleting step with id: %s", step_id)
         all_data = self.collection.get()
         for i, meta in enumerate(all_data["metadatas"]):
             if meta["step_id"] == step_id:
                 self.collection.delete(ids=[all_data["ids"][i]])
+                logger.info("Step deleted: %s", step_id)
                 break
 
     async def get_thread_author(self, thread_id: str) -> str:
+        logger.info("Getting author for thread: %s", thread_id)
         results = self.collection.get(where={"thread_id": thread_id})
         if results["metadatas"]:
             return results["metadatas"][0].get("user_id", "unknown")
@@ -145,7 +155,7 @@ class CustomDataLayer(cl_data.BaseDataLayer):
         self, pagination: Pagination, filters: ThreadFilter
     ) -> PaginatedResponse[ThreadDict]:
 
-        logger.info("Listing threads")
+        logger.info("Listing threads with filters: %s", filters)
 
         all_data = self.collection.get()
         thread_map = {}
@@ -213,7 +223,14 @@ class CustomDataLayer(cl_data.BaseDataLayer):
         metadata: Optional[Dict] = None,
         tags: Optional[List[str]] = None,
     ):
-        logger.info("Updating thread %s", thread_id)
+        logger.info(
+            "Updating thread %s with name=%s, user_id=%s, metadata=%s, tags=%s",
+            thread_id,
+            name,
+            user_id,
+            metadata,
+            tags,
+        )
         thread_title = cl.user_session.get("thread_title", None)
 
         # Updating the metadata with new thread_title

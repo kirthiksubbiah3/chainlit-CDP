@@ -1,7 +1,8 @@
 import asyncio
 
-from vars import mcp_client
 from utils import get_logger
+from vars import mcp_client
+from rag.rag_search import rag_search
 
 logger = get_logger(__name__)
 
@@ -19,6 +20,7 @@ async def initialize_tools():
                 logger.info("Lock acquired, fetching tools now...")
                 try:
                     _cached_tools["tools"] = await mcp_client.get_tools()
+                    _cached_tools["tools"].append(rag_search)
                     logger.info("Tools fetched and cached successfully.")
                 except asyncio.TimeoutError as e:
                     logger.error("Timeout while fetching tools: %s", e)

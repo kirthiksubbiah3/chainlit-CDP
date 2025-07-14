@@ -11,6 +11,7 @@ profiles = config["chainlit_profiles"]
 # get mcp config
 mcp_servers_config = get_config()["mcp"]["servers"]
 mcp_service_config = get_config()["mcp"]["url_secrets"]
+rag_config = get_config()["rag"]
 
 mcp_servers_config_to_pass = {}
 for server, cfg in mcp_servers_config.items():
@@ -26,6 +27,17 @@ for key in mcp_servers_config.keys():
         continue
 
     command = mcp_servers_config[key]["chainlit_command"]
+    command = command | {
+        "button": True,
+        "persistent": True,
+    }
+    commands.append(command)
+
+for key in rag_config.keys():
+    if "chainlit_command" not in key:
+        continue
+
+    command = rag_config[key]
     command = command | {
         "button": True,
         "persistent": True,

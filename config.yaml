@@ -1,6 +1,11 @@
 llm:
   agent:
     recursion_limit: 50
+rag:
+  chainlit_command:
+        id: "rag_search"
+        icon: "file"
+        description: "Search through rag"
 mcp:
   servers:
     default:

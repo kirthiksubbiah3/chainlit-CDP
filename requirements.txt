@@ -1,14 +1,16 @@
 chainlit==2.5.5
 chromadb==1.0.13
+langchain==0.3.26
 langchain-aws==0.2.25
-langchain-core==0.3.65
+langchain-community==0.3.27
+langchain-core==0.3.68
 langchain-mcp-adapters==0.1.7
 langgraph==0.5.0
 mcp==1.10.0
+mcp-server-fetch==2025.4.7
+PyPDF2==3.0.1
+python-docx== 1.2.0
 python-dotenv==1.1.0
 PyYAML==6.0.2
 reportlab==4.4.2
-python-docx== 1.2.0
-
-# mcp
-mcp-server-fetch==2025.4.7
+uv==0.7.19
