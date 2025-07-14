@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: chainlit-app-ingress
+  namespace: dev-sentinel-mind
+  annotations:
+    cert-manager.io/issuer: letsencrypt-production
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: dev-sentinel-mind.sflabs.ustpace.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: chainlit-app-service
+                port:
+                  number: 80
+  tls:
+    - hosts:
+        - dev-sentinel-mind.sflabs.ustpace.com
+      secretName: chainlit-tls

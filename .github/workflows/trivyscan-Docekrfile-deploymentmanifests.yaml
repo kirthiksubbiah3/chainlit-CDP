@@ -1,0 +1,57 @@
+name: Trivy Scan Dockerfile and K8s Manifests
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'Dockerfile'
+      - 'k8s/**'
+
+jobs:
+  trivy-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Fetch the code for the current commit SHA
+      - name: Fetch code
+        run: |
+          echo "Configuring safe directory for git..."
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          echo "Fetching all branches and tags..."
+          git fetch --all
+          echo "Checking out the current commit..."
+          git checkout ${{ github.sha }}
+
+      # Step 2: Install Trivy CLI tool if not installed
+      - name: Install Trivy
+        run: |
+          echo "Checking if Trivy is installed..."
+          if ! command -v trivy &> /dev/null; then
+            echo "Trivy not found. Installing Trivy..."
+            sudo apt-get update -y
+            sudo apt-get install -y wget curl
+            wget -qO- https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo tee /usr/share/keyrings/trivy-keyring.asc
+            echo "deb [signed-by=/usr/share/keyrings/trivy-keyring.asc] https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/trivy.list
+            sudo apt-get update -y
+            sudo apt-get install -y trivy
+          else
+            echo "Trivy is already installed."
+          fi
+          echo "Trivy installed at: $(which trivy)"
+
+      # Step 3: Scan Dockerfile for config issues
+      - name: Trivy scan Dockerfile for config issues
+        run: |
+          echo "Scanning Dockerfile for configuration issues..."
+          trivy config Dockerfile --exit-code 1 --severity HIGH,CRITICAL
+
+      # Step 4: Scan Kubernetes manifests for config issues
+      - name: Trivy scan Kubernetes manifests
+        run: |
+          if [ -d "k8*" ]; then
+            echo "Scanning Kubernetes manifests in k8s/ directory..."
+            trivy config k8s --exit-code 1 --severity HIGH,CRITICAL
+          else
+            echo "No k8s directory to scan."
+          fi

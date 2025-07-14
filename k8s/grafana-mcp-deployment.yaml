@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana-mcp-server
+  namespace: sentinel-mind
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana-mcp
+  template:
+    metadata:
+      labels:
+        app: grafana-mcp
+    spec:
+      containers:
+        - name: grafana-mcp
+          image: mcp/grafana:latest
+          ports:
+            - containerPort: 8000
+          env:
+            - name: GRAFANA_URL
+              value: "https://sflabs.grafana.net"
+            - name: GRAFANA_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-secrets
+                  key: api-key
+          args: ["-t", "streamable-http"]
