@@ -14,10 +14,10 @@ mcp:
       transport: "stdio"
     playwright_hl:
       command: "npx"
-      args: ["@playwright/mcp@latest", "--ignore-https-errors", "--headless"]
+      args: ["mcp-playwright-network@latest", "--ignore-https-errors", "--headless"]
       transport: "stdio"
       chainlit_command:
-        id: "Browser-HL"
+        id: "Sentinel-Mind"
         icon: "globe"
         description: "Search through browser(headless)"
     # playwright:

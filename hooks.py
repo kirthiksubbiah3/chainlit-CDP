@@ -173,8 +173,12 @@ async def on_message(msg: cl.Message):
     if msg.command:
         logger.info("Command received: %s", msg.command)
         messages.append(SystemMessage(content=f"Forward this to {msg.command} tool"))
-        if msg.command == "Browser-HL" or msg.command == "Browser":
-            logger.info("Using server session agent for Browser command")
+        if (
+            msg.command == "Browser-HL"
+            or msg.command == "Browser"
+            or msg.command == "Sentinel-Mind"
+        ):
+            logger.info("Using server session agent for %s command", msg.command)
             usage_totals = await server_session_agent(
                 messages, llm, thread_id, file_format
             )
