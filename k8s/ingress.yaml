@@ -8,7 +8,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-    - host: sentinel-mind.sflabs.ustpace.com
+    - host: ai.sflabs.ustpace.com
       http:
         paths:
           - path: /
@@ -20,5 +20,5 @@ spec:
                   number: 80
   tls:
     - hosts:
-        - sentinel-mind.sflabs.ustpace.com
+        - ai.sflabs.ustpace.com
       secretName: chainlit-tls

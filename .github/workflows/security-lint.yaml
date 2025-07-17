@@ -2,15 +2,20 @@ name: Security and Lint Checks
 
 on:
   pull_request:
-    branches: [ main ]
+    branches: 
+      - main
     paths-ignore:
       - 'streamlit/**'
 
 jobs:
   trivy-dependency-scan:
     name: Trivy Scan requirements.txt
-    runs-on: ubuntu-latest
+    runs-on: eks-edopsclt-custom-runner
     steps:
+      # Checkout repository
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
       # Fetch the code for the current SHA
       - name: Fetch code
         run: |
@@ -36,8 +41,12 @@ jobs:
 
   lint-flake8:
     name: Flake8 Lint
-    runs-on: ubuntu-latest
+    runs-on: eks-edopsclt-custom-runner
     steps:
+      # Checkout repository
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
       # Fetch the code for the current SHA
       - name: Fetch code
         run: |
@@ -59,8 +68,12 @@ jobs:
 
   bandit-scan:
     name: Bandit Security Scan
-    runs-on: ubuntu-latest
+    runs-on: eks-edopsclt-custom-runner
     steps:
+      # Checkout repository
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
       # Fetch the code for the current SHA
       - name: Fetch code
         run: |
@@ -78,4 +91,8 @@ jobs:
       # Run Bandit, skipping 'streamlit' directory
       - name: Run Bandit (excluding streamlit/)
         run: python3 -m bandit -r . --exclude streamlit
-
+      
+      # Cleanup workspace at the end
+      - name: Cleanup workspace
+        run: |
+          git clean -fdx

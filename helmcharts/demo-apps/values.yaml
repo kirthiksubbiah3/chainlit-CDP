@@ -1,0 +1,14 @@
+replicas: 1
+image: {}
+containerPort: 8080
+resources: {}
+service: {}
+ingress:
+  enabled: false
+securityContext:
+  runAsUser: 1000
+  runAsNonRoot: true
+  readOnlyRootFilesystem: true
+  allowPrivilegeEscalation: false
+env: {}
+

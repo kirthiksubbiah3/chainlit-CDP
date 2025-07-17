@@ -1,0 +1,10 @@
+{{- if .Values.llmConfig }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: chainlit-llm-config
+  namespace: {{ .Values.namespace }}
+data:
+  config.yaml: |-
+{{ .Values.llmConfig | indent 4 }}
+{{- end }}

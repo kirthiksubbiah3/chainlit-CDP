@@ -1,7 +1,7 @@
 name: Build, Scan, and Push sentinel-mind to ECR
 
 on:
-  push:
+  pull_request:
     branches:
       - main
     paths:
@@ -11,7 +11,7 @@ on:
 
 jobs:
   build-scan-push:
-    runs-on: ubuntu-latest
+    runs-on: eks-edopsclt-custom-runner
     outputs:
       image_tag: ${{ steps.set-tag.outputs.image_tag }}
 
@@ -101,3 +101,22 @@ jobs:
         run: |
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
+
+      - name: Final Cleanup (Remove Docker, workspace, and temp files)
+        if: always()
+        run: |
+          echo "Cleaning Docker..."
+          docker system prune -af || true
+          docker volume prune -f || true
+          docker image prune -af || true
+
+          echo "Removing workspace files..."
+          rm -rf "$GITHUB_WORKSPACE"/* || true
+          rm -rf /tmp/* || true
+          sudo rm -rf /usr/share/dotnet || true
+          sudo rm -rf /opt/ghc || true
+          sudo rm -rf /usr/local/lib/android || true
+          sudo rm -rf /usr/local/share/boost || true
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY" || true
+
+          echo "Cleanup complete."

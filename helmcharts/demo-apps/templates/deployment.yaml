@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.deploymentName | default .Values.appName }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ .Values.appName }}
+spec:
+  replicas: {{ .Values.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.appName }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.appName }}
+    spec:
+      containers:
+        - name: {{ .Values.appName }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" }}
+          ports:
+            - containerPort: {{ .Values.containerPort }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          securityContext:
+            readOnlyRootFilesystem: {{ .Values.securityContext.readOnlyRootFilesystem | default true }}
+            runAsNonRoot: {{ .Values.securityContext.runAsNonRoot | default true }}
+            runAsUser: {{ .Values.securityContext.runAsUser | default 1000 }}
+            allowPrivilegeEscalation: {{ .Values.securityContext.allowPrivilegeEscalation | default false }}
+          env:
+            {{- range $key, $value := .Values.env }}
+              {{- if kindIs "string" $value }}
+            - name: {{ $key }}
+              value: "{{ $value }}"
+              {{- else }}
+            - name: {{ $key }}
+              valueFrom:
+                {{- toYaml $value | nindent 16 }}
+              {{- end }}
+            {{- end }}
+          {{- if .Values.envFromSecret }}
+          envFrom:
+            {{- range .Values.envFromSecret }}
+            - secretRef:
+                name: {{ . }}
+            {{- end }}
+          {{- end }}
+          volumeMounts:
+            {{- toYaml .Values.volumeMounts | nindent 12 }}
+      volumes:
+        {{- toYaml .Values.volumes | nindent 8 }}
+#
