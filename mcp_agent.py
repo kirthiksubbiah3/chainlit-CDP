@@ -1,10 +1,11 @@
-from typing import List, Dict, Optional
+from typing import List, Dict
 
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.runnables.config import RunnableConfig
 
 import chainlit as cl
-from utils import generate_file_and_send, get_config, get_logger, strip_xml_tags
+from utils import get_config, get_logger
+from utils.text import CleanXMLTagParser
 
 logger = get_logger(__name__)
 
@@ -18,7 +19,6 @@ async def mcp_call(
     agent,
     messages: List[HumanMessage],
     thread_id: str,
-    file_format: Optional[str] = None,
 ) -> Dict[str, int]:
     """Function to call mcp servers"""
 
@@ -41,7 +41,7 @@ async def mcp_call(
         "recursion_limit": llm_agent_config["recursion_limit"],
     }
 
-    full_response_text = ""
+    parser = CleanXMLTagParser()
 
     async for chunk in agent.astream(
         {"messages": messages},
@@ -56,22 +56,26 @@ async def mcp_call(
             if not isinstance(message, AIMessage):
                 continue
 
-            msg = cl.Message(content="")
-            if message.tool_calls and isinstance(message.content, list):
-                for chunk in message.content:
-                    if (
-                        isinstance(chunk, dict)
-                        and chunk.get("type") == "text"
-                        and chunk.get("text", "").strip()
-                    ):
-                        text = strip_xml_tags(chunk["text"])
-                        full_response_text += text + "\n"
-                        await msg.stream_token(f"🤖 {text}")
-            else:
-                text = strip_xml_tags(message.content)
-                full_response_text += text + "\n"
-                await msg.stream_token(f"🤖 {text}")
+            file_path = cl.user_session.get("file_path")
+            file_name = cl.user_session.get("file_name")
 
+            if not (file_path and file_name):
+                msg = cl.Message(content="")
+                if message.tool_calls and isinstance(message.content, list):
+                    for chunk in message.content:
+                        if (
+                            isinstance(chunk, dict)
+                            and chunk.get("type") == "text"
+                            and chunk.get("text", "").strip()
+                        ):
+                            raw_text = chunk["text"]
+                            clean_text = parser.parse(raw_text)
+                            await msg.stream_token(f"🤖 {clean_text}")
+                else:
+                    raw_text = message.content
+                    clean_text = parser.parse(raw_text)
+                    if clean_text.strip():
+                        await msg.stream_token(f"🤖 {clean_text}")
             await msg.send()
             if hasattr(message, "usage_metadata") and message.usage_metadata:
                 usage = message.usage_metadata
@@ -93,8 +97,22 @@ async def mcp_call(
                 )
             await msg_thinking.remove()
             await msg_processing.remove()
-            if file_format and full_response_text.strip():
-                await generate_file_and_send(full_response_text, file_format, msg.id)
+
+    file_path = cl.user_session.get("file_path")
+    file_name = cl.user_session.get("file_name")
+
+    if file_path and file_name:
+        await cl.Message(
+            content="📄 Generated report is ready to download:",
+            elements=[
+                cl.File(
+                    name=file_name,
+                    path=file_path,
+                    display="inline",
+                )
+            ],
+        ).send()
+
     return {
         "input_tokens": stream_tokens["total_input_tokens"],
         "output_tokens": stream_tokens["total_output_tokens"],

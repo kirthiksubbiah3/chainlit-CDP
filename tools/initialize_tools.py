@@ -19,8 +19,9 @@ async def initialize_tools():
             if _cached_tools["tools"] is None:
                 logger.info("Lock acquired, fetching tools now...")
                 try:
-                    _cached_tools["tools"] = await mcp_client.get_tools()
-                    _cached_tools["tools"].append(rag_search)
+                    tools = await mcp_client.get_tools()
+                    tools.append(rag_search)
+                    _cached_tools["tools"] = tools
                     logger.info("Tools fetched and cached successfully.")
                 except asyncio.TimeoutError as e:
                     logger.error("Timeout while fetching tools: %s", e)

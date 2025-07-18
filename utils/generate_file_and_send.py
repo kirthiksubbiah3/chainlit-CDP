@@ -10,7 +10,6 @@ from reportlab.lib.enums import TA_LEFT
 from reportlab.lib.units import inch
 
 import chainlit as cl
-from .text import clean_line
 
 
 async def generate_file_and_send(content: str, file_format: str, for_id: str):
@@ -68,7 +67,6 @@ async def generate_file_and_send(content: str, file_format: str, for_id: str):
                 if not stripped:
                     story.append(Spacer(1, 0.2 * inch))
                     continue
-                line = clean_line(line)
                 if line.endswith(":"):
                     story.append(Paragraph(line, styles["Heading"]))
                 elif line.startswith("- "):
@@ -96,7 +94,6 @@ async def generate_file_and_send(content: str, file_format: str, for_id: str):
                 if not stripped:
                     doc.add_paragraph("")
                     continue
-                line = clean_line(line)
                 doc.add_paragraph(line)
 
             doc.save(docx_path)

@@ -1,18 +1,12 @@
 """Text processing and cleaning utilities"""
 
 import re
+from langchain_core.output_parsers import BaseOutputParser
 
 
-def strip_xml_tags(text: str) -> str:
-    """Removes XML-style tags from a string but keeps inner content."""
-    return re.sub(r"<[^>]+>", "", text)
+class CleanXMLTagParser(BaseOutputParser[str]):
+    """Custom parser to clean XML-like tags from LLM output."""
 
-
-def clean_line(line: str) -> str:
-    """Helper function to clean a line of text"""
-    line = line.strip()
-    line = re.sub(r"^#+\s*", "", line)
-    line = re.sub(r"^\*\*\s*", "", line)
-    line = re.sub(r"\*\*([^*]+)\*\*", r"\1", line)
-    line = line.replace("*", "")
-    return line.strip()
+    def parse(self, text: str) -> str:
+        # Remove tags like <tag>...</tag> or <tag/>
+        return re.sub(r"<[^>]+>", "", text).strip()

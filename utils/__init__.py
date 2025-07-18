@@ -20,8 +20,6 @@ from .usage import (
     send_usage_cost_message,
     log_usage_details,
 )
-from .text import strip_xml_tags, clean_line
-from .generate_file_and_send import generate_file_and_send
 from .generate_chat_title_from_input import generate_chat_title_from_input
 
 __all__ = [

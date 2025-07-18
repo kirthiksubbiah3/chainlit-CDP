@@ -138,19 +138,6 @@ async def on_message(msg: cl.Message):
     logger.info("input token cost is %s", input_token_cost)
     logger.info("output token cost is %s", output_token_cost)
 
-    file_format = None
-    msg_lower = msg.content.lower()
-
-    if any(k in msg_lower for k in ["pdf", ".pdf"]):
-        file_format = "pdf"
-    elif any(
-        k in msg_lower
-        for k in ["doc", "docx", "word", ".docx", ".doc", "ms word", "word file"]
-    ):
-        file_format = "docx"
-    elif any(k in msg_lower for k in ["report", "document", "documentation"]):
-        file_format = "docx"
-
     messages, usage_data_title = [], {}
 
     if "login" in msg.content:
@@ -179,18 +166,14 @@ async def on_message(msg: cl.Message):
             or msg.command == "Sentinel-Mind"
         ):
             logger.info("Using server session agent for %s command", msg.command)
-            usage_totals = await server_session_agent(
-                messages, llm, thread_id, file_format
-            )
+            usage_totals = await server_session_agent(messages, llm, thread_id)
         else:
             logger.info("Using tools session agent for command: %s", msg.command)
-            usage_totals = await tools_session_agent(
-                messages, llm, thread_id, file_format
-            )
+            usage_totals = await tools_session_agent(messages, llm, thread_id)
 
     else:
         logger.info("No command received, using server session agent")
-        usage_totals = await server_session_agent(messages, llm, thread_id, file_format)
+        usage_totals = await server_session_agent(messages, llm, thread_id)
         messages.append(HumanMessage(content=msg.content))
     # Setting thread title
     thread_title = cl.user_session.get("thread_title")

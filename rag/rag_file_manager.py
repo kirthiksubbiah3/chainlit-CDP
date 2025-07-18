@@ -81,7 +81,7 @@ class RagFileManager:
 
         logger.info(f"Completed upload and store for file: {filepath}")
 
-    async def get_all_documents(self) -> list:
+    async def get_all_documents(self) -> List:
         embeddings = BedrockEmbeddings(
             model_id="amazon.titan-embed-text-v1", region_name="us-east-1"
         )
