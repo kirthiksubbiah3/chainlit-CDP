@@ -6,7 +6,6 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.docstore.document import Document
 from PyPDF2 import PdfReader
 from typing import List
-
 from utils import get_logger
 
 logger = get_logger(__name__)

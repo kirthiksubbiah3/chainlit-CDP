@@ -88,8 +88,7 @@ class CustomDataLayer(cl_data.BaseDataLayer):
 
     async def create_step(self, step_dict: "StepDict"):
         if (
-            step_dict["output"]
-            == "🤖 Hello, welcome to Sentinel Mind! How can I help you?"
+            step_dict["name"] == "on_chat_start"
         ):
             return
 

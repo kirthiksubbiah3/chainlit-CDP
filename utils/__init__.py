@@ -7,8 +7,9 @@ This package contains utility functions organized into logical modules:
 - user: User-related utilities
 - time: Time and performance utilities
 - usage: Token usage and cost calculation utilities
-- text: Text processing and cleaning utilities
 - file: File generation and handling utilities
+- chat: Chat title generation from input
+- profile: Chat profile loading utilities
 """
 
 from .config import get_config, load_yaml_file, merge_dict, safe_float
@@ -21,6 +22,7 @@ from .usage import (
     log_usage_details,
 )
 from .generate_chat_title_from_input import generate_chat_title_from_input
+from .profile_loader import load_chat_profiles
 
 __all__ = [
     # Config functions
@@ -39,11 +41,10 @@ __all__ = [
     "get_usage_cost_details",
     "send_usage_cost_message",
     "log_usage_details",
-    # Text functions
-    "strip_xml_tags",
-    "clean_line",
     # File functions
     "generate_file_and_send",
     # Generate chat title from input
     "generate_chat_title_from_input",
+    # Profile loader
+    "load_chat_profiles",
 ]

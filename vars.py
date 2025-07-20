@@ -7,6 +7,7 @@ logger = get_logger(__name__)
 config = get_config()
 logger.info("Loading config")
 profiles = config["chainlit_profiles"]
+starters = config["chainlit_starters"]
 
 # get mcp config
 mcp_servers_config = get_config()["mcp"]["servers"]
