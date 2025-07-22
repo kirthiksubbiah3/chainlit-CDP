@@ -87,9 +87,7 @@ class CustomDataLayer(cl_data.BaseDataLayer):
         pass  # Not used
 
     async def create_step(self, step_dict: "StepDict"):
-        if (
-            step_dict["name"] == "on_chat_start"
-        ):
+        if step_dict["name"] == "on_chat_start":
             return
 
         logger.info(

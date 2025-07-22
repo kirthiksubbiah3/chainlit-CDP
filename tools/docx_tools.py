@@ -1,7 +1,8 @@
 from langchain.tools import tool
-from docx import Document
 import tempfile
 import chainlit as cl
+
+from utils.file_formatting import format_docx_content
 
 
 @tool
@@ -11,11 +12,8 @@ def generate_docx(content: str, filename: str) -> str:
     or want to save the output as a DOC file.
     the filename should be relevant to the content.
     """
-    doc = Document()
-    doc.add_paragraph(content)
-
     temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".docx")
-    doc.save(temp_file.name)
+    format_docx_content(content, temp_file.name)
 
     cl.user_session.set("file_path", temp_file.name)
     cl.user_session.set("file_name", f"{filename}.docx")

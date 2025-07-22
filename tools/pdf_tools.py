@@ -1,23 +1,25 @@
-from langchain.tools import tool
-from fpdf import FPDF
-import tempfile
 import chainlit as cl
+import markdown2
+from langchain.tools import tool
+import tempfile
+from weasyprint import HTML
 
 
 @tool
 def generate_pdf(content: str, filename: str) -> str:
     """
     Use this tool when the user wants to generate a PDF report or save the output as a PDF file.
-    the filename should be relevant to the content.
+    The content should be in markdown format.
+    And the filename should be relevant to the content.
     """
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font("Arial", size=12)
-    pdf.multi_cell(0, 10, content)
-
     temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
-    pdf.output(temp_file.name)
+
+    # Convert Markdown content to HTML
+    html_content = markdown2.markdown(content, extras=["fenced-code-blocks", "tables"])
+
+    # Convert HTML to PDF
+    HTML(string=html_content).write_pdf(temp_file.name)
 
     cl.user_session.set("file_path", temp_file.name)
-    cl.user_session.set("file_name", f"{filename}.pdf")
+    cl.user_session.set("file_name", f"{filename}")
     return temp_file.name
