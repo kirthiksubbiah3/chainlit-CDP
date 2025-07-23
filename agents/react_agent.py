@@ -5,6 +5,9 @@ from langgraph.checkpoint.memory import MemorySaver
 from langchain_mcp_adapters.tools import load_mcp_tools
 from langgraph.prebuilt import create_react_agent
 
+from mcp import ClientSession
+from mcp.client.stdio import stdio_client
+
 from tools import generate_docx, generate_pdf, initialize_tools
 from utils import get_logger
 from vars import mcp_client
@@ -28,6 +31,18 @@ async def tools_session_agent(llm):
     extend_with_custom_tools(tools)
     agent = create_react_agent(llm, tools, checkpointer=memory)
     return agent
+
+
+async def single_mcp_client(server_params, llm, messages, thread_id):
+    async with stdio_client(server_params) as (read, write):
+        async with ClientSession(read, write) as session:
+            # Initialize the connection
+            await session.initialize()
+            # Get tools
+            tools = await load_mcp_tools(session)
+            # Create and run the agent
+            agent = create_react_agent(llm, tools, checkpointer=memory)
+            return await invoke_react_agent(agent, messages, thread_id)
 
 
 async def server_session_agent(llm, messages, thread_id, single_mcp_client):

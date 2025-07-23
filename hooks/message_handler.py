@@ -4,12 +4,12 @@ Handles incoming messages and command processing.
 """
 
 import time
-from langchain_core.messages import HumanMessage, SystemMessage
 
 import chainlit as cl
+from langchain_core.messages import HumanMessage, SystemMessage
+from mcp.client.stdio import StdioServerParameters
 
 from llm import get_llm
-from mcp_agent import get_single_mcp_client
 from rag.rag_file_manager import RagFileManager
 from rag.update_sidebar import update_sidebar
 from utils import (
@@ -20,10 +20,11 @@ from utils import (
     generate_chat_title_from_input,
 )
 from vars import (
+    mcp_servers_config_to_pass,
     mcp_service_config,
     profiles,
 )
-from agents.react_agent import invoke_react_agent, server_session_agent
+from agents.react_agent import invoke_react_agent, single_mcp_client
 
 logger = get_logger(__name__)
 
@@ -92,10 +93,10 @@ async def on_message(msg: cl.Message):
     if session_type == "tools":
         usage_totals = await invoke_react_agent(tools_agent, messages, thread_id)
     else:
-        single_mcp_client = get_single_mcp_client(target_server)
-        usage_totals = await server_session_agent(
-            llm, messages, thread_id, single_mcp_client
+        server_params = StdioServerParameters(
+            **mcp_servers_config_to_pass[target_server]
         )
+        usage_totals = await single_mcp_client(server_params, llm, messages, thread_id)
 
     # Setting thread title
     thread_title = cl.user_session.get("thread_title")
