@@ -2,16 +2,17 @@ from typing import List, Dict
 
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.runnables.config import RunnableConfig
+from langchain_mcp_adapters.client import MultiServerMCPClient
 
 import chainlit as cl
 from utils import get_config, get_logger
 from utils.text import CleanXMLTagParser
+from vars import mcp_servers_config
 
 logger = get_logger(__name__)
 
 config = get_config()
 
-mcp_servers_config = config["mcp"]["servers"]
 llm_agent_config = config["llm"]["agent"]
 
 
@@ -118,3 +119,10 @@ async def mcp_call(
         "output_tokens": stream_tokens["total_output_tokens"],
         "total_tokens": stream_tokens["total_tokens"],
     }
+
+
+def get_single_mcp_client(server):
+    mcp_config = mcp_servers_config[server].copy()
+    mcp_config.pop("chainlit_command", None)
+    mcp_client = MultiServerMCPClient({server: mcp_config})
+    return mcp_client

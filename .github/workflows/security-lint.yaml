@@ -4,18 +4,21 @@ on:
   pull_request:
     branches: 
       - main
-    paths-ignore:
-      - 'streamlit/**'
+    paths:
+      - '**/*.py'
+      - 'requirements.txt'
 
 jobs:
-  trivy-dependency-scan:
-    name: Trivy Scan requirements.txt
+  security-and-lint:
+    name: Security and Lint Checks
     runs-on: eks-edopsclt-custom-runner
+    env:
+      EXCLUDE_DIR: streamlit
     steps:
       # Checkout repository
       - name: Checkout code
         uses: actions/checkout@v4
-        
+      
       # Fetch the code for the current SHA
       - name: Fetch code
         run: |
@@ -36,23 +39,8 @@ jobs:
           fi
 
       # Run Trivy scan, skipping 'streamlit' directory
-      - name: Run Trivy (excluding streamlit/)
-        run: trivy fs . --format table --exit-code 1 --ignore-unfixed --vuln-type library --skip-dirs streamlit
-
-  lint-flake8:
-    name: Flake8 Lint
-    runs-on: eks-edopsclt-custom-runner
-    steps:
-      # Checkout repository
-      - name: Checkout code
-        uses: actions/checkout@v4
-        
-      # Fetch the code for the current SHA
-      - name: Fetch code
-        run: |
-          git config --global --add safe.directory "$GITHUB_WORKSPACE"
-          git fetch --all
-          git checkout ${{ github.sha }}
+      - name: Run Trivy (excluding ${{ env.EXCLUDE_DIR }})
+        run: trivy fs . --format table --exit-code 1 --ignore-unfixed --vuln-type library --skip-dirs ${{ env.EXCLUDE_DIR }}
 
       # Install Python and flake8 linter
       - name: Install Python and flake8
@@ -63,35 +51,18 @@ jobs:
           python3 -m pip install flake8
 
       # Run flake8, skipping 'streamlit' directory
-      - name: Run flake8 (excluding streamlit/)
-        run: python3 -m flake8 . --exclude=streamlit
+      - name: Run flake8 (excluding ${{ env.EXCLUDE_DIR }})
+        run: python3 -m flake8 . --exclude=${{ env.EXCLUDE_DIR }}
 
-  bandit-scan:
-    name: Bandit Security Scan
-    runs-on: eks-edopsclt-custom-runner
-    steps:
-      # Checkout repository
-      - name: Checkout code
-        uses: actions/checkout@v4
-        
-      # Fetch the code for the current SHA
-      - name: Fetch code
+      # Install Bandit security scanner
+      - name: Install Bandit
         run: |
-          git config --global --add safe.directory "$GITHUB_WORKSPACE"
-          git fetch --all
-          git checkout ${{ github.sha }}
-
-      # Install Python and Bandit security scanner
-      - name: Install Python and Bandit
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install -y python3 python3-pip
           python3 -m pip install bandit
 
       # Run Bandit, skipping 'streamlit' directory
-      - name: Run Bandit (excluding streamlit/)
-        run: python3 -m bandit -r . --exclude streamlit
-      
+      - name: Run Bandit (excluding ${{ env.EXCLUDE_DIR }})
+        run: python3 -m bandit -r . --exclude ${{ env.EXCLUDE_DIR }}
+
       # Cleanup workspace at the end
       - name: Cleanup workspace
         run: |
