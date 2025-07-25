@@ -62,6 +62,7 @@ async def mcp_call(
 
             if not (file_path and file_name):
                 msg = cl.Message(content="")
+                has_content = False
                 if message.tool_calls and isinstance(message.content, list):
                     for chunk in message.content:
                         if (
@@ -72,12 +73,15 @@ async def mcp_call(
                             raw_text = chunk["text"]
                             clean_text = parser.parse(raw_text)
                             await msg.stream_token(f"🤖 {clean_text}")
+                            has_content = True
                 else:
                     raw_text = message.content
                     clean_text = parser.parse(raw_text)
                     if clean_text.strip():
                         await msg.stream_token(f"🤖 {clean_text}")
-            await msg.send()
+                        has_content = True
+            if has_content:
+                await msg.send()
             if hasattr(message, "usage_metadata") and message.usage_metadata:
                 usage = message.usage_metadata
                 msg_tokens = {
