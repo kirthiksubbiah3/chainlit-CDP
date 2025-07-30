@@ -5,7 +5,7 @@ from typing import Dict, List, Optional
 import os
 import logging
 
-from chromadb import PersistentClient
+from chromadb import HttpClient, PersistentClient
 import chainlit as cl
 import chainlit.data as cl_data
 from chainlit.types import (
@@ -38,13 +38,31 @@ def doc_id(thread_id: str, step_id: str):
 
 
 class CustomDataLayer(cl_data.BaseDataLayer):
-    """class for custom data layer"""
+    """Class for custom data layer supporting both HttpClient and PersistentClient"""
 
     def __init__(self):
-        self.chroma_client = PersistentClient(path=".chromadb")
-        self.collection = self.chroma_client.get_or_create_collection(
-            name="chat_history"
-        )
+        client_type = os.getenv("CHROMADB_CLIENT_TYPE", "http").lower()
+
+        if client_type == "http":
+            host = os.getenv("CHROMADB_HOST")
+            if not host:
+                raise ValueError("CHROMADB_HOST environment variable is not set or is empty.")
+            port_str = os.getenv("CHROMADB_PORT", "8000")  # Default to 8000 if not set
+            try:
+                port = int(port_str)
+            except ValueError:
+                raise ValueError(f"Invalid CHROMADB_PORT value: {port_str}. Must be an integer.")
+            self.chroma_client = HttpClient(host=host, port=port)
+        elif client_type == "persistent":
+            path = os.getenv("CHROMADB_PERSISTENT_PATH", ".chromadb")
+            if not path:
+                raise ValueError("CHROMADB_PERSISTENT_PATH is not set and no default value is provided.")
+            logger.warning("CHROMADB_PERSISTENT_PATH is not set. Using default path: %s", path)
+            self.chroma_client = PersistentClient(path=path)
+        else:
+            raise ValueError(f"Unsupported CHROMADB_CLIENT_TYPE: {client_type}")
+
+        self.collection = self.chroma_client.get_or_create_collection(name="chat_history")
 
     async def get_user(self, identifier: str) -> Optional[cl.PersistedUser]:
         logger.info("User logged in: %s", identifier)
