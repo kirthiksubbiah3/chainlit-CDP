@@ -7,7 +7,7 @@ import chainlit as cl
 from langgraph.checkpoint.memory import MemorySaver
 
 from mcp_tools_agents import init_mcp_tools_agents, get_mcp_tools_agents
-from utils import get_username, get_logger
+from utils import get_username, get_logger, log_and_show_usage_details
 from rag.rag_file_manager import RagFileManager
 from rag.update_sidebar import update_sidebar
 from vars import commands, profiles
@@ -58,6 +58,7 @@ async def on_chat_start():
 
     await cl.context.emitter.set_commands(commands)
     user = cl.user_session.get("user")
+    cl.user_session.set("usage_totals", {})
 
     username = get_username(user)
     logger.info("user display name is %s", username)
@@ -77,9 +78,11 @@ async def on_chat_end():
 async def on_stop():
     """Chainlit to stop the task in between messages."""
     user = cl.user_session.get("user")
+    usage_totals = cl.user_session.get("usage_totals", {})
     username = get_username(user)
 
     logger.info("Task stopped by %s", username)
+    await log_and_show_usage_details(usage_totals)
 
 
 @cl.on_logout

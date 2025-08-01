@@ -15,14 +15,12 @@ from rag.update_sidebar import update_sidebar
 from utils import (
     get_time_taken_message,
     get_logger,
-    log_usage_details,
-    send_usage_cost_message,
+    log_and_show_usage_details,
     generate_chat_title_from_input,
 )
 from vars import (
     mcp_servers_config_to_pass,
     mcp_service_config,
-    profiles,
 )
 from agents.react_agent import invoke_react_agent, single_mcp_client
 
@@ -53,11 +51,6 @@ async def on_message(msg: cl.Message):
 
     chat_profilename = cl.user_session.get("chat_profile")
     llm = get_llm(chat_profilename)
-    input_token_cost = profiles[chat_profilename]["cost"]["input_token_cost"]
-    output_token_cost = profiles[chat_profilename]["cost"]["output_token_cost"]
-
-    logger.info("input token cost is %s", input_token_cost)
-    logger.info("output token cost is %s", output_token_cost)
 
     messages, usage_data_title = [], {}
 
@@ -115,12 +108,4 @@ async def on_message(msg: cl.Message):
         usage_totals["output_tokens"] += usage_data_title["output_tokens"]
         usage_totals["total_tokens"] += usage_data_title["total_tokens"]
 
-    await cl.Message(
-        content=send_usage_cost_message(
-            usage_totals,
-            input_token_cost,
-            output_token_cost,
-        )
-    ).send()
-
-    log_usage_details(usage_totals, input_token_cost, output_token_cost, user)
+    await log_and_show_usage_details(usage_totals)

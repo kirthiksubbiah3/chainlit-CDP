@@ -20,6 +20,7 @@ from .usage import (
     get_usage_cost_details,
     send_usage_cost_message,
     log_usage_details,
+    log_and_show_usage_details,
 )
 from .generate_chat_title_from_input import generate_chat_title_from_input
 from .profile_loader import load_chat_profiles
@@ -41,6 +42,7 @@ __all__ = [
     "get_usage_cost_details",
     "send_usage_cost_message",
     "log_usage_details",
+    "log_and_show_usage_details",
     # File functions
     "generate_file_and_send",
     # Generate chat title from input

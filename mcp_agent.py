@@ -26,8 +26,8 @@ async def mcp_call(
     logger.info("Calling MCP servers for thread_id: %s", thread_id)
 
     stream_tokens = {
-        "total_input_tokens": 0,
-        "total_output_tokens": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
         "total_tokens": 0,
     }
 
@@ -90,10 +90,10 @@ async def mcp_call(
                     "total_tokens": usage.get("total_tokens", 0),
                 }
 
-                stream_tokens["total_input_tokens"] += msg_tokens["input_tokens"]
-                stream_tokens["total_output_tokens"] += msg_tokens["output_tokens"]
+                stream_tokens["input_tokens"] += msg_tokens["input_tokens"]
+                stream_tokens["output_tokens"] += msg_tokens["output_tokens"]
                 stream_tokens["total_tokens"] += msg_tokens["total_tokens"]
-
+                cl.user_session.set("usage_totals", stream_tokens)
                 logger.debug(
                     "Input tokens: %d, Output tokens: %d, Total tokens: %d",
                     msg_tokens["input_tokens"],
@@ -118,11 +118,7 @@ async def mcp_call(
             ],
         ).send()
 
-    return {
-        "input_tokens": stream_tokens["total_input_tokens"],
-        "output_tokens": stream_tokens["total_output_tokens"],
-        "total_tokens": stream_tokens["total_tokens"],
-    }
+    return stream_tokens
 
 
 def get_single_mcp_client(server):

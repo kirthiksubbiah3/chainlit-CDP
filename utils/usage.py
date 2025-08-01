@@ -1,5 +1,6 @@
 """Token usage and cost calculation utilities"""
 
+import chainlit as cl
 from .logging import get_logger
 
 logger = get_logger(__name__)
@@ -7,9 +8,9 @@ logger = get_logger(__name__)
 
 def get_usage_cost_details(usage_totals: dict, input_token_cost, output_token_cost):
     """Returns token usage and cost details as a dict"""
-    input_tokens = usage_totals["input_tokens"]
-    output_tokens = usage_totals["output_tokens"]
-    total_tokens = usage_totals["total_tokens"]
+    input_tokens = usage_totals.get("input_tokens", 0)
+    output_tokens = usage_totals.get("output_tokens", 0)
+    total_tokens = usage_totals.get("total_tokens", 0)
 
     input_cost = (input_tokens / 1000) * input_token_cost
     output_cost = (output_tokens / 1000) * output_token_cost
@@ -58,3 +59,23 @@ def log_usage_details(usage_totals: dict, input_token_cost, output_token_cost, u
         details["total_cost"],
     )
     logger.info("Logged in user: %s | Cost: $%.6f", user_id, details["total_cost"])
+
+
+async def log_and_show_usage_details(usage_totals):
+    from vars import profiles
+    chat_profile = cl.user_session.get("chat_profile")
+    input_token_cost = profiles[chat_profile]["cost"]["input_token_cost"]
+    output_token_cost = profiles[chat_profile]["cost"]["output_token_cost"]
+
+    logger.info("input token cost is %s", input_token_cost)
+    logger.info("output token cost is %s", output_token_cost)
+
+    await cl.Message(
+        content=send_usage_cost_message(
+            usage_totals,
+            input_token_cost,
+            output_token_cost,
+        )
+    ).send()
+    user = cl.user_session.get("user")
+    log_usage_details(usage_totals, input_token_cost, output_token_cost, user)
