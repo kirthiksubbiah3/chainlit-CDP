@@ -46,23 +46,33 @@ class CustomDataLayer(cl_data.BaseDataLayer):
         if client_type == "http":
             host = os.getenv("CHROMADB_HOST")
             if not host:
-                raise ValueError("CHROMADB_HOST environment variable is not set or is empty.")
+                raise ValueError(
+                    "CHROMADB_HOST environment variable is not set or is empty."
+                )
             port_str = os.getenv("CHROMADB_PORT", "8000")  # Default to 8000 if not set
             try:
                 port = int(port_str)
             except ValueError:
-                raise ValueError(f"Invalid CHROMADB_PORT value: {port_str}. Must be an integer.")
+                raise ValueError(
+                    f"Invalid CHROMADB_PORT value: {port_str}. Must be an integer."
+                )
             self.chroma_client = HttpClient(host=host, port=port)
         elif client_type == "persistent":
             path = os.getenv("CHROMADB_PERSISTENT_PATH", ".chromadb")
             if not path:
-                raise ValueError("CHROMADB_PERSISTENT_PATH is not set and no default value is provided.")
-            logger.warning("CHROMADB_PERSISTENT_PATH is not set. Using default path: %s", path)
+                raise ValueError(
+                    "CHROMADB_PERSISTENT_PATH is not set and no default value is provided."
+                )
+            logger.warning(
+                "CHROMADB_PERSISTENT_PATH is not set. Using default path: %s", path
+            )
             self.chroma_client = PersistentClient(path=path)
         else:
             raise ValueError(f"Unsupported CHROMADB_CLIENT_TYPE: {client_type}")
 
-        self.collection = self.chroma_client.get_or_create_collection(name="chat_history")
+        self.collection = self.chroma_client.get_or_create_collection(
+            name="chat_history"
+        )
 
     async def get_user(self, identifier: str) -> Optional[cl.PersistedUser]:
         logger.info("User logged in: %s", identifier)
