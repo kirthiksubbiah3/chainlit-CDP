@@ -124,7 +124,6 @@ mcp:
         icon: github
         id: GitHub
       transport: streamable_http
-      type: streamable_http
       url: https://api.githubcopilot.com/mcp
     gitlab:
       args:
@@ -146,14 +145,12 @@ mcp:
         usecase: Query the Grafana dashboard for the 'visioncheckout' project to retrieve
           the latest metrics and visualizations.
       transport: streamable_http
-      type: streamable_http
       url: http://localhost:8080/mcp
     jenkins:
       chainlit_command:
         icon: repeat-2
         id: Jenkins
       transport: sse
-      type: sse
       url: https://app.ustpace.io/visioncheckout/jenkins/mcp-server/sse
     playwright:
       args:
