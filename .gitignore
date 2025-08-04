@@ -43,5 +43,4 @@ test.py
 .chainlit
 .chromadb
 .files
-config.yaml
 secrets.yaml
