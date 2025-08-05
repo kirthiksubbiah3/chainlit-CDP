@@ -21,11 +21,14 @@ memory = MemorySaver()
 
 async def set_tools_agent():
     """Initialize and set the tools agent for the current chat session."""
+    logger.info("Setting up tools agent for the current chat session")
+
     await init_mcp_tools_agents()
     logger.info("MCP tools agents initialized")
 
     tools_agents = get_mcp_tools_agents()
     logger.info("MCP tools agents fetched")
+    logger.info("Available tools agents: %s", tools_agents.keys())
 
     chat_profile = cl.user_session.get("chat_profile")
     if not chat_profile or chat_profile not in profiles:
@@ -56,7 +59,10 @@ async def on_chat_start():
 
     await set_tools_agent()
 
+    logger.debug("Setting commands for the chat session")
     await cl.context.emitter.set_commands(commands)
+
+    logger.debug("Getting user session data")
     user = cl.user_session.get("user")
     cl.user_session.set("usage_totals", {})
 
@@ -64,6 +70,9 @@ async def on_chat_start():
     logger.info("user display name is %s", username)
     rag_filenames = await rag_manager.get_all_documents()
     logger.info("%d RAG filenames found", len(rag_filenames))
+
+    # Setting graph state as empty
+    cl.user_session.set("graph_state", {})
 
     await update_sidebar(rag_filenames)
 

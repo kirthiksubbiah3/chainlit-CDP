@@ -8,7 +8,7 @@ chainlit_profiles:
       input_token_cost: 0.00015
       output_token_cost: 0.0006
     icon: data:image/png;base64,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
-    markdown_description: Google gemini flash 2.5
+    markdown_description: Google gemini flash 2.
     starters:
     - eks
   nova_micro:
@@ -94,9 +94,10 @@ chainlit_starters:
     icon: "data:image/jpeg;base64,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"
     label: "Create apache app"
     message: | 
-        "Create deployment 'apache' that is exposed by service 'apache' 
-        which is further exposed by ingress 'apache' that has url 'apache.sflabs.ustpace.com' and class 'nginx' 
-        in the namespace 'ai-demo' of sftp-eks eks cluster"
+        Create deployment apache with replicas 2
+        that is exposed by service apache on service port 8080 and target port 80
+        which is further exposed by ingress apache that has url apache.sflabs.ustpace.com and class nginx
+        in the namespace ai-demo of sftp-eks eks cluster
 llm:
   agent:
     recursion_limit: 50
@@ -105,9 +106,9 @@ mcp:
     cloudwatch_logs:
       args:
       - awslabs.cloudwatch-logs-mcp-server@latest
-      chainlit_command:
-        icon: cloud
-        id: Cloudwatch
+      # chainlit_command:
+      #   icon: cloud
+      #   id: Cloudwatch
       command: uvx
       env:
         AWS_REGION: us-east-1
@@ -147,27 +148,27 @@ mcp:
       args:
       - -y
       - '@modelcontextprotocol/server-gitlab'
-      chainlit_command:
-        description: Search through GitLab
-        icon: gitlab
-        id: GitLab
-        usecase: Search for public repositories in a GitLab group and list their latest
-          commit messages.
+      # chainlit_command:
+      #   description: Search through GitLab
+      #   icon: gitlab
+      #   id: GitLab
+      #   usecase: Search for public repositories in a GitLab group and list their latest
+      #     commit messages.
       command: npx
       transport: stdio
     grafana:
-      chainlit_command:
-        description: Query Grafana dashboards and data sources
-        icon: bar-chart-2
-        id: Grafana
-        usecase: Query the Grafana dashboard for the 'visioncheckout' project to retrieve
-          the latest metrics and visualizations.
+      # chainlit_command:
+      #   description: Query Grafana dashboards and data sources
+      #   icon: bar-chart-2
+      #   id: Grafana
+      #   usecase: Query the Grafana dashboard for the 'visioncheckout' project to retrieve
+      #     the latest metrics and visualizations.
       transport: streamable_http
       url: http://localhost:8080/mcp
     jenkins:
-      chainlit_command:
-        icon: repeat-2
-        id: Jenkins
+      # chainlit_command:
+      #   icon: repeat-2
+      #   id: Jenkins
       transport: sse
       url: https://app.ustpace.io/visioncheckout/jenkins/mcp-server/sse
     playwright:
@@ -185,8 +186,13 @@ mcp:
           through the results, and present them in a table format.
       command: npx
       transport: stdio
-rag:
-  chainlit_command:
-    description: Search through rag
-    icon: file
-    id: rag_search
+agents:
+  new_repo:
+    chainlit_command:
+      id: NewRepo
+      icon: workflow
+  rag:
+    chainlit_command:
+      description: Search through rag
+      icon: file
+      id: rag_search

@@ -13,7 +13,7 @@ This package contains utility functions organized into logical modules:
 """
 
 from .config import get_config, load_yaml_file, merge_dict, safe_float
-from .logging import get_logger, get_log_level
+from .get_log import get_logger, get_log_level
 from .get_username import get_username
 from .get_time_taken_message import get_time_taken_message
 from .usage import (

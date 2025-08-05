@@ -3,7 +3,6 @@
 from datetime import datetime, timezone
 from typing import Dict, List, Optional
 import os
-import logging
 
 from chromadb import HttpClient, PersistentClient
 import chainlit as cl
@@ -19,12 +18,9 @@ from chainlit.types import (
 from chainlit.element import Element, ElementDict
 from chainlit.step import StepDict
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-logger.info(
-    "📁 ChromaDB instance is running in: %s",
-    os.path.abspath(".chromadb"),
-)
+from utils import get_logger
+
+logger = get_logger(__name__)
 
 
 def utc_now_str():

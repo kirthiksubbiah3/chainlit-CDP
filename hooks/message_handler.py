@@ -22,6 +22,8 @@ from vars import (
     mcp_servers_config_to_pass,
     mcp_service_config,
 )
+
+from agents.ci_cd_graph import ci_cd_graph
 from agents.react_agent import invoke_react_agent, single_mcp_client
 
 logger = get_logger(__name__)
@@ -32,6 +34,7 @@ rag_manager = RagFileManager(chroma_path=".chromadb", collection_name="rag_files
 @cl.on_message
 async def on_message(msg: cl.Message):
     """Hook to handle incoming messages"""
+    logger.info("Received message")
     rag_filenames = cl.user_session.get("rag_filenames", [])
     for element in msg.elements:
         if isinstance(element, cl.element.File):
@@ -90,6 +93,13 @@ Do not echo or use any such sensitive content in your response. Only proceed wit
     tools_agent = cl.user_session.get("tools_agent")
     session_type = "tools"
 
+    usage_totals = {
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0,
+        "buffer": 0,
+    }
+
     if msg.command:
         logger.info("Command received: %s", msg.command)
         target_server = msg.command
@@ -97,6 +107,8 @@ Do not echo or use any such sensitive content in your response. Only proceed wit
         if msg.command in ["Browser", "Browser-HL", "Sentinel-Mind"]:
             session_type = "server"
             target_server = "playwright"
+        elif msg.command == "NewRepo":
+            session_type = "NewRepo"
 
         messages.append(
             SystemMessage(content=f"Forward this to {target_server} mcp server")
@@ -105,6 +117,11 @@ Do not echo or use any such sensitive content in your response. Only proceed wit
 
     if session_type == "tools":
         usage_totals = await invoke_react_agent(tools_agent, messages, thread_id)
+    elif session_type == "NewRepo":
+        resp = await ci_cd_graph.ainvoke(
+            {"thread_id": thread_id, "llm": llm, "new_msg": msg.content}
+        )
+        usage_totals = resp["usage_totals"]
     else:
         server_params = StdioServerParameters(
             **mcp_servers_config_to_pass[target_server]

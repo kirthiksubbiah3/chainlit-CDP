@@ -44,3 +44,7 @@ test.py
 .chromadb
 .files
 secrets.yaml
+
+# temp
+
+tmp/

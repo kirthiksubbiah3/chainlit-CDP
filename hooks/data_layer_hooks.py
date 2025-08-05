@@ -15,6 +15,7 @@ logger = get_logger(__name__)
 @cl.data_layer
 def get_data_layer():
     """get data layer function for chat history persistence"""
+    logger.info("Initializing custom data layer for chat history persistence")
     return CustomDataLayer()
 
 

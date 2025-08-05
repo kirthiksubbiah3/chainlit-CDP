@@ -1,53 +1,55 @@
-import os
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from utils import get_config, get_logger
 
 logger = get_logger(__name__)
 
-config = get_config()
 logger.info("Loading config")
+config = get_config()
 profiles = config["chainlit_profiles"]
 starters = config["chainlit_starters"]
+llm_agent_config = config["llm"]["agent"]
 
 # get mcp config
-mcp_servers_config = get_config()["mcp"]["servers"]
-mcp_service_config = get_config()["mcp"]["url_secrets"]
-rag_config = get_config()["rag"]
+mcp_servers_config = config["mcp"]["servers"]
+mcp_service_config = config["mcp"]["url_secrets"]
+agents_config = config["agents"]
 
-mcp_servers_config_to_pass = {}
-for server, cfg in mcp_servers_config.items():
-    mcp_config = cfg.copy()
-    mcp_config.pop("chainlit_command", None)
-    mcp_servers_config_to_pass[server] = mcp_config
 
-# chainlit commands
-commands = []
-for key in mcp_servers_config.keys():
+def get_mcp_config():
+    mcp_servers_config_to_pass = {}
+    for server, cfg in mcp_servers_config.items():
+        mcp_config = cfg.copy()
+        mcp_config.pop("chainlit_command", None)
+        mcp_servers_config_to_pass[server] = mcp_config
 
-    if "chainlit_command" not in mcp_servers_config[key]:
-        continue
+    return mcp_servers_config_to_pass
 
-    command = mcp_servers_config[key]["chainlit_command"]
-    command = command | {
-        "button": True,
-        "persistent": True,
-    }
-    commands.append(command)
 
-for key in rag_config.keys():
-    if "chainlit_command" not in key:
-        continue
+mcp_servers_config_to_pass = get_mcp_config()
 
-    command = rag_config[key]
-    command = command | {
-        "button": True,
-        "persistent": True,
-    }
-    commands.append(command)
+
+def get_commands():
+    """Get commands from mcp servers config"""
+    commands = []
+    configs = [mcp_servers_config, agents_config]
+
+    def add_conf_commands(conf):
+        for conf_key in conf.keys():
+            if "chainlit_command" not in conf[conf_key]:
+                continue
+            cmd = conf[conf_key]["chainlit_command"]
+            cmd = cmd | {
+                "button": True,
+                "persistent": True,
+            }
+            commands.append(cmd)
+
+    for conf_item in configs:
+        add_conf_commands(conf_item)
+    return commands
+
+
+commands = get_commands()
 
 # Initialize mcp client
 mcp_client = MultiServerMCPClient(mcp_servers_config_to_pass)
-
-local_username = os.getenv("LOCAL_USERNAME")
-local_password = os.getenv("LOCAL_PASSWORD")
-oauth_enabled = os.getenv("OAUTH_ENABLED", "false").lower() == "true"

@@ -2,8 +2,10 @@
 
 import yaml
 from dotenv import load_dotenv
+from .get_log import get_logger
 
 load_dotenv(override=True)
+logger = get_logger(__name__)
 
 
 def safe_float(val, default=0.0):

@@ -5,21 +5,18 @@ from langchain_core.runnables.config import RunnableConfig
 from langchain_mcp_adapters.client import MultiServerMCPClient
 
 import chainlit as cl
-from utils import get_config, get_logger
+from utils import get_logger
 from utils.text import CleanXMLTagParser
-from vars import mcp_servers_config
+from vars import mcp_servers_config, llm_agent_config
 
 logger = get_logger(__name__)
-
-config = get_config()
-
-llm_agent_config = config["llm"]["agent"]
 
 
 async def mcp_call(
     agent,
     messages: List[HumanMessage],
     thread_id: str,
+    buffer: bool = False,
 ) -> Dict[str, int]:
     """Function to call mcp servers"""
 
@@ -93,6 +90,8 @@ async def mcp_call(
                 stream_tokens["input_tokens"] += msg_tokens["input_tokens"]
                 stream_tokens["output_tokens"] += msg_tokens["output_tokens"]
                 stream_tokens["total_tokens"] += msg_tokens["total_tokens"]
+                if buffer:
+                    stream_tokens.update({"buffer": clean_text})
                 cl.user_session.set("usage_totals", stream_tokens)
                 logger.debug(
                     "Input tokens: %d, Output tokens: %d, Total tokens: %d",

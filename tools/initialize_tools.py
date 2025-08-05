@@ -13,6 +13,7 @@ tools_lock = asyncio.Lock()
 
 async def initialize_tools():
     """Initializes tools once and returns cached version."""
+    logger.info("Initializing tools...")
     if _cached_tools["tools"] is None:
         logger.info("Tools not loaded yet, waiting for lock to fetch tools...")
         async with tools_lock:
@@ -20,7 +21,9 @@ async def initialize_tools():
                 logger.info("Lock acquired, fetching tools now...")
                 try:
                     tools = await mcp_client.get_tools()
+                    logger.debug("Fetched tools from mcp client: %s", tools)
                     tools.append(rag_search)
+                    logger.debug("Extended tools with rag_search: %s", tools)
                     _cached_tools["tools"] = tools
                     logger.info("Tools fetched and cached successfully.")
                 except asyncio.TimeoutError as e:

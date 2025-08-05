@@ -18,9 +18,9 @@ logger = get_logger(__name__)
 memory = MemorySaver()
 
 
-async def invoke_react_agent(agent, messages, thread_id):
+async def invoke_react_agent(agent, messages, thread_id, buffer=False):
     logger.info("Invoking react agent for thread_id: %s", thread_id)
-    usage_totals = await mcp_call(agent, messages, thread_id)
+    usage_totals = await mcp_call(agent, messages, thread_id, buffer=buffer)
     logger.info("React agent completed for thread_id: %s", thread_id)
     return usage_totals
 
@@ -43,6 +43,13 @@ async def single_mcp_client(server_params, llm, messages, thread_id):
             # Create and run the agent
             agent = create_react_agent(llm, tools, checkpointer=memory)
             return await invoke_react_agent(agent, messages, thread_id)
+
+
+async def tools_mcp_server_agent(mcp_server, messages, llm, thread_id, buffer=False):
+    async with mcp_client.session(mcp_server) as session:
+        tools = await load_mcp_tools(session)
+        agent = create_react_agent(llm, tools, checkpointer=memory)
+        return await invoke_react_agent(agent, messages, thread_id, buffer=buffer)
 
 
 async def server_session_agent(llm, messages, thread_id, single_mcp_client):
