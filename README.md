@@ -1,6 +1,11 @@
 # Claude 3 Chainlit Chatbot (via AWS Bedrock)
 
-This is a simple chatbot app built using [Chainlit](https://docs.chainlit.io/) and Anthropic's Claude 3 model served through AWS Bedrock.
+This is an AI assistant with agents and LLM built with
+
+- [Chainlit](https://docs.chainlit.io/)
+- [Langchain](https://www.langchain.com/)
+- [Langgraph](https://www.langchain.com/langgraph)
+- [MCP](https://www.langchain.com/langgraph)
 
 ---
 
@@ -20,21 +25,24 @@ This is a simple chatbot app built using [Chainlit](https://docs.chainlit.io/) a
 4. Run the app with chainlit
 
 ```bash
-python -m venv venv
+# optionallay set and activate venv if required
+uv venv
+source .venv/bin/activate  # On Windows: venv\Scripts\activate
 
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-pip install -r dev_requirements.txt # when developing locally, use requirements.txt for deployments
-
-chainlit run app.py -w
+uv sync
+uv run chainlit run app.py -w
 ```
 
 ## Instructions to run Grafana mcp server
+
 - We use Streamable HTTP Mode
 - You must expose port 8000 using the -p flag.
 - Use the following commands to run the server
 
 ```bash
 docker pull mcp/grafana
-docker run --rm -p 8000:8000 -e GRAFANA_URL=<Your GRAFANA_URL> -e GRAFANA_API_KEY=<Your GRAFANA_API_KEY> mcp/grafana -t streamable-http
+docker run --rm -p 8000:8000 \
+    -e GRAFANA_URL=<Your GRAFANA_URL> \
+    -e GRAFANA_API_KEY=<Your GRAFANA_API_KEY> \
+    mcp/grafana -t streamable-http
 ```

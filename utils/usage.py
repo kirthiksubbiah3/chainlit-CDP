@@ -63,6 +63,7 @@ def log_usage_details(usage_totals: dict, input_token_cost, output_token_cost, u
 
 async def log_and_show_usage_details(usage_totals):
     from vars import profiles
+
     chat_profile = cl.user_session.get("chat_profile")
     input_token_cost = profiles[chat_profile]["cost"]["input_token_cost"]
     output_token_cost = profiles[chat_profile]["cost"]["output_token_cost"]

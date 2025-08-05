@@ -12,4 +12,4 @@ logger = get_logger(__name__)
 
 logger.info("Imported module: %s", hooks.__name__)
 
-openlit.init(application_name="sflabs-chatbot")
+openlit.init(application_name="sflabs-ai-assistant")

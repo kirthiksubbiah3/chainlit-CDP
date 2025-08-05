@@ -39,7 +39,9 @@ async def extract_project_info(state: ProjectState) -> ProjectState:
     prompt = old_state.get("content", "") + f'. {state["new_msg"]}'
     state["content"] = prompt
     cl.user_session.set("graph_state", state)
-    git_data, state["usage_totals"] = await get_git_details_from_input(state["llm"], prompt)
+    git_data, state["usage_totals"] = await get_git_details_from_input(
+        state["llm"], prompt
+    )
     project_name = git_data.get("repo_name", False)
     if not project_name:
         user_inp = await cl.AskUserMessage("Enter project name:").send()
@@ -87,13 +89,17 @@ async def create_repo(state: ProjectState) -> ProjectState:
         "github", messages, state["llm"], state["thread_id"], buffer=True
     )
     state["buffer"] = resp.pop("buffer")
-    git_data, usage_metadata = await get_git_details_from_input(state["llm"], state["buffer"])
+    git_data, usage_metadata = await get_git_details_from_input(
+        state["llm"], state["buffer"]
+    )
     repo_url = git_data["repo_url"]
     if not repo_url.endswith(".git"):
         repo_url = repo_url + ".git"
     state["repo_url"] = repo_url
     usage_totals = state["usage_totals"].copy()
-    state["usage_totals"] = {k: resp[k] + usage_metadata[k] + usage_totals[k] for k in resp}
+    state["usage_totals"] = {
+        k: resp[k] + usage_metadata[k] + usage_totals[k] for k in resp
+    }
     return state
 
 

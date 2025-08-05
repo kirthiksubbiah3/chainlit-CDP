@@ -123,11 +123,11 @@ async def get_git_details_from_input(llm, conversation) -> tuple:
     """
     title_prompt = (
         f'Analyse the conversation "{conversation}". Get the git repo name and url of the project. '
-        f'Your response content should not contain any extra text or explanation.'
+        f"Your response content should not contain any extra text or explanation."
         f'Return only the repo name and git url in format "{{"repo_name": "", "repo_url": ""}}":'
     )
     response = llm.invoke(title_prompt)
     content = response.content if hasattr(response, "content") else "{}"
-    cleaned = re.sub(r'^.*?(\{.*\}).*$', r'\1', content, flags=re.DOTALL)
+    cleaned = re.sub(r"^.*?(\{.*\}).*$", r"\1", content, flags=re.DOTALL)
     content = json.loads(cleaned)
     return content, response.usage_metadata

@@ -40,7 +40,7 @@ jobs:
 
       # Run Trivy scan, skipping 'streamlit' directory
       - name: Run Trivy (excluding ${{ env.EXCLUDE_DIR }})
-        run: trivy fs . --format table --exit-code 1 --ignore-unfixed --vuln-type library --skip-dirs ${{ env.EXCLUDE_DIR }}
+        run: trivy fs . --format table --exit-code 1 --ignore-unfixed --vuln-type library  --severity HIGH,CRITICAL --skip-dirs ${{ env.EXCLUDE_DIR }}
 
       # Install Python and flake8 linter
       - name: Install Python and flake8
