@@ -18,8 +18,9 @@ class RagFileManager:
         self.chroma_path = chroma_path
         if not collection_name:
             if cl.user_session:
-                collection_name = get_collection_name(cl.user_session.get("user").identifier,
-                                                      name="rag_files")
+                collection_name = get_collection_name(
+                    cl.user_session.get("user").identifier, name="rag_files"
+                )
             else:
                 collection_name = "rag_files"
         self.collection_name = collection_name

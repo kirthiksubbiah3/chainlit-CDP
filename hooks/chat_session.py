@@ -6,15 +6,18 @@ Handles chat start, resume, and end events.
 import chainlit as cl
 from langgraph.checkpoint.memory import MemorySaver
 
+from config import app_config
 from mcp_tools_agents import init_mcp_tools_agents, get_mcp_tools_agents
-from utils import get_username, get_logger, log_and_show_usage_details
 from rag.rag_file_manager import RagFileManager
 from rag.update_sidebar import update_sidebar
-from vars import commands, profiles
+from utils import get_username, get_logger, log_and_show_usage_details
 
 logger = get_logger(__name__)
 
 memory = MemorySaver()
+
+commands = app_config.commands
+profiles = app_config.profiles
 
 
 async def set_tools_agent():
@@ -91,7 +94,7 @@ async def on_stop():
     username = get_username(user)
 
     logger.info("Task stopped by %s", username)
-    await log_and_show_usage_details(usage_totals)
+    await log_and_show_usage_details(profiles, usage_totals)
 
 
 @cl.on_logout

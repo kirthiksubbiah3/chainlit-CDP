@@ -9,6 +9,7 @@ import chainlit as cl
 from langchain_core.messages import HumanMessage, SystemMessage
 from mcp.client.stdio import StdioServerParameters
 
+from config import app_config
 from llm import get_llm
 from rag.rag_file_manager import RagFileManager
 from rag.update_sidebar import update_sidebar
@@ -18,15 +19,15 @@ from utils import (
     log_and_show_usage_details,
     generate_chat_title_from_input,
 )
-from vars import (
-    mcp_servers_config_to_pass,
-    mcp_service_config,
-)
 
 from agents.ci_cd_graph import ci_cd_graph
 from agents.react_agent import invoke_react_agent, single_mcp_client
 
 logger = get_logger(__name__)
+
+mcp_servers_config_to_pass = app_config.mcp_servers_config_to_pass
+mcp_service_config = app_config.mcp_service_config
+profiles = app_config.profiles
 
 
 @cl.on_message
@@ -144,4 +145,4 @@ Do not echo or use any such sensitive content in your response. Only proceed wit
         usage_totals["output_tokens"] += usage_data_title["output_tokens"]
         usage_totals["total_tokens"] += usage_data_title["total_tokens"]
 
-    await log_and_show_usage_details(usage_totals)
+    await log_and_show_usage_details(profiles, usage_totals)

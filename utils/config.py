@@ -1,10 +1,9 @@
 """Configuration utilities for loading and merging YAML files"""
 
 import yaml
-from dotenv import load_dotenv
+
 from .get_log import get_logger
 
-load_dotenv(override=True)
 logger = get_logger(__name__)
 
 
@@ -14,17 +13,6 @@ def safe_float(val, default=0.0):
         return float(val)
     except (TypeError, ValueError):
         return default
-
-
-def get_config():
-    """Get config from yaml files"""
-    # Load both files
-    config = load_yaml_file("config.yaml")
-    secrets = load_yaml_file("secrets.yaml")
-
-    # Merge secrets into config
-    config = merge_dict(config, secrets)
-    return config or {}
 
 
 def load_yaml_file(file_path):

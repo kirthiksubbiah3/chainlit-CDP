@@ -12,7 +12,7 @@ This package contains utility functions organized into logical modules:
 - profile: Chat profile loading utilities
 """
 
-from .config import get_config, load_yaml_file, merge_dict, safe_float
+from .config import load_yaml_file, merge_dict, safe_float
 from .get_log import get_logger, get_log_level
 from .get_username import get_username
 from .get_time_taken_message import get_time_taken_message
@@ -27,7 +27,6 @@ from .profile_loader import load_chat_profiles
 
 __all__ = [
     # Config functions
-    "get_config",
     "load_yaml_file",
     "merge_dict",
     "safe_float",

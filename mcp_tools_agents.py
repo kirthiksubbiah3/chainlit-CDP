@@ -1,11 +1,13 @@
 from agents.react_agent import tools_session_agent
+from config import app_config
 from llm import get_llm
 from utils import get_logger
-from vars import profiles
 
 logger = get_logger(__name__)
 
 mcp_tools_agents = None
+
+profiles = app_config.profiles
 
 
 async def init_mcp_tools_agents():

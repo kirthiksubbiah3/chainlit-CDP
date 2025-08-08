@@ -14,7 +14,7 @@ class CleanXMLTagParser(BaseOutputParser[str]):
 
 def get_collection_name(suffix=None, name="chat_history") -> str:
     """Generate chromadb collection name. Expected a name containing 3-512 characters from
-     [a-zA-Z0-9._-], starting and ending with a character in [a-zA-Z0-9]"""
+    [a-zA-Z0-9._-], starting and ending with a character in [a-zA-Z0-9]"""
     full_name = f"{name}_{suffix}" if suffix else name
     # Keep only allowed characters, replace others with "_"
     safe_name = re.sub(r"[^a-zA-Z0-9]", "_", full_name)

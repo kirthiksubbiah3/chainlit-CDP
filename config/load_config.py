@@ -1,0 +1,52 @@
+from dotenv import load_dotenv
+from langchain_mcp_adapters.client import MultiServerMCPClient
+
+from utils import get_logger, load_yaml_file, merge_dict
+
+logger = get_logger(__name__)
+
+
+class AppConfig:
+    def __init__(self):
+        logger.info("Loading environment variables")
+        load_dotenv()
+
+        logger.info("Loading config")
+        config = load_yaml_file("config.yaml")
+
+        logger.info("Loading secrets")
+        secrets = load_yaml_file("secrets.yaml")
+
+        # Merge secrets into config
+        self.config = merge_dict(config, secrets)
+
+        self.profiles = config["chainlit_profiles"]
+        self.starters = config["chainlit_starters"]
+        self.llm_agent_config = config["llm"]["agent"]
+
+        self.mcp_servers_config = config["mcp"]["servers"]
+        self.mcp_service_config = config["mcp"]["url_secrets"]
+        agents_config = config["agents"]
+        self.mcp_servers_config_to_pass = {
+            srv: {k: v for k, v in cfg.items() if k != "chainlit_command"}
+            for srv, cfg in self.mcp_servers_config.items()
+        }
+
+        self.mcp_client = MultiServerMCPClient(self.mcp_servers_config_to_pass)
+
+        self.commands = []
+        configs = [self.mcp_servers_config, agents_config]
+
+        for conf in configs:
+            for conf_key in conf.keys():
+                if "chainlit_command" not in conf[conf_key]:
+                    continue
+                cmd = conf[conf_key]["chainlit_command"]
+                cmd = cmd | {
+                    "button": True,
+                    "persistent": True,
+                }
+                self.commands.append(cmd)
+
+
+app_config = AppConfig()

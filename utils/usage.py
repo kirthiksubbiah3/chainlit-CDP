@@ -1,6 +1,7 @@
 """Token usage and cost calculation utilities"""
 
 import chainlit as cl
+
 from .get_log import get_logger
 
 logger = get_logger(__name__)
@@ -61,9 +62,7 @@ def log_usage_details(usage_totals: dict, input_token_cost, output_token_cost, u
     logger.info("Logged in user: %s | Cost: $%.6f", user_id, details["total_cost"])
 
 
-async def log_and_show_usage_details(usage_totals):
-    from vars import profiles
-
+async def log_and_show_usage_details(profiles, usage_totals):
     chat_profile = cl.user_session.get("chat_profile")
     input_token_cost = profiles[chat_profile]["cost"]["input_token_cost"]
     output_token_cost = profiles[chat_profile]["cost"]["output_token_cost"]

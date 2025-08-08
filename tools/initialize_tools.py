@@ -1,11 +1,12 @@
 import asyncio
 
-from utils import get_logger
-from vars import mcp_client
+from config import app_config
 from rag.rag_search import rag_search
+from utils import get_logger
 
 logger = get_logger(__name__)
 
+mcp_client = app_config.mcp_client
 
 _cached_tools = {"tools": None}
 tools_lock = asyncio.Lock()

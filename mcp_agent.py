@@ -1,15 +1,18 @@
 from typing import List, Dict
 
+import chainlit as cl
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.runnables.config import RunnableConfig
 from langchain_mcp_adapters.client import MultiServerMCPClient
 
-import chainlit as cl
+from config import app_config
 from utils import get_logger
 from utils.text import CleanXMLTagParser
-from vars import mcp_servers_config, llm_agent_config
 
 logger = get_logger(__name__)
+
+llm_agent_config = app_config.llm_agent_config
+mcp_servers_config = app_config.mcp_servers_config
 
 
 async def mcp_call(

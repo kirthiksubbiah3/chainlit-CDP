@@ -5,11 +5,14 @@ Handles chat history persistence and chat profiles.
 
 import chainlit as cl
 
+from config import app_config
 from utils import get_logger, load_chat_profiles
-from vars import profiles, starters
 from data_layer import CustomDataLayer
 
 logger = get_logger(__name__)
+
+profiles = app_config.profiles
+starters = app_config.starters
 
 
 @cl.data_layer

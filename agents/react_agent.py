@@ -8,14 +8,16 @@ from langgraph.prebuilt import create_react_agent
 from mcp import ClientSession
 from mcp.client.stdio import stdio_client
 
+from config import app_config
 from tools import generate_docx, generate_pdf, initialize_tools
 from utils import get_logger
-from vars import mcp_client
 from mcp_agent import mcp_call
 
 logger = get_logger(__name__)
 
 memory = MemorySaver()
+
+mcp_client = app_config.mcp_client
 
 
 async def invoke_react_agent(agent, messages, thread_id, buffer=False):
