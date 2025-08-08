@@ -14,8 +14,6 @@ from vars import commands, profiles
 
 logger = get_logger(__name__)
 
-rag_manager = RagFileManager(chroma_path=".chromadb", collection_name="rag_files")
-
 memory = MemorySaver()
 
 
@@ -46,6 +44,7 @@ async def on_chat_resume():
     logger.info("Chat session resumed for thread_id: %s", cl.context.session.thread_id)
     await cl.context.emitter.set_commands(commands)
 
+    rag_manager = RagFileManager()
     rag_filenames = await rag_manager.get_all_documents()
     logger.info("%d RAG filenames found", len(rag_filenames))
 
@@ -68,6 +67,7 @@ async def on_chat_start():
 
     username = get_username(user)
     logger.info("user display name is %s", username)
+    rag_manager = RagFileManager()
     rag_filenames = await rag_manager.get_all_documents()
     logger.info("%d RAG filenames found", len(rag_filenames))
 

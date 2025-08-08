@@ -11,14 +11,13 @@ from rag.update_sidebar import update_sidebar
 
 logger = get_logger(__name__)
 
-rag_manager = RagFileManager(chroma_path=".chromadb", collection_name="rag_files")
-
 
 @cl.action_callback("delete_file")
 async def handle_delete_file(action: cl.Action):
     payload = action.payload
     filename = payload.get("filename")
     if filename:
+        rag_manager = RagFileManager()
         logger.info("Deleting file: %s", filename)
         await rag_manager.delete_file(filename)
         await cl.Message(content=f"File {filename} deleted successfully.").send()

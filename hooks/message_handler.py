@@ -28,8 +28,6 @@ from agents.react_agent import invoke_react_agent, single_mcp_client
 
 logger = get_logger(__name__)
 
-rag_manager = RagFileManager(chroma_path=".chromadb", collection_name="rag_files")
-
 
 @cl.on_message
 async def on_message(msg: cl.Message):
@@ -41,6 +39,7 @@ async def on_message(msg: cl.Message):
             filepath = element.path
             filename = element.name
             logger.info(f"File received: {filename} at {filepath}")
+            rag_manager = RagFileManager()
             await rag_manager.upload_and_store_file(filepath, filename)
             rag_filenames.append(filename)
 

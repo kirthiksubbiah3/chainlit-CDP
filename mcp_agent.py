@@ -77,8 +77,8 @@ async def mcp_call(
                     if clean_text.strip():
                         await msg.stream_token(f"🤖 {clean_text}")
                         has_content = True
-            if has_content:
-                await msg.send()
+                if has_content:
+                    await msg.send()
             if hasattr(message, "usage_metadata") and message.usage_metadata:
                 usage = message.usage_metadata
                 msg_tokens = {

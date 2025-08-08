@@ -1,13 +1,11 @@
 """data layer for chainlit chat history persistence"""
 
 import os
-import re
 
 from datetime import datetime, timezone
 from typing import Dict, List, Optional
 
 from chromadb import HttpClient, PersistentClient
-from chromadb.types import Collection
 import chainlit as cl
 from chainlit.data.utils import queue_until_user_message
 import chainlit.data as cl_data
@@ -23,6 +21,7 @@ from chainlit.element import Element, ElementDict
 from chainlit.step import StepDict
 
 from utils import get_logger
+from utils.text import get_collection_name
 
 logger = get_logger(__name__)
 
@@ -74,12 +73,13 @@ class CustomDataLayer(cl_data.BaseDataLayer):
 
     async def get_user(self, identifier: str) -> Optional[cl.PersistedUser]:
         logger.info("User logged in: %s", identifier)
-        user = cl.PersistedUser(
+        if not self.collection:
+            self.collection = self.chroma_client.get_or_create_collection(
+                name=get_collection_name(identifier)
+            )
+        return cl.PersistedUser(
             id=identifier, createdAt=utc_now_str(), identifier=identifier
         )
-        if not self.collection:
-            self.collection = self.get_or_create_collection(user)
-        return user
 
     async def create_user(self, user: cl.User) -> Optional[cl.PersistedUser]:
         logger.info("Creating user in db: %s", user.identifier)
@@ -276,17 +276,3 @@ class CustomDataLayer(cl_data.BaseDataLayer):
 
     async def build_debug_url(self) -> str:
         return ""
-
-    def get_or_create_collection(self, user=None, collection_name="chat_history") -> Collection:
-        """Create chromadb collection for each user logged-in. Converts the identifier to align
-        with expected collection name and attach to default string 'chat_history' """
-        if user:
-            collection_name += f"_{user.identifier}"
-        # Replace everything except a-z, A-Z, 0-9 with "_"
-        collection_name = re.sub(r'[^a-zA-Z0-9]', '_', collection_name)
-        # Remove non-alphanumeric chars from start and end
-        collection_name = re.sub(r'(^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$)', '',
-                                 collection_name)
-        return self.chroma_client.get_or_create_collection(
-            name=collection_name
-        )

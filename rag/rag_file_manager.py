@@ -1,5 +1,6 @@
 # rag_file_manager.py
 
+import chainlit as cl
 from langchain_aws import BedrockEmbeddings
 from langchain_chroma import Chroma
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -7,13 +8,20 @@ from langchain.docstore.document import Document
 from PyPDF2 import PdfReader
 from typing import List
 from utils import get_logger
+from utils.text import get_collection_name
 
 logger = get_logger(__name__)
 
 
 class RagFileManager:
-    def __init__(self, chroma_path=".chromadb", collection_name="rag_files"):
+    def __init__(self, chroma_path=".chromadb", collection_name=None):
         self.chroma_path = chroma_path
+        if not collection_name:
+            if cl.user_session:
+                collection_name = get_collection_name(cl.user_session.get("user").identifier,
+                                                      name="rag_files")
+            else:
+                collection_name = "rag_files"
         self.collection_name = collection_name
 
     async def upload_and_store_file(self, filepath: str, filename: str):
