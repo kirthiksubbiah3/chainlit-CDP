@@ -1,11 +1,15 @@
 """data layer for chainlit chat history persistence"""
 
+import os
+import re
+
 from datetime import datetime, timezone
 from typing import Dict, List, Optional
-import os
 
 from chromadb import HttpClient, PersistentClient
+from chromadb.types import Collection
 import chainlit as cl
+from chainlit.data.utils import queue_until_user_message
 import chainlit.data as cl_data
 from chainlit.types import (
     Feedback,
@@ -66,15 +70,16 @@ class CustomDataLayer(cl_data.BaseDataLayer):
         else:
             raise ValueError(f"Unsupported CHROMADB_CLIENT_TYPE: {client_type}")
 
-        self.collection = self.chroma_client.get_or_create_collection(
-            name="chat_history"
-        )
+        self.collection = None
 
     async def get_user(self, identifier: str) -> Optional[cl.PersistedUser]:
         logger.info("User logged in: %s", identifier)
-        return cl.PersistedUser(
+        user = cl.PersistedUser(
             id=identifier, createdAt=utc_now_str(), identifier=identifier
         )
+        if not self.collection:
+            self.collection = self.get_or_create_collection(user)
+        return user
 
     async def create_user(self, user: cl.User) -> Optional[cl.PersistedUser]:
         logger.info("Creating user in db: %s", user.identifier)
@@ -96,6 +101,7 @@ class CustomDataLayer(cl_data.BaseDataLayer):
         )
         return ""
 
+    @queue_until_user_message()
     async def create_element(self, element: "Element"):
         logger.debug("create_element called but not used")
         pass  # Not used
@@ -106,10 +112,12 @@ class CustomDataLayer(cl_data.BaseDataLayer):
         logger.debug("get_element called but not used")
         return None  # Not used
 
+    @queue_until_user_message()
     async def delete_element(self, element_id: str, thread_id: Optional[str] = None):
         logger.debug("delete_element called but not used")
         pass  # Not used
 
+    @queue_until_user_message()
     async def create_step(self, step_dict: "StepDict"):
         if step_dict["name"] == "on_chat_start":
             return
@@ -134,6 +142,7 @@ class CustomDataLayer(cl_data.BaseDataLayer):
             metadatas=[metadata],
         )
 
+    @queue_until_user_message()
     async def update_step(self, step_dict: "StepDict"):
         logger.info(
             "Updating step_id %s for thread_id %s",
@@ -144,6 +153,7 @@ class CustomDataLayer(cl_data.BaseDataLayer):
         await self.delete_step(step_dict["id"])
         await self.create_step(step_dict)
 
+    @queue_until_user_message()
     async def delete_step(self, step_id: str):
         logger.info("Deleting step with id: %s", step_id)
         all_data = self.collection.get()
@@ -266,3 +276,17 @@ class CustomDataLayer(cl_data.BaseDataLayer):
 
     async def build_debug_url(self) -> str:
         return ""
+
+    def get_or_create_collection(self, user=None, collection_name="chat_history") -> Collection:
+        """Create chromadb collection for each user logged-in. Converts the identifier to align
+        with expected collection name and attach to default string 'chat_history' """
+        if user:
+            collection_name += f"_{user.identifier}"
+        # Replace everything except a-z, A-Z, 0-9 with "_"
+        collection_name = re.sub(r'[^a-zA-Z0-9]', '_', collection_name)
+        # Remove non-alphanumeric chars from start and end
+        collection_name = re.sub(r'(^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$)', '',
+                                 collection_name)
+        return self.chroma_client.get_or_create_collection(
+            name=collection_name
+        )
