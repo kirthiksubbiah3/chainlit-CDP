@@ -1,3 +1,5 @@
+import os
+
 from dotenv import load_dotenv
 from langchain_mcp_adapters.client import MultiServerMCPClient
 
@@ -10,6 +12,15 @@ class AppConfig:
     def __init__(self):
         logger.info("Loading environment variables")
         load_dotenv()
+
+        self.client_type = os.getenv("CHROMADB_CLIENT_TYPE", "http").lower()
+        self.host = os.getenv("CHROMADB_HOST")
+        self.port_str = os.getenv("CHROMADB_PORT", "8000")  # Default to 8000 if not set
+        self.path = os.getenv("CHROMADB_PERSISTENT_PATH", ".chromadb")
+
+        self.local_username = os.getenv("LOCAL_USERNAME")
+        self.local_password = os.getenv("LOCAL_PASSWORD")
+        self.oauth_enabled = os.getenv("OAUTH_ENABLED", "false").lower() == "true"
 
         logger.info("Loading config")
         config = load_yaml_file("config.yaml")

@@ -1,0 +1,47 @@
+name: Security and Lint Checks
+
+on:
+  pull_request:
+    branches: 
+      - main
+    paths:
+      - 'requirements.txt'
+
+jobs:
+  security-and-lint:
+    name: Security and Lint Checks
+    runs-on: eks-edopsclt-custom-runner
+    env:
+      EXCLUDE_DIR: streamlit
+    steps:
+    # Checkout repository
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    # Fetch the code for the current SHA
+    - name: Fetch code
+      run: |
+        git config --global --add safe.directory "$GITHUB_WORKSPACE"
+        git fetch --all
+        git checkout ${{ github.sha }}
+
+    # Install Trivy CLI if not already present
+    - name: Install Trivy
+      run: |
+        if ! command -v trivy &> /dev/null; then
+          sudo apt-get update -y
+          sudo apt-get install -y wget curl
+          wget -qO- https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo tee /usr/share/keyrings/trivy-keyring.asc
+          echo "deb [signed-by=/usr/share/keyrings/trivy-keyring.asc] https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update -y
+          sudo apt-get install -y trivy
+        fi
+
+    # Run Trivy scan, skipping 'streamlit' directory
+    - name: Run Trivy (excluding ${{ env.EXCLUDE_DIR }})
+      run: trivy fs . --format table --exit-code 1 --ignore-unfixed --vuln-type library  --severity HIGH,CRITICAL --skip-dirs ${{ env.EXCLUDE_DIR }}
+
+    # Cleanup workspace at the end
+    - name: Cleanup workspace
+      run: |
+        git clean -fdx

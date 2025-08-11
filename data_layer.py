@@ -1,7 +1,5 @@
 """data layer for chainlit chat history persistence"""
 
-import os
-
 from datetime import datetime, timezone
 from typing import Dict, List, Optional
 
@@ -20,10 +18,16 @@ from chainlit.types import (
 from chainlit.element import Element, ElementDict
 from chainlit.step import StepDict
 
+from config import app_config
 from utils import get_logger
 from utils.text import get_collection_name
 
 logger = get_logger(__name__)
+
+client_type = app_config.client_type
+host = app_config.host
+port_str = app_config.port_str
+path = app_config.path
 
 
 def utc_now_str():
@@ -40,15 +44,11 @@ class CustomDataLayer(cl_data.BaseDataLayer):
     """Class for custom data layer supporting both HttpClient and PersistentClient"""
 
     def __init__(self):
-        client_type = os.getenv("CHROMADB_CLIENT_TYPE", "http").lower()
-
         if client_type == "http":
-            host = os.getenv("CHROMADB_HOST")
             if not host:
                 raise ValueError(
                     "CHROMADB_HOST environment variable is not set or is empty."
                 )
-            port_str = os.getenv("CHROMADB_PORT", "8000")  # Default to 8000 if not set
             try:
                 port = int(port_str)
             except ValueError:
@@ -57,7 +57,6 @@ class CustomDataLayer(cl_data.BaseDataLayer):
                 )
             self.chroma_client = HttpClient(host=host, port=port)
         elif client_type == "persistent":
-            path = os.getenv("CHROMADB_PERSISTENT_PATH", ".chromadb")
             if not path:
                 raise ValueError(
                     "CHROMADB_PERSISTENT_PATH is not set and no default value is provided."

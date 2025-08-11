@@ -4,16 +4,16 @@ Handles password authentication and OAuth callbacks.
 """
 
 from typing import Dict, Optional
-import os
 import chainlit as cl
 
+from config import app_config
 from utils import get_logger
 
 logger = get_logger(__name__)
 
-local_username = os.getenv("LOCAL_USERNAME")
-local_password = os.getenv("LOCAL_PASSWORD")
-oauth_enabled = os.getenv("OAUTH_ENABLED", "false").lower() == "true"
+local_username = app_config.local_username
+local_password = app_config.local_password
+oauth_enabled = app_config.oauth_enabled
 
 
 def setup_auth_hooks():

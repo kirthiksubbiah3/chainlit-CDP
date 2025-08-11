@@ -1,6 +1,6 @@
 [project]
 name = "sflabs-ai-assistant"
-version = "1.0.1"
+version = "1.0.2"
 description = "SFLabs AI assistant with agents for DevOps and SRE tasks."
 readme = "README.md"
 requires-python = ">=3.12"
@@ -30,10 +30,10 @@ dependencies = [
     "openlit==1.34.37"
 ]
 [dependency-groups]
-dev = [
-    "bandit==1.8.5",
-    "black==25.1.0",
-    "flake8==7.3.0",
-    "pylint==3.3.7",
+code_check = [
+    "bandit==1.8.6",
     "ruff==0.12.0"
+]
+dev = [
+    "black==25.1.0"
 ]

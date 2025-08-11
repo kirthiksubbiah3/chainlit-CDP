@@ -1,0 +1,45 @@
+name: Security and Lint Checks
+
+on:
+  pull_request:
+    branches: 
+      - main
+    paths:
+      - '**/*.py'
+
+jobs:
+  security-and-lint:
+    name: Security and Lint Checks
+    runs-on: eks-edopsclt-custom-runner
+    env:
+      EXCLUDE_DIR: streamlit
+    steps:
+    # Checkout repository
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    # Fetch the code for the current SHA
+    - name: Fetch code
+      run: |
+        git config --global --add safe.directory "$GITHUB_WORKSPACE"
+        git fetch --all
+        git checkout ${{ github.sha }}
+
+    # Install uv and Python, then ruff
+    - name: Install dev dependencies
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        uv sync --only-group code_check
+
+    # Run ruff, skipping ${{ env.EXCLUDE_DIR }}
+    - name: Run ruff (excluding ${{ env.EXCLUDE_DIR }})
+      run: uv run ruff check . --exclude "${{ env.EXCLUDE_DIR }}"
+
+    # Run Bandit, skipping 'streamlit' directory
+    - name: Run Bandit (excluding ${{ env.EXCLUDE_DIR }})
+      run: uv run bandit -r *.py agents config hooks rag tools utils
+
+    # Cleanup workspace at the end
+    - name: Cleanup workspace
+      run: |
+        git clean -fdx
