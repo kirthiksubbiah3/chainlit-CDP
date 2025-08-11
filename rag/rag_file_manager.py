@@ -9,13 +9,14 @@ from PyPDF2 import PdfReader
 from typing import List
 from utils import get_logger
 from utils.text import get_collection_name
+from data_layer import ChromaDataLayer
 
 logger = get_logger(__name__)
 
 
-class RagFileManager:
-    def __init__(self, chroma_path=".chromadb", collection_name=None):
-        self.chroma_path = chroma_path
+class RagFileManager(ChromaDataLayer):
+    def __init__(self, collection_name=None):
+        super().__init__()
         if not collection_name:
             if cl.user_session:
                 collection_name = get_collection_name(
@@ -23,7 +24,15 @@ class RagFileManager:
                 )
             else:
                 collection_name = "rag_files"
-        self.collection_name = collection_name
+        logger.debug("Initializing Bedrock embeddings model")
+        embeddings = BedrockEmbeddings(
+            model_id="amazon.titan-embed-text-v1", region_name="us-east-1"
+        )
+        self.vectorstore = Chroma(
+            collection_name=collection_name,
+            client=self.chroma_client,
+            embedding_function=embeddings
+        )
 
     async def upload_and_store_file(self, filepath: str, filename: str):
         logger.info(f"Starting upload and store process for file: {filepath}")
@@ -68,38 +77,14 @@ class RagFileManager:
             for chunk in chunks
         ]
         logger.debug(f"Created {len(docs)} Document objects for vector store ingestion")
-
-        # Initialize AWS Bedrock embeddings model
-        logger.debug("Initializing Bedrock embeddings model")
-        embeddings = BedrockEmbeddings(
-            model_id="amazon.titan-embed-text-v1", region_name="us-east-1"
-        )
-
-        # Create or load Chroma vector store
-        logger.debug("Creating/loading Chroma vector store")
-        vectorstore = Chroma(
-            persist_directory=self.chroma_path,
-            collection_name=self.collection_name,
-            embedding_function=embeddings,
-        )
-
         # Add documents to vector store
         logger.debug("Adding documents to vector store")
-        vectorstore.add_documents(docs)
+        self.vectorstore.add_documents(docs)
 
         logger.info(f"Completed upload and store for file: {filepath}")
 
     async def get_all_documents(self) -> List:
-        embeddings = BedrockEmbeddings(
-            model_id="amazon.titan-embed-text-v1", region_name="us-east-1"
-        )
-        vectorstore = Chroma(
-            persist_directory=self.chroma_path,
-            collection_name=self.collection_name,
-            embedding_function=embeddings,
-        )
-
-        all_docs = vectorstore.get(include=["metadatas"])
+        all_docs = self.vectorstore.get(include=["metadatas"])
 
         filenames = {
             metadata["filename"]
@@ -108,42 +93,5 @@ class RagFileManager:
         }
         return sorted(filenames)
 
-    def getVectorStore(self) -> Chroma:
-        embeddings = BedrockEmbeddings(
-            model_id="amazon.titan-embed-text-v1", region_name="us-east-1"
-        )
-        try:
-            vectorstore = Chroma(
-                persist_directory=self.chroma_path,
-                collection_name=self.collection_name,
-                embedding_function=embeddings,
-            )
-            logger.info("Vectorstore loaded")
-        except Exception:
-            vectorstore = Chroma.from_documents(
-                [],
-                embedding=embeddings,
-                collection_name=self.collection_name,
-                persist_directory=self.chroma_path,
-            )
-            logger.info("Vectorstore created")
-        return vectorstore
-
     async def delete_file(self, filename):
-        embeddings = BedrockEmbeddings(
-            model_id="amazon.titan-embed-text-v1", region_name="us-east-1"
-        )
-        try:
-            vectorstore = Chroma(
-                persist_directory=self.chroma_path,
-                collection_name=self.collection_name,
-                embedding_function=embeddings,
-            )
-        except Exception:
-            vectorstore = Chroma.from_documents(
-                [],
-                embedding=embeddings,
-                collection_name=self.collection_name,
-                persist_directory=self.chroma_path,
-            )
-        vectorstore.delete(where={"filename": filename})
+        self.vectorstore.delete(where={"filename": filename})

@@ -40,9 +40,8 @@ def doc_id(thread_id: str, step_id: str):
     return f"{thread_id}_{step_id}"
 
 
-class CustomDataLayer(cl_data.BaseDataLayer):
-    """Class for custom data layer supporting both HttpClient and PersistentClient"""
-
+class ChromaDataLayer:
+    """Class for supporting both HttpClient and PersistentClient"""
     def __init__(self):
         if client_type == "http":
             if not host:
@@ -68,6 +67,12 @@ class CustomDataLayer(cl_data.BaseDataLayer):
         else:
             raise ValueError(f"Unsupported CHROMADB_CLIENT_TYPE: {client_type}")
 
+
+class CustomDataLayer(ChromaDataLayer, cl_data.BaseDataLayer):
+    """Class for custom data layer"""
+
+    def __init__(self):
+        super().__init__()
         self.collection = None
 
     async def get_user(self, identifier: str) -> Optional[cl.PersistedUser]:
