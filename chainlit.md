@@ -10,7 +10,12 @@ Hi there! 👋 We're excited to have you on board.
 ### NewRepo 
 - Create new react repo in GitHub with name test1d3gg
 
+### o11y
+- Get the channel history from slack. The slack channel_id is C098RQR0K8C.
+Once you get the recent message, explain the message.
+If the recent message is resolved, check for recent alert
 
 ## Useful Links 🔗
 - Code for the Sentinel Mind app: [Repo link](https://github.com/UST-PACE/Sentinel-Mind)
 - Code for the SF Labs repo: [Repo link](https://github.com/UST-PACE/sflabs)
+

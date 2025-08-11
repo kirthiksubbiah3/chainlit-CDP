@@ -22,6 +22,9 @@ from utils import (
 
 from agents.ci_cd_graph import ci_cd_graph
 from agents.react_agent import invoke_react_agent, single_mcp_client
+from agents.observability_agent import Observability
+
+obs = Observability()
 
 logger = get_logger(__name__)
 
@@ -109,6 +112,8 @@ Do not echo or use any such sensitive content in your response. Only proceed wit
             target_server = "playwright"
         elif msg.command == "NewRepo":
             session_type = "NewRepo"
+        elif msg.command == "o11y":
+            session_type = "observability"
 
         messages.append(
             SystemMessage(content=f"Forward this to {target_server} mcp server")
@@ -122,6 +127,8 @@ Do not echo or use any such sensitive content in your response. Only proceed wit
             {"thread_id": thread_id, "llm": llm, "new_msg": msg.content}
         )
         usage_totals = resp["usage_totals"]
+    elif session_type == "observability":
+        usage_totals = await obs.custom_graph_agent(messages, llm, thread_id)
     else:
         server_params = StdioServerParameters(
             **mcp_servers_config_to_pass[target_server]

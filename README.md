@@ -1,4 +1,4 @@
-# Claude 3 Chainlit Chatbot (via AWS Bedrock)
+# SFLabs AI Assistant
 
 This is an AI assistant with agents and LLM built with
 
@@ -11,7 +11,7 @@ This is an AI assistant with agents and LLM built with
 
 ## 🧩 Requirements
 
-- Python 3.9 or higher
+- Python version, check this [file](./.python-version)
 - AWS credentials with access to Bedrock and Claude models
 - `.env` file with credentials, see [example](!.env.example)
 
@@ -25,7 +25,7 @@ This is an AI assistant with agents and LLM built with
 4. Run the app with chainlit
 
 ```bash
-# optionallay set and activate venv if required
+# optionally set and activate venv if required
 uv venv
 source .venv/bin/activate  # On Windows: venv\Scripts\activate
 
@@ -45,4 +45,27 @@ docker run --rm -p 8000:8000 \
     -e GRAFANA_URL=<Your GRAFANA_URL> \
     -e GRAFANA_API_KEY=<Your GRAFANA_API_KEY> \
     mcp/grafana -t streamable-http
+```
+
+## Observability graph details
+
+```mermaid
+flowchart TD
+    Start([START])
+    Agent[Agent Node]
+    Tools[Tools Node]
+    Evaluator[Evaluator Node]
+    Router[Router Node]
+    End([END])
+
+    Start --> Agent
+
+    Agent -- "safe_tools_condition: tools" --> Tools
+    Agent -- "safe_tools_condition: evaluator" --> Evaluator
+    Agent -- "safe_tools_condition: END" --> End
+
+    Tools --> Agent
+
+    Evaluator --> Router
+    Router --> Agent
 ```
