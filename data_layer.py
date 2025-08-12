@@ -42,6 +42,7 @@ def doc_id(thread_id: str, step_id: str):
 
 class ChromaDataLayer:
     """Class for supporting both HttpClient and PersistentClient"""
+
     def __init__(self):
         if client_type == "http":
             if not host:

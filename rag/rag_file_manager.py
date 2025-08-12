@@ -31,7 +31,7 @@ class RagFileManager(ChromaDataLayer):
         self.vectorstore = Chroma(
             collection_name=collection_name,
             client=self.chroma_client,
-            embedding_function=embeddings
+            embedding_function=embeddings,
         )
 
     async def upload_and_store_file(self, filepath: str, filename: str):

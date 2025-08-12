@@ -93,7 +93,7 @@ Do not echo or use any such sensitive content in your response. Only proceed wit
     # Human message from user
     messages.append(HumanMessage(content=msg.content))
 
-    tools_agent = cl.user_session.get("tools_agent")
+    profiles_agent = cl.user_session.get("profiles_agent")
     session_type = "tools"
 
     usage_totals = {
@@ -121,7 +121,7 @@ Do not echo or use any such sensitive content in your response. Only proceed wit
         logger.info("Using %s session agent for %s command", session_type, msg.command)
 
     if session_type == "tools":
-        usage_totals = await invoke_react_agent(tools_agent, messages, thread_id)
+        usage_totals = await invoke_react_agent(profiles_agent, messages, thread_id)
     elif session_type == "NewRepo":
         resp = await ci_cd_graph.ainvoke(
             {"thread_id": thread_id, "llm": llm, "new_msg": msg.content}
