@@ -1,18 +1,20 @@
 import asyncio
-from langgraph.graph import StateGraph, START, END
+from contextlib import asynccontextmanager, AsyncExitStack
 from typing import Annotated
 from typing_extensions import TypedDict
-from langgraph.graph.message import add_messages
+
 from langchain_core.messages import HumanMessage, SystemMessage
-from contextlib import asynccontextmanager, AsyncExitStack
-from langchain_mcp_adapters.tools import load_mcp_tools
-from langgraph.prebuilt import ToolNode, tools_condition
-from langgraph.checkpoint.memory import MemorySaver
 from langchain_mcp_adapters.client import MultiServerMCPClient
+from langchain_mcp_adapters.tools import load_mcp_tools
+from langgraph.checkpoint.memory import MemorySaver
+from langgraph.graph import StateGraph, START, END
+from langgraph.graph.message import add_messages
+from langgraph.prebuilt import ToolNode, tools_condition
 from pydantic import BaseModel, Field
-from mcp_agent import mcp_call
-from utils import get_logger
+
 from config import app_config
+from invoke_agent import invoke_agent
+from utils import get_logger
 
 mcp_servers_config_to_pass = app_config.mcp_servers_config_to_pass
 
@@ -174,7 +176,7 @@ class Observability:
             # router → agent
             graph_builder.add_edge("router", "agent")
             graph = graph_builder.compile(checkpointer=self.memory)
-            usage_totals = await mcp_call(graph, messages, threadid)
+            usage_totals = await invoke_agent(graph, messages, threadid)
             return usage_totals
 
     @asynccontextmanager

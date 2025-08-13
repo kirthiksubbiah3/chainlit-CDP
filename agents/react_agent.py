@@ -11,7 +11,7 @@ from mcp.client.stdio import stdio_client
 from config import app_config
 from tools import generate_docx, generate_pdf, initialize_tools
 from utils import get_logger
-from mcp_agent import mcp_call
+from invoke_agent import invoke_agent
 
 logger = get_logger(__name__)
 
@@ -22,7 +22,7 @@ mcp_client = app_config.mcp_client
 
 async def invoke_react_agent(agent, messages, thread_id, buffer=False):
     logger.info("Invoking react agent for thread_id: %s", thread_id)
-    usage_totals = await mcp_call(agent, messages, thread_id, buffer=buffer)
+    usage_totals = await invoke_agent(agent, messages, thread_id, buffer=buffer)
     logger.info("React agent completed for thread_id: %s", thread_id)
     return usage_totals
 

@@ -113,16 +113,16 @@ mcp:
       env:
         AWS_REGION: us-east-1
       transport: stdio
-    # cost_explorer:
-    #   args:
-    #   - awslabs.cost-explorer-mcp-server@latest
-    #   chainlit_command:
-    #     icon: dollar-sign
-    #     id: AWS cost
-    #   command: uvx
-    #   env:
-    #     AWS_REGION: us-east-1
-    #   transport: stdio
+    cost_explorer:
+      args:
+      - awslabs.cost-explorer-mcp-server@latest
+      chainlit_command:
+        icon: dollar-sign
+        id: AWS cost
+      command: uvx
+      env:
+        AWS_REGION: us-east-1
+      transport: stdio
     eks:
       args:
         - awslabs.eks-mcp-server@latest
