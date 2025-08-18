@@ -69,3 +69,16 @@ flowchart TD
     Evaluator --> Router
     Router --> Agent
 ```
+
+## Slack Integration
+
+- Follow the steps in the [Chainlit Slack document](https://docs.chainlit.io/deploy/slack)
+- Fill the request URL under
+  [Event Subscriptions](https://api.slack.com/apps/A09AEQJLFHA/event-subscriptions).
+- You can use ngrok for generating https url of your chainlit app for development
+  purpose, by running ngrok on whichever port you are running chainlit,
+  for ex. ngrok http 8000. You can use the generated ngrok url in the next step.
+- The request URL will be `https://<chainlit url>/slack/events`. Chainlit has inbuilt
+  handler for it.
+- Verify the request URL by pressing verify button.
+- Start chatting.

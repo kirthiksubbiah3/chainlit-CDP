@@ -62,20 +62,23 @@ def log_usage_details(usage_totals: dict, input_token_cost, output_token_cost, u
     logger.info("Logged in user: %s | Cost: $%.6f", user_id, details["total_cost"])
 
 
-async def log_and_show_usage_details(profiles, usage_totals):
-    chat_profile = cl.user_session.get("chat_profile")
+async def log_and_show_usage_details(profiles, usage_totals, chat_profile=None):
+    if not chat_profile:
+        chat_profile = cl.user_session.get("chat_profile")
     input_token_cost = profiles[chat_profile]["cost"]["input_token_cost"]
     output_token_cost = profiles[chat_profile]["cost"]["output_token_cost"]
 
     logger.info("input token cost is %s", input_token_cost)
     logger.info("output token cost is %s", output_token_cost)
 
-    await cl.Message(
-        content=send_usage_cost_message(
-            usage_totals,
-            input_token_cost,
-            output_token_cost,
-        )
-    ).send()
+    if "slack" not in cl.user_session.get("user").identifier:
+        await cl.Message(
+            content=send_usage_cost_message(
+                usage_totals,
+                input_token_cost,
+                output_token_cost,
+            )
+        ).send()
+
     user = cl.user_session.get("user")
     log_usage_details(usage_totals, input_token_cost, output_token_cost, user)

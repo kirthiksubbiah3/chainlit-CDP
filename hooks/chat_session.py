@@ -29,6 +29,8 @@ async def set_profiles_agent():
     logger.info("Available tools agents: %s", profiles_agents.keys())
 
     chat_profile = cl.user_session.get("chat_profile")
+    if (not chat_profile) and ("slack" in cl.user_session.get("user").identifier):
+        chat_profile = next(iter(profiles))
     if not chat_profile or chat_profile not in profiles:
         logger.warning("Invalid or missing chat profile: %s", chat_profile)
         return await cl.Message(content="Error: Invalid chat profile selected.").send()

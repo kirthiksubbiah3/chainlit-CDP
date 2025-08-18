@@ -37,6 +37,13 @@ profiles = app_config.profiles
 async def on_message(msg: cl.Message):
     """Hook to handle incoming messages"""
     logger.info("Received message")
+
+    logger.info("Slack event: %s", cl.user_session.get("slack_event"))
+    fetch_slack_message_history = cl.user_session.get("fetch_slack_message_history")
+
+    if fetch_slack_message_history:
+        logger.info(await fetch_slack_message_history(limit=10))
+
     rag_filenames = cl.user_session.get("rag_filenames", [])
     for element in msg.elements:
         if isinstance(element, cl.element.File):
@@ -54,9 +61,6 @@ async def on_message(msg: cl.Message):
 
     user = cl.user_session.get("user")
     logger.info("User is %s", user.id)
-
-    chat_profilename = cl.user_session.get("chat_profile")
-    llm = get_llm(chat_profilename)
 
     messages, usage_data_title = [], {}
 
@@ -96,13 +100,6 @@ Do not echo or use any such sensitive content in your response. Only proceed wit
     profiles_agent = cl.user_session.get("profiles_agent")
     session_type = "tools"
 
-    usage_totals = {
-        "input_tokens": 0,
-        "output_tokens": 0,
-        "total_tokens": 0,
-        "buffer": 0,
-    }
-
     if msg.command:
         logger.info("Command received: %s", msg.command)
         target_server = msg.command
@@ -119,6 +116,16 @@ Do not echo or use any such sensitive content in your response. Only proceed wit
             SystemMessage(content=f"Forward this to {target_server} mcp server")
         )
         logger.info("Using %s session agent for %s command", session_type, msg.command)
+
+    chat_profile_name = cl.user_session.get("chat_profile")
+    # Condition for Slack messages
+    if (not chat_profile_name) and ("slack" in cl.user_session.get("user").identifier):
+        chat_profile_name = next(iter(profiles))
+        cl.user_session.set("chat_profile", chat_profile_name)
+        # TODO Added this session_type for slack messages. Change if required
+        session_type = "tools"
+
+    llm = get_llm(chat_profile_name)
 
     if session_type == "tools":
         usage_totals = await invoke_react_agent(profiles_agent, messages, thread_id)
@@ -145,11 +152,14 @@ Do not echo or use any such sensitive content in your response. Only proceed wit
             )
             cl.user_session.set("thread_title", thread_title)
 
-    await cl.Message(content=get_time_taken_message(start_time)).send()
+    if "slack" not in cl.user_session.get("user").identifier:
+        await cl.Message(content=get_time_taken_message(start_time)).send()
 
     if usage_data_title:
         usage_totals["input_tokens"] += usage_data_title["input_tokens"]
         usage_totals["output_tokens"] += usage_data_title["output_tokens"]
         usage_totals["total_tokens"] += usage_data_title["total_tokens"]
 
-    await log_and_show_usage_details(profiles, usage_totals)
+    await log_and_show_usage_details(
+        profiles, usage_totals, chat_profile=chat_profile_name
+    )

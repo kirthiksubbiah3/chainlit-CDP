@@ -30,12 +30,16 @@ async def invoke_agent(
         "output_tokens": 0,
         "total_tokens": 0,
     }
+    if "slack" in cl.user_session.get("user").identifier:
+        is_slack = True
 
-    msg_processing = cl.Message(content="Processing...")
-    await msg_processing.send()
+    if not is_slack:
+        msg_processing = cl.Message(content="Processing...")
 
-    msg_thinking = cl.Message(content="Thinking...")
-    await msg_thinking.send()
+        await msg_processing.send()
+
+        msg_thinking = cl.Message(content="Thinking...")
+        await msg_thinking.send()
 
     runnable_config: RunnableConfig = {
         "configurable": {"thread_id": thread_id},
@@ -49,7 +53,8 @@ async def invoke_agent(
         runnable_config,
         stream_mode="updates",
     ):
-        await msg_processing.send()
+        if not is_slack:
+            await msg_processing.send()
         if "agent" not in chunk:
             continue
 
@@ -102,8 +107,9 @@ async def invoke_agent(
                     msg_tokens["output_tokens"],
                     msg_tokens["total_tokens"],
                 )
-            await msg_thinking.remove()
-            await msg_processing.remove()
+            if not is_slack:
+                await msg_thinking.remove()
+                await msg_processing.remove()
 
     file_path = cl.user_session.get("file_path")
     file_name = cl.user_session.get("file_name")

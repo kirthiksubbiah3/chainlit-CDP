@@ -20,14 +20,15 @@ dependencies = [
     "markdown2==2.5.3",
     "mcp==1.12.3",
     "mcp-server-fetch==2025.4.7",
+    "openlit==1.34.37",
     "PyPDF2==3.0.1",
     "python-docx==1.2.0",
     "python-dotenv==1.1.0",
     "PyYAML==6.0.2",
     "reportlab==4.4.2",
+    "slack-bolt==1.23.0",
     "uv==0.7.19",
     "weasyprint==65.1",
-    "openlit==1.34.37"
 ]
 [dependency-groups]
 code_check = [

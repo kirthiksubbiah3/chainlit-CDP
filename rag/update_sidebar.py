@@ -16,5 +16,6 @@ async def update_sidebar(rag_filenames):
         ),
     ]
     logger.info("Setting sidebar elements")
-    await cl.ElementSidebar.set_elements(elements)
-    await cl.ElementSidebar.set_title("RAG pdf files")
+    if "slack" not in cl.user_session.get("user").identifier:
+        await cl.ElementSidebar.set_elements(elements)
+        await cl.ElementSidebar.set_title("RAG pdf files")

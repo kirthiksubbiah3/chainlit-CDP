@@ -76,12 +76,16 @@ class CustomDataLayer(ChromaDataLayer, cl_data.BaseDataLayer):
         super().__init__()
         self.collection = None
 
+    def ensure_collection(self, identifier=None):
+        if not identifier:
+            identifier = cl.user_session.get("user").identifier
+        self.collection = self.chroma_client.get_or_create_collection(
+            name=get_collection_name(suffix=identifier)
+        )
+
     async def get_user(self, identifier: str) -> Optional[cl.PersistedUser]:
         logger.info("User logged in: %s", identifier)
-        if not self.collection:
-            self.collection = self.chroma_client.get_or_create_collection(
-                name=get_collection_name(identifier)
-            )
+        self.ensure_collection(identifier=identifier)
         return cl.PersistedUser(
             id=identifier, createdAt=utc_now_str(), identifier=identifier
         )
@@ -140,7 +144,6 @@ class CustomDataLayer(ChromaDataLayer, cl_data.BaseDataLayer):
             "createdAt": step_dict["createdAt"],
             "user_id": cl.user_session.get("user").identifier,
         }
-
         self.collection.add(
             ids=[doc_id(step_dict["threadId"], step_dict["id"])],
             documents=[step_dict["output"]],
@@ -161,6 +164,7 @@ class CustomDataLayer(ChromaDataLayer, cl_data.BaseDataLayer):
     @queue_until_user_message()
     async def delete_step(self, step_id: str):
         logger.info("Deleting step with id: %s", step_id)
+        self.ensure_collection()
         all_data = self.collection.get()
         for i, meta in enumerate(all_data["metadatas"]):
             if meta["step_id"] == step_id:
@@ -192,7 +196,6 @@ class CustomDataLayer(ChromaDataLayer, cl_data.BaseDataLayer):
     ) -> PaginatedResponse[ThreadDict]:
 
         logger.info("Listing threads with filters: %s", filters)
-
         all_data = self.collection.get()
         thread_map = {}
 
@@ -223,7 +226,7 @@ class CustomDataLayer(ChromaDataLayer, cl_data.BaseDataLayer):
 
     async def get_thread(self, thread_id: str) -> Optional[ThreadDict]:
         logger.info("Getting thread: %s", thread_id)
-
+        self.ensure_collection()
         results = self.collection.get(where={"thread_id": thread_id})
 
         if not results["metadatas"]:
