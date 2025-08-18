@@ -15,6 +15,7 @@ from pydantic import BaseModel, Field
 from config import app_config
 from invoke_agent import invoke_agent
 from utils import get_logger
+from rag.rag_search import rag_search
 
 mcp_servers_config_to_pass = app_config.mcp_servers_config_to_pass
 
@@ -25,6 +26,7 @@ class State(TypedDict):
     alert_details: str
     is_alert: bool
     is_eval: bool
+    question_for_rag: str
 
 
 class Alertdetails(BaseModel):
@@ -88,12 +90,18 @@ class Observability:
                 HumanMessage(
                     content=(
                         (
-                            "Analyze the alert description and identify the appropriate "
-                            "Kubernetes MCP server tools."
-                            " Use the cluster name sftp-eks to extract and run the relevant "
+                            "Analyze the alert description."
+                            "Use the following question to search in the internal document via the "
+                            "RAG tool: "
+                            f"\"{state.get('question_for_rag', '')}\""
+                            "Check in the alert_details.pdf document for possible solutions."
+                            "Use the cluster name 'sftp-eks' to extract and run the relevant"
                             "kubectl commands."
-                            " Based on the output and logs, recommend resolutions for all "
-                            "affected Kubernetes resources."
+                            "If no direct solution is found, analyze and recommend actions."
+                            "Based on logs and output, recommend resolutions for all affected "
+                            "Kubernetes resources if possible"
+                            "If the number of resources are high give a generic recommendation"
+                            "for all the resources"
                         )
                     )
                 )
@@ -101,6 +109,7 @@ class Observability:
             "alert_details": state["alert_details"],
             "is_alert": state["is_alert"],
             "is_eval": state["is_eval"],
+            "question_for_rag": state["question_for_rag"],
         }
 
     def agent(self, state: State) -> State:
@@ -135,6 +144,10 @@ class Observability:
 
         eval_result = self.health_llm_call_with_output.invoke(evaluator_messages)
 
+        question_for_rag = (
+            f"Which instruction should be used for the alert: {eval_result.alert_details}?"
+        )
+
         new_state = {
             "messages": [
                 {"role": "assistant", "content": f"Evaluator findings: {eval_result}"}
@@ -142,6 +155,7 @@ class Observability:
             "alert_details": eval_result.alert_details,
             "is_alert": eval_result.is_alert,
             "is_eval": True,
+            "question_for_rag": question_for_rag,
         }
         return new_state
 
@@ -191,4 +205,5 @@ class Observability:
                 *[load_mcp_tools(session) for session in sessions]
             )
             tools = sum(tools_per_server, [])
+            tools.append(rag_search)
             yield tools

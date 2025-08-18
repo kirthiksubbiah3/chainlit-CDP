@@ -23,12 +23,21 @@ def update_env_file(env_path, creds):
                     line = f"{key}={value}\n"
             f.write(line)
 
+def recursive_update(data, creds):
+    if isinstance(data, dict):
+        for key, value in data.items():
+            if key in creds:
+                data[key] = creds[key]  # update match
+            else:
+                recursive_update(value, creds)
+    return data
 
 def update_yaml_file(yaml_path, creds):
     with open(yaml_path, "r") as f:
         data = yaml.safe_load(f)
-    for key, value in creds.items():
-        data[key] = value
+    
+    recursive_update(data, creds)
+
     with open(yaml_path, "w") as f:
         yaml.safe_dump(data, f)
 

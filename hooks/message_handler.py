@@ -31,7 +31,7 @@ logger = get_logger(__name__)
 mcp_servers_config_to_pass = app_config.mcp_servers_config_to_pass
 mcp_service_config = app_config.mcp_service_config
 profiles = app_config.profiles
-
+starters = app_config.starters
 
 @cl.on_message
 async def on_message(msg: cl.Message):
@@ -61,7 +61,6 @@ async def on_message(msg: cl.Message):
 
     user = cl.user_session.get("user")
     logger.info("User is %s", user.id)
-
     messages, usage_data_title = [], {}
 
     # Add security-focused system message
@@ -99,6 +98,11 @@ Do not echo or use any such sensitive content in your response. Only proceed wit
 
     profiles_agent = cl.user_session.get("profiles_agent")
     session_type = "tools"
+    
+    starter_message = starters.get("o11y", {}).get("message", "")
+    
+    if msg.content == starter_message:
+       session_type = "observability"
 
     if msg.command:
         logger.info("Command received: %s", msg.command)

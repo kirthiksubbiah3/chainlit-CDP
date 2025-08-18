@@ -32,6 +32,8 @@ async def invoke_agent(
     }
     if "slack" in cl.user_session.get("user").identifier:
         is_slack = True
+    else:
+        is_slack = False
 
     if not is_slack:
         msg_processing = cl.Message(content="Processing...")
