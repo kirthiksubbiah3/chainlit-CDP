@@ -30,7 +30,7 @@ uv venv
 source .venv/bin/activate  # On Windows: venv\Scripts\activate
 
 uv sync
-uv run chainlit run app.py -w
+uv run chainlit run src/app.py -w
 ```
 
 ## Instructions to run Grafana mcp server

@@ -111,4 +111,4 @@ USER appuser
 
 EXPOSE 8000
 
-ENTRYPOINT bash -c "Xvfb :1 -screen 0 1280x720x24 & sleep 2 && exec chainlit run app.py --host=0.0.0.0 --port=8000"
+ENTRYPOINT bash -c "Xvfb :1 -screen 0 1280x720x24 & sleep 2 && exec chainlit run src/app.py --host=0.0.0.0 --port=8000"
