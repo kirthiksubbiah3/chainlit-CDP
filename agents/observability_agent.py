@@ -144,9 +144,7 @@ class Observability:
 
         eval_result = self.health_llm_call_with_output.invoke(evaluator_messages)
 
-        question_for_rag = (
-            f"Which instruction should be used for the alert: {eval_result.alert_details}?"
-        )
+        question_for_rag = f"Which instruction should be used for the alert: {eval_result.alert_details}?"
 
         new_state = {
             "messages": [

@@ -10,7 +10,7 @@ class CleanXMLTagParser(BaseOutputParser[str]):
     def parse(self, text: str) -> str:
         # Remove <thinking>, </thinking>, or <thinking ...> tags
         if isinstance(text, list):
-          text = " ".join(str(t) for t in text)
+            text = " ".join(str(t) for t in text)
         elif not isinstance(text, str):
             text = " ".join(str(t) for t in text)
         elif not isinstance(text, str):

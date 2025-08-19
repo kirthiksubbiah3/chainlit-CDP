@@ -33,6 +33,7 @@ mcp_service_config = app_config.mcp_service_config
 profiles = app_config.profiles
 starters = app_config.starters
 
+
 @cl.on_message
 async def on_message(msg: cl.Message):
     """Hook to handle incoming messages"""
@@ -98,11 +99,11 @@ Do not echo or use any such sensitive content in your response. Only proceed wit
 
     profiles_agent = cl.user_session.get("profiles_agent")
     session_type = "tools"
-    
+
     starter_message = starters.get("o11y", {}).get("message", "")
-    
+
     if msg.content == starter_message:
-       session_type = "observability"
+        session_type = "observability"
 
     if msg.command:
         logger.info("Command received: %s", msg.command)
