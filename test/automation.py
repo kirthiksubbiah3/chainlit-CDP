@@ -1,8 +1,10 @@
-import os
 import asyncio
-import json
-from dotenv import load_dotenv
 from contextlib import asynccontextmanager
+import json
+import os
+from pathlib import Path
+
+from dotenv import load_dotenv
 
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from langchain_mcp_adapters.tools import load_mcp_tools
@@ -83,7 +85,10 @@ async def run_tests_from_file(file_path):
                     messages = response.get("messages", [])
                     if messages:
                         message = messages[-1]  # Get the final AIMessage
-                        content = message.content.strip().lower()
+                        if hasattr(message, "content"):
+                            content = message.content.strip().lower()
+                        else:
+                            content = ""
 
                         # Try to parse as JSON first
                         try:
@@ -123,5 +128,7 @@ async def run_tests_from_file(file_path):
 
 if __name__ == "__main__":
     # ✅ Use your full file path here
-    test_file_path = r"tests.txt"
+    base_dir = Path(__file__).parent
+    test_file_path = base_dir / "tests.txt"
+
     asyncio.run(run_tests_from_file(test_file_path))
