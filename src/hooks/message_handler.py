@@ -23,6 +23,7 @@ from utils import (
 from agents.ci_cd_graph import ci_cd_graph
 from agents.react_agent import invoke_react_agent, single_mcp_client
 from agents.observability_agent import Observability
+from mcp_tools import mcp_tools
 
 obs = Observability()
 
@@ -34,10 +35,27 @@ profiles = app_config.profiles
 starters = app_config.starters
 
 
+def set_profiles_agent():
+    profiles_agents = mcp_tools.profiles_agents
+    logger.info(profiles_agents)
+
+    chat_profile = cl.user_session.get("chat_profile")
+    logger.info("Chat profile set in user session: %s", chat_profile)
+    user = cl.user_session.get("user")
+    if (not chat_profile) and user is not None and ("slack" in getattr(user, "identifier", "")):
+        chat_profile = next(iter(profiles))
+    if not chat_profile or chat_profile not in profiles:
+        logger.warning("Invalid or missing chat profile: %s", chat_profile)
+    profiles_agent = profiles_agents[chat_profile]
+    cl.user_session.set("profiles_agent", profiles_agent)
+
+
 @cl.on_message
 async def on_message(msg: cl.Message):
     """Hook to handle incoming messages"""
     logger.info("Received message")
+
+    set_profiles_agent()
 
     logger.info("Slack event: %s", cl.user_session.get("slack_event"))
     fetch_slack_message_history = cl.user_session.get("fetch_slack_message_history")

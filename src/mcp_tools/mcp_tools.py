@@ -20,6 +20,7 @@ class MCPTools:
             for profile in profiles:
                 llm = get_llm(profile)
                 self.profiles_agents[profile] = await tools_session_agent(llm)
+        logger.info("Loaded profiles agents: %s", self.profiles_agents.keys())
 
     # not used anywhere yet
     def get_single_mcp_client(server):

@@ -23,7 +23,8 @@ SERVER_CONFIGS = {
             "mcp-playwright-network@latest",
             "--ignore-https-errors",
             "--isolated",
-            "--browser", "firefox"
+            "--browser",
+            "firefox",
         ],
         "transport": "stdio",
     },
@@ -44,6 +45,7 @@ async def make_graph():
         )
         yield agent
 
+
 APP_URL = "https://ai-dev.sflabs.ustpace.com/login"
 
 
@@ -63,23 +65,22 @@ async def run_tests_from_file(file_path):
                 attempt += 1
                 print(f"Attempt {attempt} for Test {i}")
                 try:
-                    response = await agent.ainvoke({
-                        "messages": [
-                            {
-                                "role": "system",
-                                "content": (
-                                    f"You are an automation testing agent. "
-                                    f"The application URL is {APP_URL}. "
-                                    f"For each test case, execute the "
-                                    f"steps using the given MCP tools."
-                                )
-                            },
-                            {
-                                "role": "user",
-                                "content": test
-                            }
-                        ]
-                    })
+                    response = await agent.ainvoke(
+                        {
+                            "messages": [
+                                {
+                                    "role": "system",
+                                    "content": (
+                                        f"You are an automation testing agent. "
+                                        f"The application URL is {APP_URL}. "
+                                        f"For each test case, execute the "
+                                        f"steps using the given MCP tools."
+                                    ),
+                                },
+                                {"role": "user", "content": test},
+                            ]
+                        }
+                    )
                     print("🔍 Response:", response)
 
                     messages = response.get("messages", [])
@@ -125,6 +126,7 @@ async def run_tests_from_file(file_path):
     print("\n📋 Test Summary:")
     for test_name, result in results:
         print(f"{test_name}: {result}")
+
 
 if __name__ == "__main__":
     # ✅ Use your full file path here

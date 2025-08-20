@@ -39,6 +39,42 @@ jobs:
     - name: Run Bandit (excluding ${{ env.EXCLUDE_DIR }})
       run: uv run bandit -r *.py agents config hooks rag tools utils
 
+    # Automatically increment patch version for refactor/* branches
+    - name: Increment patch version in pyproject.toml
+      if: startsWith(github.head_ref, 'refactor/')
+      run: |
+        python -c "import re; f='pyproject.toml'; s=open(f).read(); v=re.search(r'version\s*=\s*\"(\d+)\.(\d+)\.(\d+)\"',s); major,minor,patch=map(int,v.groups()); np=f'\"{major}.{minor}.{patch+1}\"'; s=re.sub(r'version\s*=\s*\"(\d+)\.(\d+)\.(\d+)\"',f'version = {np}',s); open(f,'w').write(s)"
+        
+    # Automatically increment minor version for feature/* branches
+    - name: Increment minor version in pyproject.toml
+      if: startsWith(github.head_ref, 'feature/')
+      run: |
+        python -c "import re; f='pyproject.toml'; s=open(f).read(); v=re.search(r'version\s*=\s*\"(\d+)\.(\d+)\.(\d+)\"',s); major,minor,patch=map(int,v.groups()); np=f'\"{major}.{minor+1}.0\"'; s=re.sub(r'version\s*=\s*\"(\d+)\.(\d+)\.(\d+)\"',f'version = {np}',s); open(f,'w').write(s)"
+
+    # Commit and push version bump for refactor/* branches
+    - name: Commit version bump (patch)
+      if: startsWith(github.head_ref, 'refactor/')
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git add pyproject.toml
+        git commit -m "chore: bump patch version automatically"
+        git push origin HEAD:${{ github.head_ref }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    # Commit and push version bump for feature/* branches
+    - name: Commit version bump (minor)
+      if: startsWith(github.head_ref, 'feature/')
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git add pyproject.toml
+        git commit -m "chore: bump minor version automatically"
+        git push origin HEAD:${{ github.head_ref }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
     # Cleanup workspace at the end
     - name: Cleanup workspace
       run: |
