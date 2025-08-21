@@ -40,7 +40,7 @@ build/
 test.py
 
 # chainlit
-.chainlit
+.chainlit/translations/
 .chromadb
 .files
 secrets.yaml
