@@ -32,7 +32,7 @@ edit_message = true
 
 [features.slack]
 # Add emoji reaction when message is received (requires reactions:write OAuth scope)
-reaction_on_message_received = false
+reaction_on_message_received = true
 
 # Authorize users to spontaneously upload files with messages
 [features.spontaneous_file_upload]
