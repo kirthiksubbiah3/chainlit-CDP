@@ -1,7 +1,7 @@
 from typing import List, Dict
 
 import chainlit as cl
-from langchain_core.messages import AIMessage, HumanMessage
+from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 from langchain_core.runnables.config import RunnableConfig
 
 from config import app_config
@@ -57,61 +57,78 @@ async def invoke_agent(
     ):
         if not is_slack:
             await msg_processing.send()
-        if "agent" not in chunk:
-            continue
+        if "agent" in chunk:
+            for message in chunk["agent"]["messages"]:
+                if not isinstance(message, AIMessage):
+                    continue
 
-        for message in chunk["agent"]["messages"]:
-            if not isinstance(message, AIMessage):
-                continue
+                file_path = cl.user_session.get("file_path")
+                file_name = cl.user_session.get("file_name")
 
-            file_path = cl.user_session.get("file_path")
-            file_name = cl.user_session.get("file_name")
-
-            if not (file_path and file_name):
-                msg = cl.Message(content="")
-                has_content = False
-                if message.tool_calls and isinstance(message.content, list):
-                    for chunk in message.content:
-                        if (
-                            isinstance(chunk, dict)
-                            and chunk.get("type") == "text"
-                            and chunk.get("text", "").strip()
-                        ):
-                            raw_text = chunk["text"]
-                            clean_text = parser.parse(raw_text)
+                if not (file_path and file_name):
+                    msg = cl.Message(content="")
+                    has_content = False
+                    if message.tool_calls and isinstance(message.content, list):
+                        for chunk in message.content:
+                            if (
+                                isinstance(chunk, dict)
+                                and chunk.get("type") == "text"
+                                and chunk.get("text", "").strip()
+                            ):
+                                raw_text = chunk["text"]
+                                clean_text = parser.parse(raw_text)
+                                await msg.stream_token(f"🤖 {clean_text}")
+                                has_content = True
+                    else:
+                        raw_text = message.content
+                        clean_text = parser.parse(raw_text)
+                        if clean_text.strip():
                             await msg.stream_token(f"🤖 {clean_text}")
                             has_content = True
-                else:
-                    raw_text = message.content
-                    clean_text = parser.parse(raw_text)
-                    if clean_text.strip():
-                        await msg.stream_token(f"🤖 {clean_text}")
-                        has_content = True
-                if has_content:
-                    await msg.send()
-            if hasattr(message, "usage_metadata") and message.usage_metadata:
-                usage = message.usage_metadata
-                msg_tokens = {
-                    "input_tokens": usage.get("input_tokens", 0),
-                    "output_tokens": usage.get("output_tokens", 0),
-                    "total_tokens": usage.get("total_tokens", 0),
-                }
+                    if has_content:
+                        await msg.send()
+                if hasattr(message, "usage_metadata") and message.usage_metadata:
+                    usage = message.usage_metadata
+                    msg_tokens = {
+                        "input_tokens": usage.get("input_tokens", 0),
+                        "output_tokens": usage.get("output_tokens", 0),
+                        "total_tokens": usage.get("total_tokens", 0),
+                    }
 
-                stream_tokens["input_tokens"] += msg_tokens["input_tokens"]
-                stream_tokens["output_tokens"] += msg_tokens["output_tokens"]
-                stream_tokens["total_tokens"] += msg_tokens["total_tokens"]
-                if buffer:
-                    stream_tokens.update({"buffer": clean_text})
-                cl.user_session.set("usage_totals", stream_tokens)
-                logger.debug(
-                    "Input tokens: %d, Output tokens: %d, Total tokens: %d",
-                    msg_tokens["input_tokens"],
-                    msg_tokens["output_tokens"],
-                    msg_tokens["total_tokens"],
-                )
-            if not is_slack:
-                await msg_thinking.remove()
-                await msg_processing.remove()
+                    stream_tokens["input_tokens"] += msg_tokens["input_tokens"]
+                    stream_tokens["output_tokens"] += msg_tokens["output_tokens"]
+                    stream_tokens["total_tokens"] += msg_tokens["total_tokens"]
+                    if buffer:
+                        stream_tokens.update({"buffer": clean_text})
+                    cl.user_session.set("usage_totals", stream_tokens)
+                    logger.debug(
+                        "Input tokens: %d, Output tokens: %d, Total tokens: %d",
+                        msg_tokens["input_tokens"],
+                        msg_tokens["output_tokens"],
+                        msg_tokens["total_tokens"],
+                    )
+                if not is_slack:
+                    await msg_thinking.remove()
+                    await msg_processing.remove()
+
+        elif "tools" in chunk:
+            for tool_msg in chunk["tools"]["messages"]:
+                if ((not isinstance(tool_msg, ToolMessage)) or
+                        (tool_msg.name not in ["get_file_contents"]) or (not tool_msg.artifact)):
+                    continue
+                msg_tool = cl.Message(content=tool_msg.content)
+                for art in tool_msg.artifact:
+                    has_content = False
+                    resource = getattr(art, "resource", None)
+                    if not resource:
+                        continue
+                    text = getattr(resource, "text", None)
+                    if text and text.strip():
+                        clean_text = parser.parse(text.strip())
+                        has_content = True
+                        await msg_tool.stream_token(clean_text)
+                    if has_content:
+                        await msg_tool.send()
 
     file_path = cl.user_session.get("file_path")
     file_name = cl.user_session.get("file_name")

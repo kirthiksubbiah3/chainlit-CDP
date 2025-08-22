@@ -17,13 +17,8 @@ jobs:
     # Checkout repository
     - name: Checkout code
       uses: actions/checkout@v4
-
-    # Fetch the code for the current SHA
-    - name: Fetch code
-      run: |
-        git config --global --add safe.directory "$GITHUB_WORKSPACE"
-        git fetch --all
-        git checkout ${{ github.sha }}
+      with:
+        ref: ${{ github.head_ref }}
 
     # Install uv and Python, then ruff
     - name: Install dev dependencies
