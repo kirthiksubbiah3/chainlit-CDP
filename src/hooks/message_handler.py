@@ -7,6 +7,7 @@ import time
 
 import chainlit as cl
 from langchain_core.messages import HumanMessage, SystemMessage
+from langgraph.checkpoint.serde import jsonplus
 from mcp.client.stdio import StdioServerParameters
 
 from config import app_config
@@ -24,6 +25,11 @@ from agents.ci_cd_graph import ci_cd_graph
 from agents.react_agent import invoke_react_agent, single_mcp_client
 from agents.observability_agent import Observability
 from mcp_tools import mcp_tools
+from utils.serializer import _custom_msgpack_default
+
+
+jsonplus._msgpack_default = _custom_msgpack_default
+
 
 obs = Observability()
 
