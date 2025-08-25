@@ -23,7 +23,7 @@ def get_data_layer():
 
 
 @cl.set_chat_profiles
-async def chat_profile(current_user: cl.User):
-    logger.info("Loading chat profiles for user %s", current_user.id)
-    chat_profiles = await load_chat_profiles(profiles, starters)
+async def chat_profile(user: cl.User):
+    logger.info("Loading chat profiles for user %s", user.id)
+    chat_profiles = await load_chat_profiles(user, profiles, starters)
     return chat_profiles

@@ -36,16 +36,17 @@ async def on_chat_resume():
 async def on_chat_start():
     """Hook to initialize the chat session"""
     logger.info("Starting Sentinel Mind")
-
-    logger.debug("Setting commands for the chat session")
-    await cl.context.emitter.set_commands(commands)
-
+    
     logger.debug("Getting user session data")
     user = cl.user_session.get("user")
     cl.user_session.set("usage_totals", {})
 
     username = get_username(user)
     logger.info("user display name is %s", username)
+
+    logger.debug("Setting commands for the chat session")
+    await cl.context.emitter.set_commands(commands)
+    
     rag_manager = RagFileManager()
     rag_filenames = await rag_manager.get_all_documents()
     logger.info("%d RAG filenames found", len(rag_filenames))
