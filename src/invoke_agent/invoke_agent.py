@@ -113,8 +113,11 @@ async def invoke_agent(
 
         elif "tools" in chunk:
             for tool_msg in chunk["tools"]["messages"]:
-                if ((not isinstance(tool_msg, ToolMessage)) or
-                        (tool_msg.name not in ["get_file_contents"]) or (not tool_msg.artifact)):
+                if (
+                    (not isinstance(tool_msg, ToolMessage))
+                    or (tool_msg.name not in ["get_file_contents"])
+                    or (not tool_msg.artifact)
+                ):
                     continue
                 msg_tool = cl.Message(content=tool_msg.content)
                 for art in tool_msg.artifact:

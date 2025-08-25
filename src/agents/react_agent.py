@@ -9,7 +9,7 @@ from mcp import ClientSession
 from mcp.client.stdio import stdio_client
 
 from config import app_config
-from tools import generate_docx, generate_pdf, initialize_tools
+from tools import generate_docx, generate_pdf
 from utils import get_logger
 from invoke_agent import invoke_agent
 
@@ -25,14 +25,6 @@ async def invoke_react_agent(agent, messages, thread_id, buffer=False):
     usage_totals = await invoke_agent(agent, messages, thread_id, buffer=buffer)
     logger.info("React agent completed for thread_id: %s", thread_id)
     return usage_totals
-
-
-async def tools_session_agent(llm):
-    logger.info("Initializing tools for tools session agent")
-    tools = await initialize_tools()
-    extend_with_custom_tools(tools)
-    agent = create_react_agent(llm, tools, checkpointer=memory)
-    return agent
 
 
 async def single_mcp_client(server_params, llm, messages, thread_id):

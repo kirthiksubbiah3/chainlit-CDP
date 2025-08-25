@@ -10,7 +10,7 @@ import openlit
 
 from config import app_config
 import hooks
-from mcp_tools import mcp_tools
+from agents import default_agents
 from utils import get_logger
 
 logger = get_logger(__name__)
@@ -24,7 +24,7 @@ logger.info("Initialized openlit for %s", app)
 
 
 async def get_profiles_agents():
-    await mcp_tools.get_profiles_agents()
+    await default_agents.get_profiles_agents()
 
 
 asyncio.run(get_profiles_agents())

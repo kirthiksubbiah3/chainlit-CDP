@@ -1,11 +1,11 @@
 from langchain_mcp_adapters.client import MultiServerMCPClient
 
-from agents.react_agent import tools_session_agent
 from config import app_config
-from llm import get_llm
 from utils import get_logger
 
 logger = get_logger(__name__)
+
+mcp_client = app_config.mcp_client
 profiles = app_config.profiles
 mcp_servers_config_to_pass = app_config.mcp_servers_config_to_pass
 
@@ -13,14 +13,12 @@ mcp_servers_config_to_pass = app_config.mcp_servers_config_to_pass
 class MCPTools:
     def __init__(self):
         self.profiles_agents = None
+        self.tools = None
 
-    async def get_profiles_agents(self):
-        if self.profiles_agents is None:
-            self.profiles_agents = {}
-            for profile in profiles:
-                llm = get_llm(profile)
-                self.profiles_agents[profile] = await tools_session_agent(llm)
-        logger.info("Loaded profiles agents: %s", self.profiles_agents.keys())
+    async def get_tools(self):
+        if not self.tools:
+            self.tools = await mcp_client.get_tools()
+        return self.tools
 
     # not used anywhere yet
     def get_single_mcp_client(server):

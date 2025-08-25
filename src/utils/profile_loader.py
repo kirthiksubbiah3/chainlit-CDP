@@ -23,11 +23,11 @@ async def load_chat_profiles(
     for profile_name, profile_cfg in profiles_cfg.items():
         name = profile_name
         icon = profile_cfg.get("icon", "")
-        
+
         username = get_username(user)
-        
+
         markdown_description = f"Hello *{username}* 👋, how can I assist you today?"
-        
+
         profile_starters = profile_cfg.get("starters", [])
 
         starters_cl: list[cl.Starter] = []
