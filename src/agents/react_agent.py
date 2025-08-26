@@ -5,9 +5,6 @@ from langgraph.checkpoint.memory import MemorySaver
 from langchain_mcp_adapters.tools import load_mcp_tools
 from langgraph.prebuilt import create_react_agent
 
-from mcp import ClientSession
-from mcp.client.stdio import stdio_client
-
 from config import app_config
 from tools import generate_docx, generate_pdf
 from utils import get_logger
@@ -25,18 +22,6 @@ async def invoke_react_agent(agent, messages, thread_id, buffer=False):
     usage_totals = await invoke_agent(agent, messages, thread_id, buffer=buffer)
     logger.info("React agent completed for thread_id: %s", thread_id)
     return usage_totals
-
-
-async def single_mcp_client(server_params, llm, messages, thread_id):
-    async with stdio_client(server_params) as (read, write):
-        async with ClientSession(read, write) as session:
-            # Initialize the connection
-            await session.initialize()
-            # Get tools
-            tools = await load_mcp_tools(session)
-            # Create and run the agent
-            agent = create_react_agent(llm, tools, checkpointer=memory)
-            return await invoke_react_agent(agent, messages, thread_id)
 
 
 async def tools_mcp_server_agent(mcp_server, messages, llm, thread_id, buffer=False):

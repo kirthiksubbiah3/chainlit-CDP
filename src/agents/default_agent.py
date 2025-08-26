@@ -38,6 +38,7 @@ class DefaultAgents:
 
 default_agents = DefaultAgents()
 
+
 def default_agent(profile):
     agent = default_agents.profiles_agents[profile]
     return agent

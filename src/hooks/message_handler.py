@@ -8,7 +8,6 @@ import time
 import chainlit as cl
 from langchain_core.messages import HumanMessage, SystemMessage
 from langgraph.checkpoint.serde import jsonplus
-from mcp.client.stdio import StdioServerParameters
 
 from config import app_config
 from invoke_agent import invoke_agent
@@ -24,8 +23,8 @@ from utils import (
 
 from agents.ci_cd_graph import ci_cd_graph
 from agents.default_agent import default_agent
-from agents.react_agent import single_mcp_client
 from agents.observability_agent import Observability
+from mcp_tools import mcp_server_session
 from utils.serializer import _custom_msgpack_default
 
 
@@ -41,6 +40,7 @@ mcp_service_config = app_config.mcp_service_config
 profiles = app_config.profiles
 starters = app_config.starters
 
+single_mcp_client = mcp_server_session.single_mcp_client
 
 def set_profiles_agent():
     chat_profile = cl.user_session.get("chat_profile")
@@ -168,10 +168,7 @@ Do not echo or use any such sensitive content in your response. Only proceed wit
     elif session_type == "observability":
         usage_totals = await obs.custom_graph_agent(messages, llm, thread_id)
     else:
-        server_params = StdioServerParameters(
-            **mcp_servers_config_to_pass[target_server]
-        )
-        usage_totals = await single_mcp_client(server_params, llm, messages, thread_id)
+        usage_totals = await single_mcp_client(target_server, llm, messages, thread_id)
 
     # Setting thread title
     thread_title = cl.user_session.get("thread_title")
