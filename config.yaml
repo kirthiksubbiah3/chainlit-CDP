@@ -102,9 +102,6 @@ mcp:
     cloudwatch_logs:
       args:
       - awslabs.cloudwatch-logs-mcp-server@latest
-      # chainlit_command:
-      #   icon: cloud
-      #   id: Cloudwatch
       command: uvx
       env:
         AWS_REGION: us-east-1
@@ -147,27 +144,12 @@ mcp:
       args:
       - -y
       - '@modelcontextprotocol/server-gitlab'
-      # chainlit_command:
-      #   description: Search through GitLab
-      #   icon: gitlab
-      #   id: GitLab
-      #   usecase: Search for public repositories in a GitLab group and list their latest
-      #     commit messages.
       command: npx
       transport: stdio
     grafana:
-      # chainlit_command:
-      #   description: Query Grafana dashboards and data sources
-      #   icon: bar-chart-2
-      #   id: Grafana
-      #   usecase: Query the Grafana dashboard for the 'visioncheckout' project to retrieve
-      #     the latest metrics and visualizations.
       transport: streamable_http
       url: http://localhost:8080/mcp
     jenkins:
-      # chainlit_command:
-      #   icon: repeat-2
-      #   id: Jenkins
       transport: sse
       url: https://app.ustpace.io/visioncheckout/jenkins/mcp-server/sse
     playwright:

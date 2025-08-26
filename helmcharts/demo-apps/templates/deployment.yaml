@@ -23,22 +23,19 @@ spec:
             - containerPort: {{ .Values.containerPort }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
-          securityContext:
-            readOnlyRootFilesystem: {{ .Values.securityContext.readOnlyRootFilesystem | default true }}
-            runAsNonRoot: {{ .Values.securityContext.runAsNonRoot | default true }}
-            runAsUser: {{ .Values.securityContext.runAsUser | default 1000 }}
-            allowPrivilegeEscalation: {{ .Values.securityContext.allowPrivilegeEscalation | default false }}
+          {{- if .Values.env }}
           env:
             {{- range $key, $value := .Values.env }}
               {{- if kindIs "string" $value }}
-            - name: {{ $key }}
-              value: "{{ $value }}"
+              - name: {{ $key }}
+                value: "{{ $value }}"
               {{- else }}
-            - name: {{ $key }}
-              valueFrom:
-                {{- toYaml $value | nindent 16 }}
+              - name: {{ $key }}
+                valueFrom:
+                  {{- toYaml $value | nindent 18 }}
               {{- end }}
             {{- end }}
+          {{- end }}
           {{- if .Values.envFromSecret }}
           envFrom:
             {{- range .Values.envFromSecret }}
@@ -48,6 +45,8 @@ spec:
           {{- end }}
           volumeMounts:
             {{- toYaml .Values.volumeMounts | nindent 12 }}
+      {{- if .Values.extraContainers }}
+      {{- toYaml .Values.extraContainers | nindent 8 }}
+      {{- end }}
       volumes:
         {{- toYaml .Values.volumes | nindent 8 }}
-#

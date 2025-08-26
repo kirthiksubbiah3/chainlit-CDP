@@ -18,12 +18,11 @@ spec:
             pathType: {{ .pathType }}
             backend:
               service:
-                name: {{ $.Values.service.name | default $.Values.appName }}
+                name: {{ .serviceName }}
                 port:
-                  number: {{ $.Values.service.port }}
+                  number: {{ .servicePort }}
           {{- end }}
     {{- end }}
   tls:
     {{- toYaml .Values.ingress.tls | nindent 4 }}
 {{- end }}
-

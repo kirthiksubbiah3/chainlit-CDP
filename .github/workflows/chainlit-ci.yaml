@@ -6,8 +6,7 @@ on:
       - main
     paths:
       - 'Dockerfile'
-      - '**/*.py'
-      - 'requirements.txt'
+      - 'src/'
 
 jobs:
   build-scan-push:
