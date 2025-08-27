@@ -15,12 +15,22 @@ spec:
       labels:
         app: {{ .Values.appName }}
     spec:
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+        {{- if .Values.fsGroup }}
+        fsGroup: {{ .Values.fsGroup }}
+        {{- end }}
       containers:
         - name: {{ .Values.appName }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" }}
           ports:
             - containerPort: {{ .Values.containerPort }}
+
+          {{- if .Values.args }}
+          args: {{- toYaml .Values.args | nindent 10 }}
+          {{- end }}
+
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           {{- if .Values.env }}
@@ -43,6 +53,7 @@ spec:
                 name: {{ . }}
             {{- end }}
           {{- end }}
+          securityContext: {{- toYaml .Values.containerSecurityContext | nindent 10 }}
           volumeMounts:
             {{- toYaml .Values.volumeMounts | nindent 12 }}
       {{- if .Values.extraContainers }}

@@ -1,0 +1,28 @@
+appName: grafana-mcp
+namespace: mcp-servers
+replicas: 1
+image:
+  repository: mcp/grafana
+  tag: latest
+  pullPolicy: IfNotPresent
+
+containerPort: 8000
+args:
+  - "-t"
+  - "streamable-http"
+env:
+  GRAFANA_URL: "https://sflabs.grafana.net"
+  GRAFANA_API_KEY:
+    secretKeyRef:
+      name: grafana-secrets
+      key: api-key
+
+service:
+  name: grafana-mcp-service
+  type: ClusterIP
+  protocol: TCP
+  port: 8000
+  targetPort: 8000
+
+pvc:
+  enabled: false

@@ -1,0 +1,32 @@
+appName: chromadb
+namespace: mcp-servers
+replicas: 1
+fsGroup: 1000
+image:
+  repository: chromadb/chroma
+  tag: latest
+  pullPolicy: IfNotPresent
+
+containerPort: 8000
+
+volumeMounts:
+  - name: chromadb-data
+    mountPath: /data
+
+volumes:
+  - name: chromadb-data
+    persistentVolumeClaim:
+      claimName: chromadb-data
+
+service:
+  name: chromadb
+  type: ClusterIP
+  protocol: TCP
+  port: 8000
+  targetPort: 8000
+
+pvc:
+  enabled: true
+  name: chromadb-data
+  accessMode: ReadWriteOnce
+  storage: 20Gi
