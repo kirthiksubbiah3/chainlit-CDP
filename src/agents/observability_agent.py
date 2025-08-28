@@ -51,13 +51,9 @@ class Observability:
         }
         self.logger = get_logger(__name__)
 
-        self.servers_to_use = ["slack", "eks"]
-        filtered_config = {
-            key: mcp_servers_config_to_pass[key]
-            for key in self.servers_to_use
-            if key in mcp_servers_config_to_pass
-        }
-        self.mcp_client = MCPServerSessionMulti(filtered_config)
+        servers_to_use = ["slack", "eks"]
+
+        self.mcp_client = MCPServerSessionMulti(servers_to_use)
 
     def safe_tools_condition(self, state: State) -> str:
         result = tools_condition(state)

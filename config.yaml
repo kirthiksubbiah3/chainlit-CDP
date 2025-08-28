@@ -176,6 +176,10 @@ agents:
     chainlit_command:
       id: NewRepo
       icon: workflow
+  cryptowallet:
+    chainlit_command:
+      id: cryptowallet
+      icon: bar-chart-2
   rag:
     chainlit_command:
       description: Search through rag

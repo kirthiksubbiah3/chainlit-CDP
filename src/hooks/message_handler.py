@@ -24,6 +24,7 @@ from utils import (
 from agents.react_repo_agent import react_repo_agent
 from agents.default_agent import default_agent
 from agents.observability_agent import Observability
+from agents.cryptowallet_agent import CryptoWallet
 from mcp_tools import MCPServerSession
 from utils.serializer import _custom_msgpack_default
 
@@ -32,6 +33,7 @@ jsonplus._msgpack_default = _custom_msgpack_default
 
 
 obs = Observability()
+crypto = CryptoWallet()
 
 logger = get_logger(__name__)
 
@@ -141,6 +143,8 @@ Do not echo or use any such sensitive content in your response. Only proceed wit
             session_type = "NewRepo"
         elif msg.command == "o11y":
             session_type = "observability"
+        elif msg.command == "cryptowallet":
+            session_type = "cryptowallet"
 
         messages.append(
             SystemMessage(content=f"Forward this to {target_server} mcp server")
@@ -166,6 +170,8 @@ Do not echo or use any such sensitive content in your response. Only proceed wit
         usage_totals = resp["usage_totals"]
     elif session_type == "observability":
         usage_totals = await obs.custom_graph_agent(messages, llm, thread_id)
+    elif session_type == "cryptowallet":
+        usage_totals = await crypto.custom_graph_agent(messages, llm, thread_id)
     else:
         mcp_server_session = MCPServerSession(
             "github", messages, llm, thread_id, buffer=False
