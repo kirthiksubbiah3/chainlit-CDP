@@ -1,11 +1,7 @@
-import asyncio
-from contextlib import asynccontextmanager, AsyncExitStack
 from typing import Annotated
 from typing_extensions import TypedDict
 
 from langchain_core.messages import HumanMessage, SystemMessage
-from langchain_mcp_adapters.client import MultiServerMCPClient
-from langchain_mcp_adapters.tools import load_mcp_tools
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import StateGraph, START, END
 from langgraph.graph.message import add_messages
@@ -14,6 +10,7 @@ from pydantic import BaseModel, Field
 
 from config import app_config
 from invoke_agent import invoke_agent
+from mcp_tools import MCPServerSessionMulti
 from utils import get_logger
 from rag.rag_search import rag_search
 
@@ -60,7 +57,7 @@ class Observability:
             for key in self.servers_to_use
             if key in mcp_servers_config_to_pass
         }
-        self.mcp_client = MultiServerMCPClient(filtered_config)
+        self.mcp_client = MCPServerSessionMulti(filtered_config)
 
     def safe_tools_condition(self, state: State) -> str:
         result = tools_condition(state)
@@ -158,7 +155,9 @@ class Observability:
         return new_state
 
     async def custom_graph_agent(self, messages, llm, threadid):
-        async with self.make_graph() as tools:
+        async with self.mcp_client.yield_tools() as tools:
+            tools.append(rag_search)
+
             self.llm = llm
             self.llm_with_tools = llm.bind_tools(tools)
             self.health_llm_call_with_output = self.llm.with_structured_output(
@@ -190,18 +189,3 @@ class Observability:
             graph = graph_builder.compile(checkpointer=self.memory)
             usage_totals = await invoke_agent(graph, messages, threadid)
             return usage_totals
-
-    @asynccontextmanager
-    async def make_graph(self):
-        server_names = list(self.mcp_client.connections.keys())
-        async with AsyncExitStack() as stack:
-            sessions = [
-                await stack.enter_async_context(self.mcp_client.session(name))
-                for name in server_names
-            ]
-            tools_per_server = await asyncio.gather(
-                *[load_mcp_tools(session) for session in sessions]
-            )
-            tools = sum(tools_per_server, [])
-            tools.append(rag_search)
-            yield tools

@@ -42,6 +42,7 @@ starters = app_config.starters
 
 single_mcp_client = mcp_server_session.single_mcp_client
 
+
 def set_profiles_agent():
     chat_profile = cl.user_session.get("chat_profile")
     logger.info("Chat profile set in user session: %s", chat_profile)
