@@ -5,7 +5,7 @@ from langgraph.graph import StateGraph, END
 from langchain_core.messages import HumanMessage
 from typing_extensions import TypedDict
 
-from agents.react_agent import tools_mcp_server_agent
+from mcp_tools import MCPServerSession
 from utils.git import (
     create_repo_from_boilerplate,
     get_git_details_from_input,
@@ -85,9 +85,12 @@ async def create_repo(state: ProjectState) -> ProjectState:
     )
 
     messages = [HumanMessage(content=message)]
-    resp = await tools_mcp_server_agent(
+
+    mcp_server_session = MCPServerSession(
         "github", messages, state["llm"], state["thread_id"], buffer=True
     )
+    resp = await mcp_server_session.client_session_per_server()
+
     state["buffer"] = resp.pop("buffer")
     git_data, usage_metadata = await get_git_details_from_input(
         state["llm"], state["buffer"]
@@ -129,4 +132,4 @@ def make_graph():
     return builder.compile()
 
 
-ci_cd_graph = make_graph()
+react_repo_agent = make_graph()

@@ -43,7 +43,9 @@ class AppConfig:
             for srv, cfg in self.mcp_servers_config.items()
         }
 
-        self.mcp_client = MultiServerMCPClient(self.mcp_servers_config_to_pass)
+        self.multi_server_mcp_client = MultiServerMCPClient(
+            self.mcp_servers_config_to_pass
+        )
 
         self.commands = []
         configs = [self.mcp_servers_config, agents_config]

@@ -6,6 +6,7 @@ from langchain_mcp_adapters.tools import load_mcp_tools
 
 
 class MCPServerSessionMulti:
+    # mcp_config can contain one or more server configurations
     def __init__(self, mcp_config):
         self.mcp_client = MultiServerMCPClient(mcp_config)
 

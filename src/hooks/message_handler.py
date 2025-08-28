@@ -21,10 +21,10 @@ from utils import (
     generate_chat_title_from_input,
 )
 
-from agents.ci_cd_graph import ci_cd_graph
+from agents.react_repo_agent import react_repo_agent
 from agents.default_agent import default_agent
 from agents.observability_agent import Observability
-from mcp_tools import mcp_server_session
+from mcp_tools import MCPServerSession
 from utils.serializer import _custom_msgpack_default
 
 
@@ -39,8 +39,6 @@ mcp_servers_config_to_pass = app_config.mcp_servers_config_to_pass
 mcp_service_config = app_config.mcp_service_config
 profiles = app_config.profiles
 starters = app_config.starters
-
-single_mcp_client = mcp_server_session.single_mcp_client
 
 
 def set_profiles_agent():
@@ -162,14 +160,17 @@ Do not echo or use any such sensitive content in your response. Only proceed wit
     if session_type == "tools":
         usage_totals = await invoke_agent(profiles_agent, messages, thread_id)
     elif session_type == "NewRepo":
-        resp = await ci_cd_graph.ainvoke(
+        resp = await react_repo_agent.ainvoke(
             {"thread_id": thread_id, "llm": llm, "new_msg": msg.content}
         )
         usage_totals = resp["usage_totals"]
     elif session_type == "observability":
         usage_totals = await obs.custom_graph_agent(messages, llm, thread_id)
     else:
-        usage_totals = await single_mcp_client(target_server, llm, messages, thread_id)
+        mcp_server_session = MCPServerSession(
+            "github", messages, llm, thread_id, buffer=False
+        )
+        usage_totals = await mcp_server_session.client_session_per_server()
 
     # Setting thread title
     thread_title = cl.user_session.get("thread_title")
