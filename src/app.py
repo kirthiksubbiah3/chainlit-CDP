@@ -16,6 +16,7 @@ logger = get_logger(__name__)
 logger.info("Imported module: %s", hooks.__name__)
 logger.info("Loaded config from %s", app_config)
 
+
 async def get_profiles_agents():
     await default_agents.get_profiles_agents()
 

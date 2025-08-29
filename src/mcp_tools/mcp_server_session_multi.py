@@ -8,6 +8,7 @@ from config import app_config
 
 mcp_servers_config_to_pass = app_config.mcp_servers_config_to_pass
 
+
 class MCPServerSessionMulti:
     # mcp_config can contain one or more server configurations
     def __init__(self, server_names):

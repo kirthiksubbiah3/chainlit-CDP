@@ -28,7 +28,6 @@ from agents.cryptowallet_agent import CryptoWallet
 from mcp_tools import MCPServerSession
 from utils.serializer import _custom_msgpack_default
 
-
 jsonplus._msgpack_default = _custom_msgpack_default
 
 
@@ -73,6 +72,7 @@ async def on_message(msg: cl.Message):
         logger.info(await fetch_slack_message_history(limit=10))
 
     rag_filenames = cl.user_session.get("rag_filenames", [])
+
     for element in msg.elements:
         if isinstance(element, cl.element.File):
             filepath = element.path
@@ -91,24 +91,34 @@ async def on_message(msg: cl.Message):
     logger.info("User is %s", user.id)
     messages, usage_data_title = [], {}
 
+    if filepath:
+        summarize_file_prompt = SystemMessage(
+            content=f"""
+            If the user asks to summarize the uploaded file, pass {filepath}
+            to the read_attachment tool to extract its content and
+            provide a concise summary of their content.
+        """
+        )
+        messages.append(summarize_file_prompt)
+
     # Add security-focused system message
     security_filter_prompt = SystemMessage(
         content="""
- Security Notice:
+        Security Notice:
 
-You MUST NOT ask for or process any sensitive user information like:
-- Passwords
-- API keys
-- Access tokens
-- TLS certificates
-- Secrets
-- Anything resembling credentials or private configuration
+        You MUST NOT ask for or process any sensitive user information like:
+        - Passwords
+        - API keys
+        - Access tokens
+        - TLS certificates
+        - Secrets
+        - Anything resembling credentials or private configuration
 
-If a user provides such data (even accidentally), respond only with this message:
-"or your security, please do NOT share sensitive credentials or secrets. They have been ignored."
+        If a user provides such data (even accidentally), respond only with this message:
+        "or your security, please do NOT share sensitive credentials or secrets. They have been ignored."
 
-Do not echo or use any such sensitive content in your response. Only proceed with safe content.
-"""
+        Do not echo or use any such sensitive content in your response. Only proceed with safe content.
+    """
     )
     messages.append(security_filter_prompt)
 
