@@ -2,7 +2,7 @@ name: Security and Lint Checks
 
 on:
   pull_request:
-    branches: 
+    branches:
       - main
     paths:
       - '**/*.py'
@@ -13,42 +13,66 @@ jobs:
     runs-on: eks-edopsclt-custom-runner
     env:
       EXCLUDE_DIR: streamlit
+
     steps:
-    # Checkout repository
-    - name: Checkout code
+    # Checkout PR branch
+    - name: Checkout PR code
       uses: actions/checkout@v4
       with:
         ref: ${{ github.head_ref }}
+        fetch-depth: 0 # Fetch all history for diffing
 
-    # Install uv and Python, then ruff
+    # Checkout base branch to a different folder
+    - name: Checkout base branch (main)
+      uses: actions/checkout@v4
+      with:
+        ref: main
+        path: base_branch
+        fetch-depth: 0
+
+    # Install dev dependencies
     - name: Install dev dependencies
       run: |
         curl -LsSf https://astral.sh/uv/install.sh | sh
         uv sync --only-group code_check
 
-    # Run ruff, skipping ${{ env.EXCLUDE_DIR }}
+    # Run ruff (lint), skipping $EXCLUDE_DIR
     - name: Run ruff (excluding ${{ env.EXCLUDE_DIR }})
       run: uv run ruff check . --exclude "${{ env.EXCLUDE_DIR }}"
 
-    # Run Bandit, skipping 'streamlit' directory
-    - name: Run Bandit (excluding ${{ env.EXCLUDE_DIR }})
+    # Run Bandit (security), skipping streamlit
+    - name: Run Bandit
       run: uv run bandit -r *.py agents config hooks rag tools utils
 
-    # Automatically increment patch version for refactor/* branches
+    # Check if version bump needed
+    - name: Check if version bump is needed
+      id: version_check
+      run: |
+        pr_version=$(grep 'version =' pyproject.toml | sed 's/version = "\(.*\)"/\1/')
+        base_version=$(grep 'version =' base_branch/pyproject.toml | sed 's/version = "\(.*\)"/\1/')
+        echo "PR branch version: $pr_version"
+        echo "Base branch version: $base_version"
+        if [[ "$pr_version" == "$base_version" ]]; then
+          echo "needs_bump=true" >> $GITHUB_OUTPUT
+        else
+          echo "needs_bump=false" >> $GITHUB_OUTPUT
+        fi
+
+    # Bump patch version for refactor/* branches, only if needed
     - name: Increment patch version in pyproject.toml
-      if: startsWith(github.head_ref, 'refactor/')
+      if: startsWith(github.head_ref, 'refactor/') && steps.version_check.outputs.needs_bump == 'true'
       run: |
         python -c "import re; f='pyproject.toml'; s=open(f).read(); v=re.search(r'version\s*=\s*\"(\d+)\.(\d+)\.(\d+)\"',s); major,minor,patch=map(int,v.groups()); np=f'\"{major}.{minor}.{patch+1}\"'; s=re.sub(r'version\s*=\s*\"(\d+)\.(\d+)\.(\d+)\"',f'version = {np}',s); open(f,'w').write(s)"
-        
-    # Automatically increment minor version for feature/* branches
+
+    # Bump minor version for feature/* branches, only if needed
     - name: Increment minor version in pyproject.toml
-      if: startsWith(github.head_ref, 'feature/')
+      if: startsWith(github.head_ref, 'feature/') && steps.version_check.outputs.needs_bump == 'true'
       run: |
         python -c "import re; f='pyproject.toml'; s=open(f).read(); v=re.search(r'version\s*=\s*\"(\d+)\.(\d+)\.(\d+)\"',s); major,minor,patch=map(int,v.groups()); np=f'\"{major}.{minor+1}.0\"'; s=re.sub(r'version\s*=\s*\"(\d+)\.(\d+)\.(\d+)\"',f'version = {np}',s); open(f,'w').write(s)"
 
     # Commit and push version bump for refactor/* branches
     - name: Commit version bump (patch)
-      if: startsWith(github.head_ref, 'refactor/')
+      if: startsWith(github.head_ref, 'refactor/') && steps.version_check.outputs.needs_bump == 'true'
       run: |
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -60,7 +84,7 @@ jobs:
 
     # Commit and push version bump for feature/* branches
     - name: Commit version bump (minor)
-      if: startsWith(github.head_ref, 'feature/')
+      if: startsWith(github.head_ref, 'feature/') && steps.version_check.outputs.needs_bump == 'true'
       run: |
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -70,7 +94,6 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    # Cleanup workspace at the end
+    # Cleanup workspace
     - name: Cleanup workspace
-      run: |
-        git clean -fdx
+      run: git clean -fdx
