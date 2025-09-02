@@ -49,9 +49,14 @@ class Observability:
             "total_output_tokens": 0,
             "total_tokens": 0,
         }
+        self.channel = (
+            mcp_servers_config_to_pass.get("slack", {})
+            .get("env", {})
+            .get("SLACK_CHANNEL_IDS", "")
+        )
         self.logger = get_logger(__name__)
 
-        servers_to_use = ["slack", "eks"]
+        servers_to_use = ["slack", "eks", "grafana"]
 
         self.mcp_client = MCPServerSessionMulti(servers_to_use)
 
@@ -95,6 +100,13 @@ class Observability:
                             "Kubernetes resources if possible"
                             "If the number of resources are high give a generic recommendation"
                             "for all the resources"
+                            "If the affected resources are less try to fix the issue after getting"
+                            "approval from the user"
+                            "Validate after fixing the issue"
+                            "If a namespace is stuck in the Terminating state due to finalizers"
+                            "patch the namespace by setting its metadata.finalizers to null"
+                            "Don't keep on trying the same thing again and again"
+                            "Validate using kubernetes alert, don't validate with alert"
                         )
                     )
                 )
@@ -106,7 +118,18 @@ class Observability:
         }
 
     def agent(self, state: State) -> State:
-        return {"messages": [self.llm_with_tools.invoke(state["messages"])]}
+        additional_instruction = HumanMessage(
+            content=(
+                f"You may retrieve alert details from the Slack MCP server if needed"
+                f"When communicating with slack, use the channelid {self.channel}"
+                f"To get the list of affected resource, try getting from grafana mcp server"
+                f"Try eks mcp server if you are getting information from grafana mcp server"
+                f"To fix the issue, try using eks mcp server"
+                f"Use sftp-eks cluster"
+            )
+        )
+        messages = state["messages"] + [additional_instruction]
+        return {"messages": [self.llm_with_tools.invoke(messages)]}
 
     def evaluator(self, state: State) -> State:
         last_message = state["messages"][-1]
@@ -137,7 +160,10 @@ class Observability:
 
         eval_result = self.health_llm_call_with_output.invoke(evaluator_messages)
 
-        question_for_rag = f"Which instruction should be used for the alert: {eval_result.alert_details}?"
+        question_for_rag = (
+            f"Which instruction should be used for the alert: "
+            f"{eval_result.alert_details}?"
+        )
 
         new_state = {
             "messages": [

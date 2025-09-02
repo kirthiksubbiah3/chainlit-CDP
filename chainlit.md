@@ -17,8 +17,8 @@ in namespace ai-demo in the sftp-eks cluster.
 
 ### o11y
 
-Get the channel history from slack. The slack channel_id is C098RQR0K8C.
-Work on Namespace without pod alerts
+Get details about Pods without Memory limit in Slack. Give list of affected resources.
+Recommend a solution to fix the alert. Fix the alert after getting user confirmation
 
 ### PodRestart
 
