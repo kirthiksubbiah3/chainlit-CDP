@@ -24,6 +24,7 @@ from utils import (
 from agents.react_repo_agent import react_repo_agent
 from agents.default_agent import default_agent
 from agents.observability_agent import Observability
+from agents.pod_restart_agent import PodRestartAgent
 from agents.cryptowallet_agent import CryptoWallet
 from mcp_tools import MCPServerSession
 from utils.serializer import _custom_msgpack_default
@@ -153,6 +154,8 @@ async def on_message(msg: cl.Message):
             session_type = "NewRepo"
         elif msg.command == "o11y":
             session_type = "observability"
+        elif msg.command == "PodRestart":
+            session_type = "pod_restart"
         elif msg.command == "cryptowallet":
             session_type = "cryptowallet"
 
@@ -180,6 +183,8 @@ async def on_message(msg: cl.Message):
         usage_totals = resp["usage_totals"]
     elif session_type == "observability":
         usage_totals = await obs.custom_graph_agent(messages, llm, thread_id)
+    elif session_type == "pod_restart":
+        usage_totals = await PodRestartAgent().custom_graph_agent(messages, llm, thread_id)
     elif session_type == "cryptowallet":
         usage_totals = await crypto.custom_graph_agent(messages, llm, thread_id)
     else:

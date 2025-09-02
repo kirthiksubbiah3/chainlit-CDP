@@ -20,6 +20,10 @@ in namespace ai-demo in the sftp-eks cluster.
 Get the channel history from slack. The slack channel_id is C098RQR0K8C.
 Work on Namespace without pod alerts
 
+### PodRestart
+
+Restart EKS pods
+
 ## Useful Links 🔗
 
 - Code for the Sentinel Mind app: [Repo link](https://github.com/UST-PACE/Sentinel-Mind)

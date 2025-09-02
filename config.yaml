@@ -176,6 +176,10 @@ agents:
     chainlit_command:
       id: NewRepo
       icon: workflow
+  pod_restart:
+    chainlit_command:
+      id: PodRestart
+      icon: list-restart
   cryptowallet:
     chainlit_command:
       id: cryptowallet
