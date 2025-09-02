@@ -3,7 +3,7 @@ name: Build, Scan, and Push sentinel-mind to ECR
 on:
   push:
     branches:
-      - main
+      - main  
     paths:
       - 'Dockerfile'
       - 'src/'
@@ -119,3 +119,9 @@ jobs:
           sudo rm -rf "$AGENT_TOOLSDIRECTORY" || true
 
           echo "Cleanup complete."
+  deploy:
+    needs: build-scan-push
+    uses: ./.github/workflows/chainlit-cd.yaml
+    secrets: inherit
+    with:
+      image_tag: ${{ needs.build-scan-push.outputs.image_tag }}

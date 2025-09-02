@@ -43,14 +43,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Copy uv (with embedded Python) from the official image
 COPY --from=docker.io/astral/uv:latest /uv /uvx /bin/
 
-WORKDIR /app
-
-# Create non-root user and group 
-RUN groupadd -r appuser && useradd -m -r -g appuser appuser \
+# Create non-root user and group
+RUN groupadd -g 1001 appuser && useradd -m -u 1001 -g appuser appuser \
     && mkdir -p /app /ms-playwright /tmp/.X11-unix \
     && chown -R appuser:appuser /app /ms-playwright /tmp/.X11-unix \
     && chmod 1777 /tmp/.X11-unix \
     && chmod -R 777 /ms-playwright
+
+WORKDIR /app
 
 USER appuser
 

@@ -13,4 +13,8 @@ containerSecurityContext:
   readOnlyRootFilesystem: true
   allowPrivilegeEscalation: false
 env: {}
-
+pvc:
+  enabled: false
+  # name: ""
+  # accessMode: "ReadWriteOnce"
+  # storage: "20Gi"

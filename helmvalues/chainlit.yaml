@@ -3,7 +3,7 @@ namespace: sentinel-mind
 replicas: 1
 image:
   repository: 442426895473.dkr.ecr.us-east-1.amazonaws.com/sentinelmind/chainlit
-  tag: 40356f8-2025-08-26
+  tag: 542ccfb-2025-09-02
   pullPolicy: IfNotPresent
 
 containerPort: 8000
@@ -91,6 +91,18 @@ volumeMounts:
     # volumeMounts:
     #   - name: x11-unix
     #     mountPath: /tmp/.X11-unix3
+
+# These values ensure that secrets/configs are readable by the container user
+podSecurityContext:
+  runAsUser: 1001      
+  runAsGroup: 1001        
+  fsGroup: 1001        
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  # runAsUser: 1000       
+  # runAsGroup: 1000
+  readOnlyRootFilesystem: false
 
 llmConfig: |-
   chainlit_profiles:
@@ -197,9 +209,6 @@ llmConfig: |-
       cloudwatch_logs:
         args:
         - awslabs.cloudwatch-logs-mcp-server@latest
-        # chainlit_command:
-        #   icon: cloud
-        #   id: Cloudwatch
         command: uvx
         env:
           AWS_REGION: us-east-1
@@ -207,9 +216,6 @@ llmConfig: |-
       cost_explorer:
         args:
         - awslabs.cost-explorer-mcp-server@latest
-      #   chainlit_command:
-      #     icon: dollar-sign
-      #     id: AWS cost
         command: uvx
         env:
           AWS_REGION: us-east-1
@@ -223,7 +229,6 @@ llmConfig: |-
         env:
           AWS_REGION: us-east-1
         transport: stdio
-
       slack:
         args:
           - "@modelcontextprotocol/server-slack"
@@ -246,27 +251,12 @@ llmConfig: |-
         args:
         - -y
         - '@modelcontextprotocol/server-gitlab'
-        # chainlit_command:
-        #   description: Search through GitLab
-        #   icon: gitlab
-        #   id: GitLab
-        #   usecase: Search for public repositories in a GitLab group and list their latest
-        #     commit messages.
         command: npx
         transport: stdio
       grafana:
-        # chainlit_command:
-        #   description: Query Grafana dashboards and data sources
-        #   icon: bar-chart-2
-        #   id: Grafana
-        #   usecase: Query the Grafana dashboard for the 'visioncheckout' project to retrieve
-        #     the latest metrics and visualizations.
         transport: streamable_http
         url: http://grafana-mcp-service.mcp-servers.svc.cluster.local:8000/mcp
       jenkins:
-        # chainlit_command:
-        #   icon: repeat-2
-        #   id: Jenkins
         transport: sse
         url: https://app.ustpace.io/visioncheckout/jenkins/mcp-server/sse
       playwright:
@@ -293,6 +283,10 @@ llmConfig: |-
       chainlit_command:
         id: NewRepo
         icon: workflow
+    cryptowallet:
+      chainlit_command:
+        id: cryptowallet
+        icon: bar-chart-2
     rag:
       chainlit_command:
         description: Search through rag

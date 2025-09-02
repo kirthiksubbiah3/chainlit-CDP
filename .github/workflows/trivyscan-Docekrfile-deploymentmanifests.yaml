@@ -1,4 +1,4 @@
-name: Trivy Scan Dockerfile and K8s Manifests
+name: Trivy Scan Dockerfile, K8s, and Helm Charts
 
 on:
   pull_request:
@@ -9,6 +9,8 @@ on:
       - 'k8s/**'
       - 'k8s-dev/**'
       - 'helmcharts/**'
+      - 'helmfiles/**'
+      - 'helmvalues/**'
 
 jobs:
   trivy-scan:
@@ -29,6 +31,23 @@ jobs:
             sudo apt-get install -y trivy
           fi
 
+      - name: Install Helm
+        run: |
+          if ! command -v helm &> /dev/null; then
+            curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+          fi
+          helm version
+      
+      - name: Install Helmfile
+        run: |
+          set -e
+          HELMFILE_VERSION="1.1.5"
+          wget -O helmfile_linux_amd64.tar.gz https://github.com/helmfile/helmfile/releases/download/v${HELMFILE_VERSION}/helmfile_${HELMFILE_VERSION}_linux_amd64.tar.gz
+          tar -xzf helmfile_linux_amd64.tar.gz
+          sudo mv helmfile /usr/local/bin/helmfile
+          sudo chmod +x /usr/local/bin/helmfile
+          helmfile --version
+                    
       - name: Trivy scan Dockerfile for config issues
         run: |
           echo "Scanning Dockerfile for configuration issues..."
@@ -52,13 +71,39 @@ jobs:
             echo "No k8s-dev directory to scan."
           fi
 
-      - name: Trivy scan Helm charts
+      - name: Trivy scan Helm chart source
         run: |
           if [ -d "helmcharts" ]; then
-            echo "Scanning Helm charts in helmcharts/ directory..."
+            echo "Scanning helmcharts/ directory for config issues..."
             trivy config helmcharts --exit-code 1 --severity HIGH,CRITICAL
           else
             echo "No helmcharts directory to scan."
+          fi
+
+      - name: Render Helm manifests with Helmfile (all apps)
+        run: |
+          mkdir -p rendered-manifests
+          for helmfile in helmfiles/*.yaml; do
+            name=$(basename "$helmfile" .yaml)
+            helmfile -f "$helmfile" template > "rendered-manifests/${name}.yaml"
+          done
+
+      # - name: Show rendered dev-chainlit.yaml manifest
+      #   run: |
+      #     if [ -f "rendered-manifests/dev-chainlit.yaml" ]; then
+      #       echo "Contents of rendered-manifests/dev-chainlit.yaml:"
+      #       cat rendered-manifests/dev-chainlit.yaml
+      #     else
+      #       echo "rendered-manifests/dev-chainlit.yaml does not exist."
+      #     fi
+          
+      - name: Trivy config scan on rendered Helm manifests
+        run: |
+          if [ -d "rendered-manifests" ]; then
+            echo "Scanning all rendered manifests in rendered-manifests/ directory..."
+            trivy config rendered-manifests --exit-code 1 --severity HIGH,CRITICAL
+          else
+            echo "No rendered-manifests directory to scan."
           fi
 
       - name: Cleanup workspace
