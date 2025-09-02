@@ -74,6 +74,7 @@ async def on_message(msg: cl.Message):
 
     rag_filenames = cl.user_session.get("rag_filenames", [])
 
+    filepath = None
     for element in msg.elements:
         if isinstance(element, cl.element.File):
             filepath = element.path
@@ -184,7 +185,9 @@ async def on_message(msg: cl.Message):
     elif session_type == "observability":
         usage_totals = await obs.custom_graph_agent(messages, llm, thread_id)
     elif session_type == "pod_restart":
-        usage_totals = await PodRestartAgent().custom_graph_agent(messages, llm, thread_id)
+        usage_totals = await PodRestartAgent().custom_graph_agent(
+            messages, llm, thread_id
+        )
     elif session_type == "cryptowallet":
         usage_totals = await crypto.custom_graph_agent(messages, llm, thread_id)
     else:

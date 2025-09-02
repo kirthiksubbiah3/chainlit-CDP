@@ -6,6 +6,7 @@ Handles chat start, resume, and end events.
 import chainlit as cl
 from langgraph.checkpoint.memory import MemorySaver
 
+from agents import default_agents
 from config import app_config
 from rag.rag_file_manager import RagFileManager
 from rag.update_sidebar import update_sidebar
@@ -22,7 +23,7 @@ profiles = app_config.profiles
 @cl.on_chat_resume
 async def on_chat_resume():
     """Hook for chat resume"""
-    logger.info("Chat session resumed for thread_id: %s", cl.context.session.thread_id)
+    logger.debug("Chat session resumed for thread_id: %s", cl.context.session.thread_id)
     await cl.context.emitter.set_commands(commands)
 
     rag_manager = RagFileManager()
@@ -35,7 +36,9 @@ async def on_chat_resume():
 @cl.on_chat_start
 async def on_chat_start():
     """Hook to initialize the chat session"""
-    logger.info("Starting Sentinel Mind")
+    logger.debug("Starting new chat thread_id: %s", cl.context.session.thread_id)
+
+    await default_agents.get_profiles_agents()
 
     logger.debug("Getting user session data")
     user = cl.user_session.get("user")
@@ -44,7 +47,7 @@ async def on_chat_start():
     username = get_username(user)
     logger.info("user display name is %s", username)
 
-    logger.debug("Setting commands for the chat session")
+    logger.info("Setting commands for the chat session")
     await cl.context.emitter.set_commands(commands)
 
     rag_manager = RagFileManager()

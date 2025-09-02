@@ -11,6 +11,7 @@ from data_layer import CustomDataLayer
 
 logger = get_logger(__name__)
 
+commands = app_config.commands
 profiles = app_config.profiles
 starters = app_config.starters
 

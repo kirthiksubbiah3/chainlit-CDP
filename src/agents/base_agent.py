@@ -11,6 +11,7 @@ from mcp_tools import MCPServerSessionMulti
 
 mcp_servers_config_to_pass = app_config.mcp_servers_config_to_pass
 
+
 class BaseState(TypedDict):
     messages: Annotated[list, add_messages]
 
@@ -24,7 +25,11 @@ class BaseAgent:
         self.graph = None
         self.memory = MemorySaver()
         self.llm_structured_output = None
-        self.stream_tokens = {"total_input_tokens": 0, "total_output_tokens": 0, "total_tokens": 0}
+        self.stream_tokens = {
+            "total_input_tokens": 0,
+            "total_output_tokens": 0,
+            "total_tokens": 0,
+        }
 
         self.servers_to_use = servers_to_use or []
         self.mcp_client = MCPServerSessionMulti(servers_to_use)
@@ -53,7 +58,7 @@ class BaseAgent:
 
     def agent(self, state: BaseState) -> BaseState:
         """This node is added to get chunk["agent"]["messages"] in the invoke_agent method.
-         Inherit in the subclasses and change as required"""
+        Inherit in the subclasses and change as required"""
         return state
 
     async def custom_graph_agent(self, messages, llm, thread_id):
