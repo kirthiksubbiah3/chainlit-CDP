@@ -192,7 +192,7 @@ async def on_message(msg: cl.Message):
         usage_totals = await crypto.custom_graph_agent(messages, llm, thread_id)
     else:
         mcp_server_session = MCPServerSession(
-            "github", messages, llm, thread_id, buffer=False
+            target_server, messages, llm, thread_id, buffer=False
         )
         usage_totals = await mcp_server_session.client_session_per_server()
 
