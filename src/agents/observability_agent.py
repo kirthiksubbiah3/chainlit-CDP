@@ -2,19 +2,17 @@ from typing import Annotated
 from typing_extensions import TypedDict
 
 from langchain_core.messages import HumanMessage, SystemMessage
-from langgraph.checkpoint.memory import MemorySaver
-from langgraph.graph import StateGraph, START, END
+from langgraph.graph import START, END
 from langgraph.graph.message import add_messages
-from langgraph.prebuilt import ToolNode, tools_condition
+from langgraph.prebuilt import tools_condition, ToolNode
 from pydantic import BaseModel, Field
 
 from config import app_config
-from invoke_agent import invoke_agent
-from mcp_tools import MCPServerSessionMulti
-from utils import get_logger
+from agents.base_agent import BaseAgent
 from rag.rag_search import rag_search
 
 mcp_servers_config_to_pass = app_config.mcp_servers_config_to_pass
+cluster_name = app_config.cluster_name
 
 
 class State(TypedDict):
@@ -36,29 +34,17 @@ class Alertdetails(BaseModel):
     )
 
 
-class Observability:
+class Observability(BaseAgent):
     def __init__(self):
-        self.tools = None
-        self.llm = None
-        self.llm_with_tools = None
-        self.graph = None
-        self.memory = MemorySaver()
-        self.health_llm_call_with_output = None
-        self.stream_tokens = {
-            "total_input_tokens": 0,
-            "total_output_tokens": 0,
-            "total_tokens": 0,
-        }
+        super().__init__(servers_to_use=["slack", "eks", "grafana"])
+        self.state_schema = State
+        self.model = Alertdetails
+        self.tools = [rag_search]
         self.channel = (
             mcp_servers_config_to_pass.get("slack", {})
             .get("env", {})
             .get("SLACK_CHANNEL_IDS", "")
         )
-        self.logger = get_logger(__name__)
-
-        servers_to_use = ["slack", "eks", "grafana"]
-
-        self.mcp_client = MCPServerSessionMulti(servers_to_use)
 
     def safe_tools_condition(self, state: State) -> str:
         result = tools_condition(state)
@@ -82,6 +68,7 @@ class Observability:
         return result if result in ("tools", "evaluator") else "evaluator"
 
     def router(self, state: State) -> State:
+        self.logger.info("Calling the router")
         # You can optionally log or update messages here
         return {
             "messages": [
@@ -92,13 +79,14 @@ class Observability:
                             "Use the following question to search in the internal document via the "
                             "RAG tool: "
                             f"\"{state.get('question_for_rag', '')}\""
-                            "Check in the alert_details.pdf document for possible solutions."
-                            "Use the cluster name 'sftp-eks' to extract and run the relevant"
+                            "Check in the alert_details document for possible "
+                            "solutions."
+                            f"Use the cluster name '{cluster_name}' to extract and run the relevant"
                             "kubectl commands."
                             "If no direct solution is found, analyze and recommend actions."
                             "Based on logs and output, recommend resolutions for all affected "
                             "Kubernetes resources if possible"
-                            "If the number of resources are high give a generic recommendation"
+                            "If the number of resources are high give a generic recommendation "
                             "for all the resources"
                             "If the affected resources are less try to fix the issue after getting"
                             "approval from the user"
@@ -118,14 +106,16 @@ class Observability:
         }
 
     def agent(self, state: State) -> State:
+        self.logger.info("Calling the agent")
         additional_instruction = HumanMessage(
             content=(
-                f"You may retrieve alert details from the Slack MCP server if needed"
-                f"When communicating with slack, use the channelid {self.channel}"
-                f"To get the list of affected resource, try getting from grafana mcp server"
-                f"Try eks mcp server if you are getting information from grafana mcp server"
-                f"To fix the issue, try using eks mcp server"
-                f"Use sftp-eks cluster"
+                "You may use Slack or Grafana to get alert details depending on the input.\n"
+                f"- If Slack is available, connect to Slack channel {self.channel} "
+                "to retrieve alert details.\n"
+                "- Otherwise, query Grafana's MCP server (default-group folder) "
+                "to get firing alerts.\n"
+                "Check for affected resources in the previous messages.\n"
+                "Don't keep on trying the same thing again and again."
             )
         )
         messages = state["messages"] + [additional_instruction]
@@ -158,7 +148,7 @@ class Observability:
 
         evaluator_messages = [system_message, human_message]
 
-        eval_result = self.health_llm_call_with_output.invoke(evaluator_messages)
+        eval_result = self.llm_structured_output.invoke(evaluator_messages)
 
         question_for_rag = (
             f"Which instruction should be used for the alert: "
@@ -176,38 +166,26 @@ class Observability:
         }
         return new_state
 
-    async def custom_graph_agent(self, messages, llm, threadid):
-        async with self.mcp_client.yield_tools() as tools:
-            tools.append(rag_search)
+    def add_nodes_to_graph(self, graph_builder, state: State):
 
-            self.llm = llm
-            self.llm_with_tools = llm.bind_tools(tools)
-            self.health_llm_call_with_output = self.llm.with_structured_output(
-                Alertdetails
-            )
-            graph_builder = StateGraph(State)
-            graph_builder.add_node("agent", self.agent)
-            graph_builder.add_node("tools", ToolNode(tools=tools))
-            graph_builder.add_node("evaluator", self.evaluator)
-            graph_builder.add_node("router", self.router)
-            # START → agent
-            graph_builder.add_edge(START, "agent")
+        graph_builder.add_node("tools", ToolNode(tools=self.tool_list))
+        graph_builder.add_node("evaluator", self.evaluator)
+        graph_builder.add_node("router", self.router)
+        # START → agent
+        graph_builder.add_edge(START, "agent")
 
-            # From agent, decide: tool call or no tool call
-            # If tool is needed → tools; else → evaluator
-            graph_builder.add_conditional_edges(
-                "agent",
-                self.safe_tools_condition,
-                {"tools": "tools", "evaluator": "evaluator", END: END},
-            )
-            # After tools, go back to agent
-            graph_builder.add_edge("tools", "agent")
+        # From agent, decide: tool call or no tool call
+        # If tool is needed → tools; else → evaluator
+        graph_builder.add_conditional_edges(
+            "agent",
+            self.safe_tools_condition,
+            {"tools": "tools", "evaluator": "evaluator", END: END},
+        )
+        # After tools, go back to agent
+        graph_builder.add_edge("tools", "agent")
 
-            # Evaluator → router
-            graph_builder.add_edge("evaluator", "router")
+        # Evaluator → router
+        graph_builder.add_edge("evaluator", "router")
 
-            # router → agent
-            graph_builder.add_edge("router", "agent")
-            graph = graph_builder.compile(checkpointer=self.memory)
-            usage_totals = await invoke_agent(graph, messages, threadid)
-            return usage_totals
+        # router → agent
+        graph_builder.add_edge("router", "agent")

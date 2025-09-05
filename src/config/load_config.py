@@ -21,6 +21,7 @@ class AppConfig:
         self.local_username = os.getenv("LOCAL_USERNAME")
         self.local_password = os.getenv("LOCAL_PASSWORD")
         self.oauth_enabled = os.getenv("OAUTH_ENABLED", "false").lower() == "true"
+        self.cluster_name = os.getenv("CLUSTER_NAME", "sftp-eks")
 
         logger.info("Loading config")
         config = load_yaml_file("config.yaml")

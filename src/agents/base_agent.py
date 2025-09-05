@@ -30,7 +30,7 @@ class BaseAgent:
             "total_output_tokens": 0,
             "total_tokens": 0,
         }
-
+        self.tool_list = None
         self.servers_to_use = servers_to_use or []
         self.mcp_client = MCPServerSessionMulti(servers_to_use)
         # Define placeholders for state_schema and model, to be set by child
@@ -64,6 +64,7 @@ class BaseAgent:
     async def custom_graph_agent(self, messages, llm, thread_id):
         async with self.mcp_client.yield_tools() as tools:
             tools.extend(self.tools)
+            self.tool_list = tools
             self.llm = llm
             self.llm_with_tools = llm.bind_tools(tools)
             self.llm_structured_output = self.llm.with_structured_output(self.model)
