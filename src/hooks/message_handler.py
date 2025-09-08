@@ -41,6 +41,7 @@ mcp_servers_config_to_pass = app_config.mcp_servers_config_to_pass
 mcp_service_config = app_config.mcp_service_config
 profiles = app_config.profiles
 starters = app_config.starters
+env = app_config.env
 
 
 def set_profiles_agent():
@@ -92,6 +93,7 @@ async def on_message(msg: cl.Message):
     user = cl.user_session.get("user")
     logger.info("User is %s", user.id)
     messages, usage_data_title = [], {}
+
 
     if filepath:
         summarize_file_prompt = SystemMessage(
@@ -207,7 +209,10 @@ async def on_message(msg: cl.Message):
             cl.user_session.set("thread_title", thread_title)
 
     if "slack" not in cl.user_session.get("user").identifier:
-        await cl.Message(content=get_time_taken_message(start_time)).send()
+        response_time = get_time_taken_message(start_time)
+        if env == "dev":
+           await cl.Message(content=response_time).send()
+        logger.info(response_time)
 
     if usage_data_title:
         usage_totals["input_tokens"] += usage_data_title["input_tokens"]
@@ -215,5 +220,5 @@ async def on_message(msg: cl.Message):
         usage_totals["total_tokens"] += usage_data_title["total_tokens"]
 
     await log_and_show_usage_details(
-        profiles, usage_totals, chat_profile=chat_profile_name
+        profiles, usage_totals, chat_profile_name, env
     )

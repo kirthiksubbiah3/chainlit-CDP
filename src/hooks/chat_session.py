@@ -17,6 +17,7 @@ logger = get_logger(__name__)
 memory = MemorySaver()
 
 commands = app_config.commands
+env = app_config.env
 profiles = app_config.profiles
 
 
@@ -74,7 +75,7 @@ async def on_stop():
     username = get_username(user)
 
     logger.info("Task stopped by %s", username)
-    await log_and_show_usage_details(profiles, usage_totals)
+    await log_and_show_usage_details(profiles, usage_totals, env=env)
 
 
 @cl.on_logout

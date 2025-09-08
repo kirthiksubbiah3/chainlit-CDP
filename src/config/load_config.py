@@ -18,6 +18,8 @@ class AppConfig:
         self.port_str = os.getenv("CHROMADB_PORT", "8000")  # Default to 8000 if not set
         self.path = os.getenv("CHROMADB_PERSISTENT_PATH", ".chromadb")
 
+        self.env = os.getenv("ENV", "dev").lower()
+
         self.local_username = os.getenv("LOCAL_USERNAME")
         self.local_password = os.getenv("LOCAL_PASSWORD")
         self.oauth_enabled = os.getenv("OAUTH_ENABLED", "false").lower() == "true"

@@ -6,7 +6,6 @@ from .get_log import get_logger
 
 logger = get_logger(__name__)
 
-
 def get_usage_cost_details(usage_totals: dict, input_token_cost, output_token_cost):
     """Returns token usage and cost details as a dict"""
     input_tokens = usage_totals.get("input_tokens", 0)
@@ -62,7 +61,7 @@ def log_usage_details(usage_totals: dict, input_token_cost, output_token_cost, u
     logger.info("Logged in user: %s | Cost: $%.6f", user_id, details["total_cost"])
 
 
-async def log_and_show_usage_details(profiles, usage_totals, chat_profile=None):
+async def log_and_show_usage_details(profiles, usage_totals, chat_profile=None, env: str="dev"):
     if not chat_profile:
         chat_profile = cl.user_session.get("chat_profile")
     input_token_cost = profiles[chat_profile]["cost"]["input_token_cost"]
@@ -71,7 +70,7 @@ async def log_and_show_usage_details(profiles, usage_totals, chat_profile=None):
     logger.info("input token cost is %s", input_token_cost)
     logger.info("output token cost is %s", output_token_cost)
 
-    if "slack" not in cl.user_session.get("user").identifier:
+    if "slack" not in cl.user_session.get("user").identifier and env == "dev":
         await cl.Message(
             content=send_usage_cost_message(
                 usage_totals,

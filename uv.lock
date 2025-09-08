@@ -3565,7 +3565,7 @@ wheels = [
 
 [[package]]
 name = "sflabs-ai-assistant"
-version = "1.6.0"
+version = "1.8.0"
 source = { virtual = "." }
 dependencies = [
     { name = "chainlit" },
