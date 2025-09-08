@@ -3,7 +3,7 @@ namespace: sentinel-mind
 replicas: 1
 image:
   repository: 442426895473.dkr.ecr.us-east-1.amazonaws.com/sentinelmind/chainlit
-  tag: 542ccfb-2025-09-02
+  tag: 0a2a3b6-2025-09-03
   pullPolicy: IfNotPresent
 
 containerPort: 8000
@@ -40,13 +40,13 @@ ingress:
         - ai.sflabs.ustpace.com
       secretName: chainlit-tls
 
-        #resources:
-        #limits:
-        # cpu: "500m"
-        #memory: "1536Mi"
-        #requests:
-        #cpu: "250m"
-        #memory: "1536Mi"
+resources:
+  requests:
+    cpu: "2"
+    memory: "2Gi"
+  limits:
+    cpu: "2"
+    memory: "2Gi"
 
 # Volume configuration
 volumes:
@@ -94,13 +94,13 @@ volumeMounts:
 
 # These values ensure that secrets/configs are readable by the container user
 podSecurityContext:
-  runAsUser: 1001      
-  runAsGroup: 1001        
-  fsGroup: 1001        
+  runAsUser: 1001
+  runAsGroup: 1001
+  fsGroup: 1001
 
 containerSecurityContext:
   allowPrivilegeEscalation: false
-  # runAsUser: 1000       
+  # runAsUser: 1000
   # runAsGroup: 1000
   readOnlyRootFilesystem: false
 
@@ -110,7 +110,8 @@ llmConfig: |-
       config:
         model: gemini-2.5-flash
         model_provider: google_genai
-        temperature: 0.5
+        temperature: 0.0
+        max_tokens: 1500
       cost:
         input_token_cost: 0.00015
         output_token_cost: 0.0006
@@ -283,6 +284,10 @@ llmConfig: |-
       chainlit_command:
         id: NewRepo
         icon: workflow
+    pod_restart:
+      chainlit_command:
+        id: PodRestart
+        icon: list-restart
     cryptowallet:
       chainlit_command:
         id: cryptowallet

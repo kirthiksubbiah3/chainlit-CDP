@@ -62,6 +62,7 @@ RUN uv sync
 COPY --chown=appuser:appuser src ./src
 COPY --chown=appuser:appuser .chainlit ./.chainlit
 COPY --chown=appuser:appuser public ./public
+COPY --chown=appuser:appuser chainlit.md ./chainlit.md
 
 EXPOSE 8000
 
