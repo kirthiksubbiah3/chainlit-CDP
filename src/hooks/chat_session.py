@@ -39,6 +39,9 @@ async def on_chat_start():
     """Hook to initialize the chat session"""
     logger.debug("Starting new chat thread_id: %s", cl.context.session.thread_id)
 
+    logger.debug("Setting commands for the chat session")
+    await cl.context.emitter.set_commands(commands)
+    
     await default_agents.get_profiles_agents()
 
     logger.debug("Getting user session data")
@@ -47,9 +50,6 @@ async def on_chat_start():
 
     username = get_username(user)
     logger.info("user display name is %s", username)
-
-    logger.info("Setting commands for the chat session")
-    await cl.context.emitter.set_commands(commands)
 
     rag_manager = RagFileManager()
     rag_filenames = await rag_manager.get_all_documents()
