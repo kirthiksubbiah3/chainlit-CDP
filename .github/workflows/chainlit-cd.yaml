@@ -115,7 +115,7 @@ jobs:
         run: |
           scp -i bastion.pem -o StrictHostKeyChecking=no helmvalues/dev-chainlit.yaml $BASTION_USER@$BASTION_HOST:/home/$BASTION_USER/helmvalues/
           scp -i bastion.pem -o StrictHostKeyChecking=no helmfiles/dev-chainlit.yaml $BASTION_USER@$BASTION_HOST:/home/$BASTION_USER/helmfiles/
-          scp -i bastion.pem -o StrictHostKeyChecking=no -r helmcharts/demo-apps $BASTION_USER@$BASTION_HOST:/home/$BASTION_USER/helmcharts/
+          scp -i bastion.pem -o StrictHostKeyChecking=no -r helmchart $BASTION_USER@$BASTION_HOST:/home/$BASTION_USER/helmchart/
 
       - name: Deploy to EKS via Bastion
         env:

@@ -3,14 +3,14 @@ namespace: sentinel-mind
 replicas: 1
 image:
   repository: 442426895473.dkr.ecr.us-east-1.amazonaws.com/sentinelmind/chainlit
-  tag: 0a2a3b6-2025-09-03
+  tag: 19f22c3-2025-09-08
   pullPolicy: IfNotPresent
 
 containerPort: 8000
 env:
   DISPLAY: "vnc-desktop-service.sentinel-mind.svc.cluster.local:1"
 envFromSecret:
-  - aws-secrets
+  - prod-chainlit-secrets
 
 service:
   name: chainlit-app-service
@@ -42,11 +42,12 @@ ingress:
 
 resources:
   requests:
-    cpu: "2"
-    memory: "2Gi"
+    cpu: "500m"
+    memory: "1Gi"
   limits:
-    cpu: "2"
+    cpu: "1"
     memory: "2Gi"
+serviceAccountName: secrets-store-csi-driver
 
 # Volume configuration
 volumes:
@@ -58,7 +59,12 @@ volumes:
   - name: chainlit-llm-config
     configMap:
       name: chainlit-llm-config
-
+  - name: secrets-store-inline
+    csi:
+      driver: secrets-store.csi.k8s.io
+      readOnly: true
+      volumeAttributes:
+        secretProviderClass: "aws-secrets"
 volumeMounts:
   # - name: x11-unix
   #   mountPath: /tmp/.X11-unix
@@ -68,7 +74,9 @@ volumeMounts:
   - name: chainlit-llm-config
     mountPath: /app/config.yaml
     subPath: config.yaml
-
+  - name: secrets-store-inline
+    mountPath: "/mnt/secrets-store"
+    readOnly: true
 # Add a VNC browser sidecar
 # extraContainers:
 #   - name: vnc-desktop

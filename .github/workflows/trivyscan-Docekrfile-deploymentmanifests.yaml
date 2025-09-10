@@ -8,7 +8,7 @@ on:
       - 'Dockerfile'
       - 'k8s/**'
       - 'k8s-dev/**'
-      - 'helmcharts/**'
+      - 'helmchart/**'
       - 'helmfiles/**'
       - 'helmvalues/**'
 
@@ -73,11 +73,11 @@ jobs:
 
       - name: Trivy scan Helm chart source
         run: |
-          if [ -d "helmcharts" ]; then
-            echo "Scanning helmcharts/ directory for config issues..."
-            trivy config helmcharts --exit-code 1 --severity HIGH,CRITICAL
+          if [ -d "helmchart" ]; then
+            echo "Scanning helmchart/ directory for config issues..."
+            trivy config helmchart --exit-code 1 --severity HIGH,CRITICAL
           else
-            echo "No helmcharts directory to scan."
+            echo "No helmchart directory to scan."
           fi
 
       - name: Render Helm manifests with Helmfile (all apps)

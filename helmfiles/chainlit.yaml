@@ -1,6 +1,6 @@
 releases:
   - name: chainlit
-    chart: ../helmcharts/demo-apps
+    chart: ../helmchart
     namespace: sentinel-mind
     values:
       - ../helmvalues/chainlit.yaml

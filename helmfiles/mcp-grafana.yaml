@@ -1,6 +1,6 @@
 releases:
   - name: mcp-grafana
-    chart: ../helmcharts/demo-apps
+    chart: ../helmchart
     namespace: mcp-servers
     values:
       - ../helmvalues/mcp-grafana.yaml

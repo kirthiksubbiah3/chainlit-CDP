@@ -15,6 +15,9 @@ spec:
       labels:
         app: {{ .Values.appName }}
     spec:
+      {{- if .Values.serviceAccountName }}
+      serviceAccountName: {{ .Values.serviceAccountName }}
+      {{- end }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
         {{- if .Values.fsGroup }}
