@@ -77,7 +77,7 @@ volumeMounts:
   - name: secrets-store-inline
     mountPath: "/mnt/secrets-store"
     readOnly: true
-# Add a VNC browser sidecar 
+# Add a VNC browser sidecar
 # extraContainers:
 #   - name: vnc-desktop
 #     image: consol/ubuntu-xfce-vnc
@@ -102,13 +102,13 @@ volumeMounts:
 
 # These values ensure that secrets/configs are readable by the container user
 podSecurityContext:
-  runAsUser: 1001      
-  runAsGroup: 1001        
-  fsGroup: 1001        
+  runAsUser: 1001
+  runAsGroup: 1001
+  fsGroup: 1001
 
 containerSecurityContext:
   allowPrivilegeEscalation: false
-  # runAsUser: 1000       
+  # runAsUser: 1000
   # runAsGroup: 1000
   readOnlyRootFilesystem: false
 
@@ -205,7 +205,7 @@ llmConfig: |-
     eks:
       icon: "data:image/jpeg;base64,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"
       label: "Create apache app"
-      message: | 
+      message: |
           Create deployment apache with replicas 2
           that is exposed by service apache on service port 8080 and target port 80
           which is further exposed by ingress apache that has url apache.sflabs.ustpace.com and class nginx
@@ -284,22 +284,10 @@ llmConfig: |-
         command: npx
         transport: stdio
   agents:
-    o11y:
+    supervisor:
       chainlit_command:
-        id: o11y
-        icon: git-graph
-    new_repo:
-      chainlit_command:
-        id: NewRepo
-        icon: workflow
-    pod_restart:
-      chainlit_command:
-        id: PodRestart
-        icon: list-restart
-    cryptowallet:
-      chainlit_command:
-        id: cryptowallet
-        icon: bar-chart-2
+        id: Supervisor
+        icon: shapes
     rag:
       chainlit_command:
         description: Search through rag

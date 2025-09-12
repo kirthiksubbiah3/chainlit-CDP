@@ -5,7 +5,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 
 from .observability_agent import Observability
 from .pod_restart_agent import PodRestartAgent
-from .cryptowallet_agent import CryptoWallet
+from .cryptowallet_agent import Cryptowallet
 from .react_repo_agent import react_repo_agent
 from .base_agent import get_all_message_content
 
@@ -23,15 +23,17 @@ class SupervisorAgent:
             "NewRepo": react_repo_agent,
             "observability": Observability,
             "pod_restart": PodRestartAgent,
-            "crypto_wallet": CryptoWallet,
+            "crypto_wallet": Cryptowallet
         }
         # TODO change the description for each agent inorder to match with the user prompt
         self.description = {
             "NewRepo": "create new git repo with boilerplate code",
             "observability": "metrics, logs, tracing, monitoring, details about Pods, memory, "
-                             "affected resources, recommend solutions, alert ",
+                             "affected resources, recommend solutions, alert, slack, cluster ",
             "pod_restart": "restarting pods (EKS/AKS)",
-            "crypto_wallet": "crypto wallets created, transactions from grafana logs",
+            "crypto_wallet": ("cryptowallet application, crypto wallets created, transaction "
+                              "happened, deposited, withdraw, transfer, errors, get, walletID, "
+                              "delete, currency, money, error details")
         }
 
     async def classify_session(self, message: str):
