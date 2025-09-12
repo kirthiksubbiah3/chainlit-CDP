@@ -169,22 +169,10 @@ mcp:
       command: npx
       transport: stdio
 agents:
-  o11y:
+  supervisor:
     chainlit_command:
-      id: o11y
-      icon: git-graph
-  new_repo:
-    chainlit_command:
-      id: NewRepo
-      icon: workflow
-  pod_restart:
-    chainlit_command:
-      id: PodRestart
-      icon: list-restart
-  cryptowallet:
-    chainlit_command:
-      id: cryptowallet
-      icon: bar-chart-2
+      id: Supervisor
+      icon: shapes
   rag:
     chainlit_command:
       description: Search through rag

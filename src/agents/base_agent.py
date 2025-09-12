@@ -1,4 +1,4 @@
-from langchain_core.messages import AIMessage
+from langchain_core.messages import AIMessage, SystemMessage
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph.message import add_messages
 from langgraph.graph import StateGraph, END
@@ -43,15 +43,7 @@ class BaseAgent:
         Collects and concatenates the content of all messages in the state.
         Handles both ChatMessage objects and plain dicts.
         """
-        contents = []
-        for msg in state.get("messages", []):
-            if hasattr(msg, "content"):
-                contents.append(msg.content)
-            elif isinstance(msg, dict) and "content" in msg:
-                contents.append(msg["content"])
-            else:
-                contents.append(str(msg))
-        return "\n\n".join(contents)
+        return get_all_message_content(state.get("messages", []))
 
     def _to_assistant_msg(self, content) -> AIMessage:
         return AIMessage(content)
@@ -78,3 +70,21 @@ class BaseAgent:
             graph = graph_builder.compile(checkpointer=self.memory)
             usage_totals = await invoke_agent(graph, messages, thread_id)
             return usage_totals
+
+
+def get_all_message_content(messages) -> str:
+    """
+    Collects and concatenates the content of all messages.
+    Handles both ChatMessage objects and plain dicts.
+    """
+    contents = []
+    for msg in messages:
+        if isinstance(msg, SystemMessage):
+            continue
+        if hasattr(msg, "content"):
+            contents.append(msg.content)
+        elif isinstance(msg, dict) and "content" in msg:
+            contents.append(msg["content"])
+        else:
+            contents.append(str(msg))
+    return "\n\n".join(contents)

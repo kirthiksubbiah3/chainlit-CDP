@@ -21,19 +21,12 @@ from utils import (
     generate_chat_title_from_input,
 )
 
-from agents.react_repo_agent import react_repo_agent
 from agents.default_agent import default_agent
-from agents.observability_agent import Observability
-from agents.pod_restart_agent import PodRestartAgent
-from agents.cryptowallet_agent import CryptoWallet
+from agents.supervisor_agent import SupervisorAgent
 from mcp_tools import MCPServerSession
 from utils.serializer import _custom_msgpack_default
 
 jsonplus._msgpack_default = _custom_msgpack_default
-
-
-obs = Observability()
-crypto = CryptoWallet()
 
 logger = get_logger(__name__)
 
@@ -141,11 +134,6 @@ async def on_message(msg: cl.Message):
     profiles_agent = cl.user_session.get("profiles_agent")
     session_type = "tools"
 
-    starter_message = starters.get("o11y", {}).get("message", "")
-
-    if msg.content == starter_message:
-        session_type = "observability"
-
     if msg.command:
         logger.info("Command received: %s", msg.command)
         target_server = msg.command
@@ -153,15 +141,8 @@ async def on_message(msg: cl.Message):
         if msg.command in ["Browser", "Browser-HL", "Sentinel-Mind"]:
             session_type = "server"
             target_server = "playwright"
-        elif msg.command == "NewRepo":
-            session_type = "NewRepo"
-        elif msg.command == "o11y":
-            session_type = "observability"
-        elif msg.command == "PodRestart":
-            session_type = "pod_restart"
-        elif msg.command == "cryptowallet":
-            session_type = "cryptowallet"
-
+        elif msg.command == "Supervisor":
+            session_type = "supervisor"
         messages.append(
             SystemMessage(content=f"Forward this to {target_server} mcp server")
         )
@@ -176,22 +157,10 @@ async def on_message(msg: cl.Message):
         session_type = "tools"
 
     llm = get_llm(chat_profile_name)
-
     if session_type == "tools":
         usage_totals = await invoke_agent(profiles_agent, messages, thread_id)
-    elif session_type == "NewRepo":
-        resp = await react_repo_agent.ainvoke(
-            {"thread_id": thread_id, "llm": llm, "new_msg": msg.content}
-        )
-        usage_totals = resp["usage_totals"]
-    elif session_type == "observability":
-        usage_totals = await obs.custom_graph_agent(messages, llm, thread_id)
-    elif session_type == "pod_restart":
-        usage_totals = await PodRestartAgent().custom_graph_agent(
-            messages, llm, thread_id
-        )
-    elif session_type == "cryptowallet":
-        usage_totals = await crypto.custom_graph_agent(messages, llm, thread_id)
+    elif session_type == "supervisor":
+        usage_totals = await SupervisorAgent(llm).run(messages, thread_id)
     else:
         mcp_server_session = MCPServerSession(
             target_server, messages, llm, thread_id, buffer=False
