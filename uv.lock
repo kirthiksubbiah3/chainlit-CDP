@@ -460,7 +460,7 @@ wheels = [
 
 [[package]]
 name = "chainlit"
-version = "2.7.1.1"
+version = "2.7.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiofiles" },
@@ -477,6 +477,7 @@ dependencies = [
     { name = "nest-asyncio" },
     { name = "packaging" },
     { name = "pydantic" },
+    { name = "pydantic-settings" },
     { name = "pyjwt" },
     { name = "python-dotenv" },
     { name = "python-multipart" },
@@ -487,9 +488,9 @@ dependencies = [
     { name = "uvicorn" },
     { name = "watchfiles" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/2c/d3/fca6043959897bcacb77c0be4ed3ff91cda68a9d9c0c643ec6a099b12ad4/chainlit-2.7.1.1.tar.gz", hash = "sha256:1123fc9dbe1589ccb0b98457c8a48178d5fb103dca4d9bdd56d447662824d714", size = 9817768, upload-time = "2025-08-21T14:53:19.259Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/69/15/ccaeca73f6e57c5c3525868af614a2e598b9ebbd0274211842871af8e789/chainlit-2.7.2.tar.gz", hash = "sha256:c3d8db8071cf125d495d370388070ce100a380e890fcc00972e7a7ac4e950122", size = 9827422, upload-time = "2025-08-26T15:18:16.704Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/88/21/f6e9bc71e093cdda0ed95c2458f5cf2d6b3f1c55b5205abbe66c38e1ebcc/chainlit-2.7.1.1-py3-none-any.whl", hash = "sha256:914d79899e62a7e52e2b6dd71e1af8b729752d48a136ab1a1fce7856b14db689", size = 9654513, upload-time = "2025-08-21T14:53:15.654Z" },
+    { url = "https://files.pythonhosted.org/packages/a0/ed/e7614d994214f743b76a1fdff304d1e6cef6d961c221cee58ae2726f8cb1/chainlit-2.7.2-py3-none-any.whl", hash = "sha256:28fcf214b6fd676033c43fe9d60c157aea38104d543b83b727ec2a7d9a9d532d", size = 9665993, upload-time = "2025-08-26T15:18:13.697Z" },
 ]
 
 [[package]]
@@ -3565,7 +3566,7 @@ wheels = [
 
 [[package]]
 name = "sflabs-ai-assistant"
-version = "1.8.0"
+version = "1.14.0"
 source = { virtual = "." }
 dependencies = [
     { name = "chainlit" },
@@ -3605,7 +3606,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "chainlit", specifier = "==2.7.1.1" },
+    { name = "chainlit", specifier = "==2.7.2" },
     { name = "chromadb", specifier = "==1.0.13" },
     { name = "fpdf", specifier = "==1.7.2" },
     { name = "gitpython", specifier = "==3.1.44" },
