@@ -1,6 +1,6 @@
 [project]
 name = "sflabs-ai-assistant"
-version = "1.14.0"
+version = "1.14.1"
 description = "SFLabs AI assistant with agents for DevOps and SRE tasks."
 readme = "README.md"
 requires-python = ">=3.12"
@@ -37,5 +37,5 @@ code_check = [
     "ruff==0.12.0"
 ]
 dev = [
-    "black==25.1.0"
+    "black==25.1.0",
 ]

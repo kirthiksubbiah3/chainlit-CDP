@@ -1,4 +1,9 @@
+import asyncio
+from contextlib import asynccontextmanager, AsyncExitStack
+
 from langchain_core.messages import AIMessage, SystemMessage
+from langchain_mcp_adapters.client import MultiServerMCPClient
+from langchain_mcp_adapters.tools import load_mcp_tools
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph.message import add_messages
 from langgraph.graph import StateGraph, END
@@ -7,7 +12,6 @@ from typing_extensions import Annotated, TypedDict
 from config import app_config
 from invoke_agent import invoke_agent
 from utils import get_logger
-from mcp_tools import MCPServerSessionMulti
 
 mcp_servers_config_to_pass = app_config.mcp_servers_config_to_pass
 
@@ -22,7 +26,6 @@ class BaseAgent:
         self.tools = []
         self.llm = None
         self.llm_with_tools = None
-        self.graph = None
         self.memory = MemorySaver()
         self.llm_structured_output = None
         self.stream_tokens = {
@@ -32,7 +35,14 @@ class BaseAgent:
         }
         self.tool_list = None
         self.servers_to_use = servers_to_use or []
-        self.mcp_client = MCPServerSessionMulti(servers_to_use)
+
+        mcp_config = {
+            key: mcp_servers_config_to_pass[key]
+            for key in servers_to_use
+            if key in mcp_servers_config_to_pass
+        }
+        self.mcp_client = MultiServerMCPClient(mcp_config)
+
         # Define placeholders for state_schema and model, to be set by child
         self.state_schema = None
         self.model = None
@@ -53,22 +63,52 @@ class BaseAgent:
         Inherit in the subclasses and change as required"""
         return state
 
-    async def custom_graph_agent(self, messages, llm, thread_id):
-        async with self.mcp_client.yield_tools() as tools:
+    def build_graph(self):
+        graph_builder = StateGraph(self.state_schema)
+        graph_builder.add_node(self.agent_node_name, self.agent)
+        # --- CALL hook for child class to add nodes ---
+        if hasattr(self, "add_nodes_to_graph"):
+            self.add_nodes_to_graph(graph_builder, self.state_schema)
+        graph_builder.add_edge(self.agent_node_name, END)
+        graph = graph_builder.compile(checkpointer=self.memory)
+        return graph
+
+    @asynccontextmanager
+    async def yield_graph(self, llm):
+        server_names = list(self.mcp_client.connections.keys())
+        async with AsyncExitStack() as stack:
+            sessions = [
+                await stack.enter_async_context(self.mcp_client.session(name))
+                for name in server_names
+            ]
+            tools_per_server = await asyncio.gather(
+                *[load_mcp_tools(session) for session in sessions]
+            )
+            tools = sum(tools_per_server, [])
             tools.extend(self.tools)
             self.tool_list = tools
+
             self.llm = llm
             self.llm_with_tools = llm.bind_tools(tools)
             self.llm_structured_output = self.llm.with_structured_output(self.model)
+            graph = self.build_graph()
 
-            graph_builder = StateGraph(self.state_schema)
-            graph_builder.add_node(self.agent_node_name, self.agent)
-            # --- CALL hook for child class to add nodes ---
-            if hasattr(self, "add_nodes_to_graph"):
-                self.add_nodes_to_graph(graph_builder, self.state_schema)
-            graph_builder.add_edge(self.agent_node_name, END)
-            graph = graph_builder.compile(checkpointer=self.memory)
-            usage_totals = await invoke_agent(graph, messages, thread_id)
+            yield graph
+
+    async def custom_graph_agent(
+        self,
+        messages,
+        llm,
+        thread_id,
+    ):
+        async with self.yield_graph(
+            llm,
+        ) as graph:
+            usage_totals = await invoke_agent(
+                graph,
+                messages,
+                thread_id,
+            )
             return usage_totals
 
 

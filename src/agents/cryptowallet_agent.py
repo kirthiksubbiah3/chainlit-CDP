@@ -86,7 +86,7 @@ class Cryptowallet(BaseAgent):
                 "If no date range is mentioned, return today's date range\n"
                 "  Strictly the output of operation should be one of the following: "
                 "creation, deposit, withdraw, transfer, delete, error, get, transaction.\n"
-                f"Here is the message:\n\"\"\"{message}\"\"\""
+                f'Here is the message:\n"""{message}"""'
             )
         )
 
@@ -152,7 +152,9 @@ class Cryptowallet(BaseAgent):
             "direction": "backward",
         }
 
-        response = requests.get(LOKI_URL, params=params, auth=(USERNAME, PASSWORD), timeout=30)
+        response = requests.get(
+            LOKI_URL, params=params, auth=(USERNAME, PASSWORD), timeout=30
+        )
 
         if response.status_code != 200:
             raise RuntimeError(

@@ -11,9 +11,13 @@ from .base_agent import get_all_message_content
 
 
 class SupervisorInput(BaseModel):
-    messages: List[HumanMessage] = Field(default=None, description="Conversation messages so far")
+    messages: List[HumanMessage] = Field(
+        default=None, description="Conversation messages so far"
+    )
     thread_id: str | None = Field(default=None, description="Conversation thread ID")
-    session_type: str | None = Field(default=None, description="Optional session type override")
+    session_type: str | None = Field(
+        default=None, description="Optional session type override"
+    )
 
 
 class SupervisorAgent:
@@ -23,17 +27,19 @@ class SupervisorAgent:
             "NewRepo": react_repo_agent,
             "observability": Observability,
             "pod_restart": PodRestartAgent,
-            "crypto_wallet": Cryptowallet
+            "crypto_wallet": Cryptowallet,
         }
         # TODO change the description for each agent inorder to match with the user prompt
         self.description = {
             "NewRepo": "create new git repo with boilerplate code",
             "observability": "metrics, logs, tracing, monitoring, details about Pods, memory, "
-                             "affected resources, recommend solutions, alert, slack, cluster ",
+            "affected resources, recommend solutions, alert, slack, cluster ",
             "pod_restart": "restarting pods (EKS/AKS)",
-            "crypto_wallet": ("cryptowallet application, crypto wallets created, transaction "
-                              "happened, deposited, withdraw, transfer, errors, get, walletID, "
-                              "delete, currency, money, error details")
+            "crypto_wallet": (
+                "cryptowallet application, crypto wallets created, transaction "
+                "happened, deposited, withdraw, transfer, errors, get, walletID, "
+                "delete, currency, money, error details"
+            ),
         }
 
     async def classify_session(self, message: str):
@@ -46,12 +52,12 @@ class SupervisorAgent:
             + "\n".join(desc_lines)
             + f"\nRespond with ONLY the session type from {self.agents.keys()}."
         )
-        result = await self.llm.ainvoke([SystemMessage(content=system_prompt),
-                                         HumanMessage(content=message)])
+        result = await self.llm.ainvoke(
+            [SystemMessage(content=system_prompt), HumanMessage(content=message)]
+        )
         return result.content.strip()
 
-    async def run(self, messages, thread_id: str = None,
-                  session_type: str = None):
+    async def run(self, messages, thread_id: str = None, session_type: str = None):
         """
         Routes user queries to the correct agent.
         """
@@ -76,10 +82,10 @@ class SupervisorAgent:
 
         desc_lines = [f"- {k}: {v}" for k, v in self.description.items()]
         description = (
-                "Supervisor router tool. You MUST call this tool if the user request is"
-                "about any of the following categories:\n"
-                + "\n".join(desc_lines)
-                + "\nDo not answer directly. Always call this tool.."
+            "Supervisor router tool. You MUST call this tool if the user request is"
+            "about any of the following categories:\n"
+            + "\n".join(desc_lines)
+            + "\nDo not answer directly. Always call this tool.."
         )
         return StructuredTool.from_function(
             coroutine=self.run,

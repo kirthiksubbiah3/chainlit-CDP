@@ -41,7 +41,7 @@ async def on_chat_start():
 
     logger.debug("Setting commands for the chat session")
     await cl.context.emitter.set_commands(commands)
-    
+
     await default_agents.get_profiles_agents()
 
     logger.debug("Getting user session data")
