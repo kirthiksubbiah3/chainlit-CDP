@@ -1,0 +1,13 @@
+# Reach out to pace_hydra@ust.com for any changes in this file.
+
+microserviceName=sentinel-mind
+techName=python312
+sonarQualityProfile="Sonar way - DAgility"
+sonarQualityGate="Sonar way"
+dockerfileName=Dockerfile
+
+# Dev Environment Details
+devEnvironment=dev
+devImageTag=latest
+devBranch=main
+devJavaDebugEnabled=false
