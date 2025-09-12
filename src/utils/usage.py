@@ -33,7 +33,7 @@ def send_usage_cost_message(usage_totals: dict, input_token_cost, output_token_c
     msg = (
         "📦 Token usage and approximate cost for this session. "
         f"The cost is calculated with ${input_token_cost} per 1000 input token and "
-        f"${output_token_cost} per 1000 output token. Refer AWS official documentation "
+        f"${output_token_cost} per 1000 output token. Refer LLM Models official documentation "
         "for updated pricing.\n"
         f"- Total Input tokens: {details['input_tokens']}\n"
         f"- Total Output tokens: {details['output_tokens']}\n"
