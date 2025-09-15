@@ -25,6 +25,7 @@ from agents.default_agent import default_agent
 from agents.supervisor_agent import SupervisorAgent
 from mcp_tools import MCPServerSession
 from utils.serializer import _custom_msgpack_default
+from data_layer import CustomDataLayer
 
 jsonplus._msgpack_default = _custom_msgpack_default
 
@@ -57,7 +58,6 @@ def set_profiles_agent():
 async def on_message(msg: cl.Message):
     """Hook to handle incoming messages"""
     logger.info("Received message")
-
     set_profiles_agent()
 
     logger.info("Slack event: %s", cl.user_session.get("slack_event"))
@@ -111,9 +111,11 @@ async def on_message(msg: cl.Message):
         - Anything resembling credentials or private configuration
 
         If a user provides such data (even accidentally), respond only with this message:
-        "or your security, please do NOT share sensitive credentials or secrets. They have been ignored."
+        "For your security, please do NOT share sensitive credentials or secrets. "
+        "They have been ignored."
 
-        Do not echo or use any such sensitive content in your response. Only proceed with safe content.
+        Do not echo or use any such sensitive content in your response. Only proceed with
+        safe content.
     """
     )
     messages.append(security_filter_prompt)
@@ -149,7 +151,8 @@ async def on_message(msg: cl.Message):
 
     chat_profile_name = cl.user_session.get("chat_profile")
     # Condition for Slack messages
-    if (not chat_profile_name) and ("slack" in cl.user_session.get("user").identifier):
+    if ((not chat_profile_name) and
+            ("slack" in cl.user_session.get("user").identifier)):
         chat_profile_name = next(iter(profiles))
         cl.user_session.set("chat_profile", chat_profile_name)
         # TODO Added this session_type for slack messages. Change if required
@@ -159,6 +162,16 @@ async def on_message(msg: cl.Message):
     if session_type == "tools":
         usage_totals = await invoke_agent(profiles_agent, messages, thread_id)
     elif session_type == "supervisor":
+        user_name = cl.user_session.get("user").identifier
+        collection_name = "chat_history_" + user_name
+        logger.info(f"Collection name in user session: {collection_name}")
+        cdl = CustomDataLayer()
+        documents = await cdl.get_document(thread_id)
+        human_docs = [doc for i, doc in enumerate(documents) if i % 2 == 0]
+        human_msgs = [HumanMessage(content=doc) for doc in human_docs]
+        messages.append(HumanMessage(
+            content=f"{human_msgs}"
+        ))
         usage_totals = await SupervisorAgent(llm).run(messages, thread_id)
     else:
         mcp_server_session = MCPServerSession(

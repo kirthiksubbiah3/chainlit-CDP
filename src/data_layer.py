@@ -252,6 +252,13 @@ class CustomDataLayer(ChromaDataLayer, cl_data.BaseDataLayer):
             "steps": steps,
         }
 
+    async def get_document(self, thread_id: str):
+        self.ensure_collection()
+        results = self.collection.get(where={"thread_id": thread_id})
+        if not results["documents"]:
+            return None
+        return results["documents"]
+
     # pylint: disable=too-many-arguments
     # pylint: disable=R0917
     async def update_thread(

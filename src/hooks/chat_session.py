@@ -5,7 +5,6 @@ Handles chat start, resume, and end events.
 
 import chainlit as cl
 from langgraph.checkpoint.memory import MemorySaver
-
 from agents import default_agents
 from config import app_config
 from rag.rag_file_manager import RagFileManager

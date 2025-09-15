@@ -1,6 +1,6 @@
 from typing import Annotated
 from typing_extensions import TypedDict
-from langgraph.graph import START, END
+from langgraph.graph import START
 from langgraph.graph.message import add_messages
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 import pandas as pd
@@ -37,26 +37,6 @@ class Cryptowallet(BaseAgent):
         super().__init__(servers_to_use=[])
         self.state_schema = State
         self.model = Operation
-
-    def safe_tools_condition(self, state: State) -> str:
-        operation = state.get("operation", None)
-        if operation == "creation":
-            return "creation"
-        if operation == "transfer":
-            return "transfer"
-        if operation == "deposit":
-            return "deposit"
-        if operation == "withdraw":
-            return "withdraw"
-        if operation == "delete":
-            return "delete"
-        if operation == "error":
-            return "error"
-        if operation == "get":
-            return "get"
-        if operation == "transaction":
-            return "transaction"
-        return END
 
     def extract_date_range_and_operation(self, state: State) -> State:
         today_date = datetime.now()
@@ -251,196 +231,20 @@ class Cryptowallet(BaseAgent):
         state["filtered_df"] = None
         return state
 
-    def transfer_operation(self, state: State) -> State:
-        filtered_records = state.get("filtered_df", [])
-
+    def fetch_result(self, state: State) -> State:
+        filtered_records = state["filtered_df"]
         system_message = SystemMessage(
             content=(
-                "You are a data analyst agent. You are given wallet transfer records "
-                "in tabular format. "
-                "Your job is to create a comprehensive insight report, "
-                "NOT just answer the user's question. "
-                f"Answer question based on the data {filtered_records}\n"
-                "The currency types available are BTC, ETH, GBP, USD.\n"
-                "From the data, see Message column to identify the currency type "
-                "and the amount transferred"
-                "Regardless of what the user asked earlier, you must include:\n\n"
-                "1. Total number of transfer happened\n"
-                "2. Locations where transaction has happened\n"
-                "3. Top Wallet ID involved\n"
-                "4. What are the currency type involved in transfer\n"
-                "5. How much transfer happened in each currency type\n"
-                "6. Anomalies or suspicious activities\n"
-                "7. Any recommendation for further analysis\n"
-                "\n"
-                "⚠️ Do NOT return just a single sentence or count. "
-                "Always return a detailed paragraph or bullets."
-            )
-        )
-        return self.process_insights(state, system_message)
-
-    def deposit_operation(self, state: State) -> State:
-        filtered_records = state.get("filtered_df", [])
-
-        system_message = SystemMessage(
-            content=(
-                "You are a data analyst agent. You are given wallet deposit records "
-                "in tabular format. "
-                "Your job is to create a comprehensive insight report, "
-                "NOT just answer the user's question. "
-                f"Answer question based on the data {filtered_records}"
-                "The currency types available are BTC, ETH, GBP, USD. "
-                "From the data, see Message column to identify the currency type "
-                "and the amount transferred"
-                "Regardless of what the user asked earlier, you must include:\n\n"
-                "1. Total number of deposited happened\n"
-                "2. Locations where transaction has happened\n"
-                "3. Top Wallet ID involved\n"
-                "4. What are the currency type involved in deposit\n"
-                "5. How much deposit happened in each currency type\n"
-                "6. Anomalies or suspicious activities\n"
-                "7. Any recommendation for further analysis\n\n"
-                "⚠️ Do NOT return just a single sentence or count. Always return a detailed "
-                "paragraph or bullets."
-            )
-        )
-        return self.process_insights(state, system_message)
-
-    def withdraw_operation(self, state: State) -> State:
-        filtered_records = state.get("filtered_df", [])
-
-        system_message = SystemMessage(
-            content=(
-                "You are a data analyst agent. You are given wallet withdraw records in "
-                "tabular format. "
-                "Your job is to create a comprehensive insight report, "
-                "NOT just answer the user's question. "
-                f"Answer question based on the data {filtered_records}"
-                "The currency types available are BTC, ETH, GBP, USD.\n"
-                "From the data, see Message column to identify the currency type "
-                "and the amount transferred"
-                "Regardless of what the user asked earlier, you must include:\n\n"
-                "1. Total number of withdraw happened\n"
-                "2. Locations where withdraw has happened\n"
-                "3. Top Wallet ID involved\n"
-                "4. What are the currency type involved in withdrawal\n"
-                "5. How much withdrawal happened in each currency type\n"
-                "6. Anomalies or suspicious activities\n"
-                "7. Any recommendation for further analysis\n\n"
-                "⚠️ Do NOT return just a single sentence or count. "
-                "Always return a detailed paragraph or bullets."
-            )
-        )
-        return self.process_insights(state, system_message)
-
-    def delete_operation(self, state: State) -> State:
-        filtered_records = state.get("filtered_df", [])
-
-        system_message = SystemMessage(
-            content=(
-                "You are a data analyst agent. You are given wallet delete records "
-                "in tabular format. "
-                "Your job is to create a comprehensive insight report, "
-                "NOT just answer the user's question. "
-                f"Answer question based on the data {filtered_records}"
-                "1. Total number of delete operation happened\n"
-                "2. Locations where delete operation has happened\n"
-                "3. Top Wallet ID involved\n"
-                "4. Anomalies or suspicious activities\n"
-                "5. Any recommendation for further analysis\n\n"
-                "⚠️ Do NOT return just a single sentence or count. "
-                "Always return a detailed paragraph or bullets."
-            )
-        )
-        return self.process_insights(state, system_message)
-
-    def error_operation(self, state: State) -> State:
-        filtered_records = state.get("filtered_df", [])
-
-        system_message = SystemMessage(
-            content=(
-                "You are a data analyst agent. You are given wallet error records in tabular "
-                "format. Your job is to create a comprehensive insight report, "
-                "NOT just answer the user's question. "
-                f"Answer question based on the data {filtered_records}"
-                "1. Total number of error operation happened\n"
-                "2. Locations where error operation has happened\n"
-                "3. Top Wallet ID involved in error operation\n"
-                "4. Anomalies or suspicious activities\n"
-                "5. Highest location, user, currency where error is involved\n"
-                "6. Any recommendation for further analysis\n\n"
-                "⚠️ Do NOT return just a single sentence or count. "
-                "Always return a detailed paragraph or bullets."
-            )
-        )
-        return self.process_insights(state, system_message)
-
-    def get_operation(self, state: State) -> State:
-        filtered_records = state.get("filtered_df", [])
-
-        system_message = SystemMessage(
-            content=(
-                "You are a data analyst agent. You are given wallet get records in tabular format. "
-                "Your job is to create a comprehensive insight report, "
-                "NOT just answer the user's question. "
-                f"Answer question based on the data {filtered_records}"
-                "1. Total number of get operation happened\n"
-                "2. Locations where get operation has happened\n"
-                "3. Top Wallet ID involved in get operation\n"
-                "4. Currency details of the wallets where get operation has involved\n"
-                "5. Anomalies or suspicious activities\n"
-                "6. Any recommendation for further analysis\n\n"
-                "⚠️ Do NOT return just a single sentence or count. "
-                "Always return a detailed paragraph or bullets."
-            )
-        )
-        return self.process_insights(state, system_message)
-
-    def creation_operation(self, state: State) -> State:
-        filtered_records = state.get("filtered_df", [])
-
-        system_message = SystemMessage(
-            content=(
-                "You are a data analyst agent. You are given wallet creation records in "
-                "tabular format. "
-                "Your job is to create a comprehensive insight report, "
-                "NOT just answer the user's question. "
-                f"Answer question based on the data {filtered_records}"
-                "Regardless of what the user asked earlier, you must include:\n\n"
-                "1. Total number of wallets created\n"
-                "2. Top users and location involved (if available). "
-                "The location data can be fetched from "
-                "location field.\n"
-                "3. Wallet ID details\n"
-                "4. Anomalies or suspicious activities\n"
-                "5. Any recommendation for further analysis\n\n"
-                "⚠️ Do NOT return just a single sentence or count. "
-                "Always return a detailed paragraph or bullets."
-            )
-        )
-        return self.process_insights(state, system_message)
-
-    def transaction_operation(self, state: State) -> State:
-        filtered_records = state.get("filtered_df", [])
-
-        system_message = SystemMessage(
-            content=(
-                "You are a data analyst agent. You are given wallet transaction records in "
-                "tabular format. "
-                "Transaction operation is mixed of deposit, withdraw and transfer "
-                "operations. "
-                "Your job is to create a comprehensive insight report, "
-                "NOT just answer the user's question. "
-                f"Answer question based on the data {filtered_records}"
-                "Regardless of what the user asked earlier, you must include:\n\n"
-                "1. Total number of transactions happened which is aggregation of deposit, "
-                "withdraw and transfer operations\n"
-                "2. Highest transaction amount and the transaction type\n"
-                "3. Currency involved in the transactions\n"
-                "4. Anomalies or suspicious activities\n"
-                "5. Any recommendation for further analysis\n\n"
-                "⚠️ Do NOT return just a single sentence or count. "
-                "Always return a detailed paragraph or bullets."
+                "You are an agent that fetches result based on the user input. "
+                f"Correlate and give answer to the userinput with reference to these "
+                f"records: {filtered_records}. "
+                f"Answer question based on the data provided. "
+                "If the user ask for detailed report or insights, you must include:\n\n"
+                "Prefer direct answer if the user didnot request detailed report.\n"
+                "Give detailed analysis only when the user ask. "
+                "Include things like wallet level information, user level information, "
+                "location level information, currency distribution, recomendations, "
+                "anamoly in the detailed report along with other things."
             )
         )
         return self.process_insights(state, system_message)
@@ -451,29 +255,8 @@ class Cryptowallet(BaseAgent):
             "extract_parameters", self.extract_date_range_and_operation
         )
         graph_builder.add_node("query_data", self.query_wallet_data_from_loki)
-        graph_builder.add_node("creation_operation", self.creation_operation)
-        graph_builder.add_node("transfer_operation", self.transfer_operation)
-        graph_builder.add_node("deposit_operation", self.deposit_operation)
-        graph_builder.add_node("withdraw_operation", self.withdraw_operation)
-        graph_builder.add_node("delete_operation", self.delete_operation)
-        graph_builder.add_node("error_operation", self.error_operation)
-        graph_builder.add_node("get_operation", self.get_operation)
-        graph_builder.add_node("transaction_operation", self.transaction_operation)
+        graph_builder.add_node("fetch_result", self.fetch_result)
         graph_builder.add_edge(START, "extract_parameters")
         graph_builder.add_edge("extract_parameters", "query_data")
-        operation_node_map = {
-            "creation": "creation_operation",
-            "transfer": "transfer_operation",
-            "deposit": "deposit_operation",
-            "withdraw": "withdraw_operation",
-            "delete": "delete_operation",
-            "error": "error_operation",
-            "get": "get_operation",
-            "transaction": "transaction_operation",
-        }
-
-        graph_builder.add_conditional_edges(
-            "query_data", self.safe_tools_condition, operation_node_map
-        )
-        for op_node in operation_node_map.values():
-            graph_builder.add_edge(op_node, self.agent_node_name)
+        graph_builder.add_edge("query_data", "fetch_result")
+        graph_builder.add_edge("fetch_result", self.agent_node_name)
