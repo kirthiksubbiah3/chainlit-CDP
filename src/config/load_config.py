@@ -62,7 +62,7 @@ class AppConfig:
                     continue
                 cmd = conf[conf_key]["chainlit_command"]
                 cmd = cmd | {
-                    "button": True,
+                    "button": False,
                     "persistent": True,
                 }
                 self.commands.append(cmd)
