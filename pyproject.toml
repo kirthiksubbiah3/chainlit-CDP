@@ -5,7 +5,7 @@ description = "SFLabs AI assistant with agents for DevOps and SRE tasks."
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "chainlit==2.7.2",
+    "chainlit==2.8.0",
     "chromadb==1.0.13",
     "fpdf==1.7.2",
     "GitPython==3.1.44",
