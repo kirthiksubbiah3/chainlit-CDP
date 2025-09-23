@@ -47,6 +47,21 @@ docker run --rm -p 8000:8000 \
     mcp/grafana -t streamable-http
 ```
 
+## Instructions to run Atlassian mcp server
+
+- We use Streamable HTTP Mode
+- You must expose port 9000 using the -p flag.
+- Use the following commands to run the server
+
+```bash
+docker pull ghcr.io/sooperset/mcp-atlassian:latest
+docker run --rm -p 9000:9000 \
+    -e CONFLUENCE_URL="https://your-company.atlassian.net/wiki" \
+    -e CONFLUENCE_USERNAME="your.email@company.com" \
+    -e CONFLUENCE_API_TOKEN="your_atlassian_api_token" \
+    ghcr.io/sooperset/mcp-atlassian:latest -t streamable-http --port 9000
+```
+
 ## Observability graph details
 
 ```mermaid
