@@ -67,7 +67,9 @@ async def on_message(msg: cl.Message):
         logger.info(await fetch_slack_message_history(limit=10))
 
     rag_filenames = cl.user_session.get("rag_filenames", [])
-
+    cl.user_session.set("x_axis", None)
+    cl.user_session.set("y_axis", None)
+    cl.user_session.set("operation", None)
     filepath = None
     for element in msg.elements:
         if isinstance(element, cl.element.File):
@@ -167,10 +169,8 @@ async def on_message(msg: cl.Message):
         logger.info(f"Collection name in user session: {collection_name}")
         cdl = CustomDataLayer()
         documents = await cdl.get_document(thread_id)
-        human_docs = [doc for i, doc in enumerate(documents) if i % 2 == 0]
-        human_msgs = [HumanMessage(content=doc) for doc in human_docs]
         messages.append(HumanMessage(
-            content=f"{human_msgs}"
+            content=f"{documents}"
         ))
         usage_totals = await SupervisorAgent(llm).run(messages, thread_id)
     else:

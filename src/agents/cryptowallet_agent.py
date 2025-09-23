@@ -6,9 +6,10 @@ from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 import pandas as pd
 from typing import Optional
 from pydantic import BaseModel, Field
-from datetime import datetime
 import requests
 import re
+import chainlit as cl
+from datetime import datetime
 
 from config import app_config
 from agents.base_agent import BaseAgent
@@ -21,6 +22,9 @@ class State(TypedDict):
     operation: Optional[str] = None
     wallet_ids: Optional[list] = None
     insights: Optional[str] = None
+    x_axis: Optional[list] = None
+    y_axis: Optional[list] = None
+    is_detailed_report: Optional[bool] = None
 
 
 class Operation(BaseModel):
@@ -30,6 +34,14 @@ class Operation(BaseModel):
     date_range: Optional[str] = Field(
         description="Get the date range from the user input"
     )
+    is_detailed_report: Optional[bool] = Field(
+        description="Is the user asking for detailed report or not", default=False
+    )
+
+
+class graph_coordinates(BaseModel):
+    x_axis: list = Field(description="x axis values")
+    y_axis: list = Field(description="y axis values")
 
 
 class Cryptowallet(BaseAgent):
@@ -38,8 +50,16 @@ class Cryptowallet(BaseAgent):
         self.state_schema = State
         self.model = Operation
 
+    def condition(self, state: State) -> str:
+        is_detailed_report = state["is_detailed_report"]
+        if is_detailed_report:
+            return "graph_node"
+        else:
+            return "agent"
+
     def extract_date_range_and_operation(self, state: State) -> State:
-        today_date = datetime.now()
+        self.logger.info(f"State message value is {state['messages']}")
+        self.today_date = datetime.now()
         message = state.get("messages", [])
         system_message = SystemMessage(
             content=(
@@ -47,13 +67,17 @@ class Cryptowallet(BaseAgent):
                     "You are an agent extracts date range and operation details from the user input"
                     "The date range should be in the format "
                     "'From YYYY-MM-DD 00:00:00 To YYYY-MM-DD 23:59:59'. "
-                    f"Take the reference as today's date {today_date} and "
+                    f"Take the reference as today's date {self.today_date} and "
                     "calculate the time range accordingly. "
                     "If no date range is mentioned, return today's date range. "
                     "If the input is like last 7 days, return the date range for last 7 days. "
                     "The operations that are available are creation, deposit, withdraw, transfer, "
                     "delete, error, get, transaction. "
                     "Map corresponding operation based on the user input in the message."
+                    "From the user input, tell if the user is asking for detailed report or not. "
+                    "Check only for the last message for that"
+                    "Any values cannot be None"
+                    "is_detailed_report - The possible values are True or False."
                 )
             )
         )
@@ -62,14 +86,18 @@ class Cryptowallet(BaseAgent):
             content=(
                 f"""Please extract the following:
     - operation: What is the Operation that needs to be filtered from the user input
-    - date_range: What is the date range mentioned in the user input. """
-                "If no date range is mentioned, return today's date range\n"
-                "  Strictly the output of operation should be one of the following: "
-                "creation, deposit, withdraw, transfer, delete, error, get, transaction.\n"
-                f'Here is the message:\n"""{message}"""'
+    - date_range: What is the date range mentioned in the user input.
+    - is_detailed_report: Is the user asking for additional details or not.
+    True if the user is asking else false
+    If no date range is mentioned, return today's date range
+    Strictly the output of operation should be one of the following:
+    creation, deposit, withdraw, transfer, delete, error, get, transaction.
+
+    Here is the message:
+    {message}
+    """
             )
         )
-
         evaluator_messages = [system_message, human_message]
 
         eval_result = self.llm_structured_output.invoke(evaluator_messages)
@@ -78,6 +106,8 @@ class Cryptowallet(BaseAgent):
         if state["operation"] is None:
             state["operation"] = "creation"
         state["time_range"] = eval_result.date_range
+        state["is_detailed_report"] = eval_result.is_detailed_report
+        self.logger.info(f"is_detailed_report in the eval: {eval_result.is_detailed_report}")
         self.logger.info(f"Operation extracted: {eval_result.operation}")
         return state
 
@@ -121,9 +151,6 @@ class Cryptowallet(BaseAgent):
             )
         else:
             log_selector = f'{{service_name="{SERVICE_NAME}"}} |= "{log_pattern}"'
-
-        self.logger.info(f"Using Loki query: {log_selector}")
-
         params = {
             "query": log_selector,
             "start": str(start),
@@ -228,7 +255,7 @@ class Cryptowallet(BaseAgent):
             state["messages"].append(AIMessage(content=str(response)))
 
         state["insights"] = response
-        state["filtered_df"] = None
+
         return state
 
     def fetch_result(self, state: State) -> State:
@@ -249,14 +276,73 @@ class Cryptowallet(BaseAgent):
         )
         return self.process_insights(state, system_message)
 
+    def group_by_date(self, state: State) -> State:
+        df = self.wallet_df
+        df['Date'] = pd.to_datetime(df['Date'])  # Convert to datetime
+
+        if df['Date'].dt.date.nunique() == 1:
+            # All entries on the same day -> group by 4-hour bucket
+            df['Bucket'] = df['Date'].dt.floor('4H')  # Round down to nearest 4 hours
+            grouped = df.groupby('Bucket').size().reset_index(name='count')
+
+            # Create full 4-hour range for the day
+            day = df['Date'].dt.date.iloc[0]
+            time_range = pd.date_range(start=pd.Timestamp(f"{day} 00:00:00"),
+                                       end=pd.Timestamp(f"{day} 23:59:59"),
+                                       freq='4H')
+
+            # Reindex to fill missing buckets
+            grouped = (grouped.set_index('Bucket')
+                       .reindex(time_range, fill_value=0)
+                       .rename_axis('Bucket')
+                       .reset_index())
+
+            # Format x and y axes
+            grouped['x_axis'] = grouped['Bucket'].dt.strftime('%Y-%m-%d %H:%M')
+            x_axis = grouped['x_axis'].tolist()
+            y_axis = grouped['count'].tolist()
+
+        else:
+            df['DateOnly'] = df['Date'].dt.normalize()  # Keep it in datetime64, not Python date
+
+            # Group by day
+            grouped = df.groupby('DateOnly').size().reset_index(name='count')
+
+            # Fill in missing dates
+            date_range = pd.date_range(start=df['DateOnly'].min(), end=df['DateOnly'].max())
+
+            grouped = (
+                grouped.set_index('DateOnly')
+                .reindex(date_range, fill_value=0)
+                .rename_axis('DateOnly')
+                .reset_index()
+            )
+            x_axis = grouped['DateOnly'].dt.strftime('%Y-%m-%d').tolist()
+            y_axis = grouped['count'].tolist()
+        cl.user_session.set("x_axis", x_axis)
+        cl.user_session.set("y_axis", y_axis)
+        cl.user_session.set("operation", state["operation"])
+        state["x_axis"] = x_axis
+        state["y_axis"] = y_axis
+        self.logger.info(f"x_axis extracted: {state['x_axis']}")
+        self.logger.info(f"y_axis extracted: {state['y_axis']}")
+
+        return state
+
     def add_nodes_to_graph(self, graph_builder, state: State):
-        self.logger.info(f"Tools registered: {self.tools}")
         graph_builder.add_node(
             "extract_parameters", self.extract_date_range_and_operation
         )
         graph_builder.add_node("query_data", self.query_wallet_data_from_loki)
         graph_builder.add_node("fetch_result", self.fetch_result)
+        graph_builder.add_node("group_by_date", self.group_by_date)
         graph_builder.add_edge(START, "extract_parameters")
         graph_builder.add_edge("extract_parameters", "query_data")
         graph_builder.add_edge("query_data", "fetch_result")
-        graph_builder.add_edge("fetch_result", self.agent_node_name)
+        graph_builder.add_conditional_edges(
+            "fetch_result",
+            self.condition,
+            {"graph_node": "group_by_date", "agent": self.agent_node_name},
+        )
+
+        graph_builder.add_edge("group_by_date", self.agent_node_name)
