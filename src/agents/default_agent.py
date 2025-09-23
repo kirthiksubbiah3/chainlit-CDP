@@ -5,7 +5,7 @@ from config import app_config
 from llm import get_llm
 from mcp_tools import mcp_tools
 from rag.rag_search import rag_search
-from tools import generate_docx, generate_pdf, read_attachment
+from tools import generate_docx, generate_pdf, read_attachment, generate_mermaid_diagram
 from agents.supervisor_agent import SupervisorAgent
 from utils import get_logger
 
@@ -22,7 +22,8 @@ class DefaultAgents:
     async def get_tools(self):
         if not self.tools:
             self.tools = await mcp_tools.get_tools()
-            self.tools += [generate_docx, generate_pdf, rag_search, read_attachment]
+            self.tools += [generate_docx, generate_pdf, rag_search, read_attachment,
+                           generate_mermaid_diagram]
             logger.info("Loaded tools: %s", [tool.name for tool in self.tools])
 
     async def get_profiles_agents(self):
