@@ -1,9 +1,9 @@
 # Reach out to pace_hydra@ust.com for any changes in this file.
 
-microserviceName=sentinel-mind
+microserviceName=sflabs-ai-assistant
 techName=python312
-sonarQualityProfile="Sonar way - DAgility"
-sonarQualityGate="Sonar way"
+sonarQualityProfile="Python - PACE AI"
+sonarQualityGate="Python - PACE AI"
 dockerfileName=Dockerfile
 
 # Dev Environment Details
