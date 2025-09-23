@@ -73,3 +73,4 @@ ENV PIP_DISABLE_PIP_VERSION_CHECK=on \
     DISPLAY=:1
 
 ENTRYPOINT ["uv", "run", "chainlit", "run", "src/app.py", "--host=0.0.0.0", "--port=8000"]
+#
