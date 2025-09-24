@@ -24,6 +24,16 @@ from .usage import (
 )
 from .generate_chat_title_from_input import generate_chat_title_from_input
 from .profile_loader import load_chat_profiles
+from .serializer import _custom_msgpack_default
+from .text import CleanXMLTagParser, get_collection_name
+from .git import (
+    clone_repo,
+    commit_and_push_code,
+    create_repo_from_boilerplate,
+    get_git_details_from_input,
+    BOILER_PLATES,
+    TEMPL_WORKSPACE,
+)
 
 __all__ = [
     # Config functions
@@ -48,4 +58,17 @@ __all__ = [
     "generate_chat_title_from_input",
     # Profile loader
     "load_chat_profiles",
+    # Serializer function
+    "_custom_msgpack_default",
+    # text
+    "CleanXMLTagParser",
+    "get_collection_name",
+    # git
+    "clone_repo",
+    "commit_and_push_code",
+    "create_repo_from_boilerplate",
+    "get_git_details_from_input",
+    "BOILER_PLATES",
+    "TEMPL_WORKSPACE",
+    "GitCommandError",
 ]

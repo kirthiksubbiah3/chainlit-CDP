@@ -1,15 +1,47 @@
-name: Build, Scan, and Push sentinel-mind to ECR
+name: Build, Test, Scan, and Push sentinel-mind to ECR
 
 on:
   push:
     branches:
-      - main  
+      - main
     paths:
       - 'Dockerfile'
       - 'src/**'
+      - 'tests/**'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'Dockerfile'
+      - 'src/**'
+      - 'tests/**'
 
 jobs:
+  unit-test:
+    runs-on: eks-edopsclt-custom-runner
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+
+    - name: Install uv
+      run: pip install uv
+
+    - name: Create and activate virtual environment
+      run: uv venv
+
+    - name: Sync dependencies
+      run: uv sync
+
+    - name: Run unit tests
+      run: uv run python -m unittest discover -s tests
+
   build-scan-push:
+    needs: unit-test
     runs-on: eks-edopsclt-custom-runner
     outputs:
       image_tag: ${{ steps.set-tag.outputs.image_tag }}
@@ -35,22 +67,7 @@ jobs:
           echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
 
-      # - name: Free up disk space
-      #   run: |
-      #     docker system prune -af
-      #     sudo rm -rf /usr/share/dotnet
-      #     sudo rm -rf /opt/ghc
-      #     sudo rm -rf /usr/local/lib/android
-      #     sudo rm -rf /usr/local/share/boost
-      #     sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-
-      - name: Build Docker Image
-        env:
-          ECR_REGISTRY: 442426895473.dkr.ecr.us-east-1.amazonaws.com
-          ECR_REPOSITORY: sentinelmind/chainlit
-        run: |
-          docker build --no-cache -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f Dockerfile .
-
+      # Uncomment and enable Trivy steps if you want to scan your image for vulnerabilities
       # - name: Install Trivy (if not installed)
       #   run: |
       #     if ! command -v trivy &> /dev/null; then
@@ -62,6 +79,13 @@ jobs:
       #       sudo apt-get install -y trivy
       #     fi
       #     echo "Trivy installed at: $(which trivy)"
+
+      # - name: Build Docker Image
+      #   env:
+      #     ECR_REGISTRY: 442426895473.dkr.ecr.us-east-1.amazonaws.com
+      #     ECR_REPOSITORY: sentinelmind/chainlit
+      #   run: |
+      #     docker build --no-cache -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f Dockerfile .
 
       # - name: Scan built Docker image with Trivy (table output, enforce fail on HIGH/CRITICAL)
       #   env:
@@ -92,6 +116,13 @@ jobs:
       #     name: trivy-report
       #     path: trivy-report.json
 
+      - name: Build Docker Image
+        env:
+          ECR_REGISTRY: 442426895473.dkr.ecr.us-east-1.amazonaws.com
+          ECR_REPOSITORY: sentinelmind/chainlit
+        run: |
+          docker build --no-cache -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f Dockerfile .
+
       - name: Push Docker Image to ECR
         if: ${{ success() }}
         env:
@@ -99,7 +130,6 @@ jobs:
           ECR_REPOSITORY: sentinelmind/chainlit
         run: |
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-
 
       - name: Final Cleanup (Remove Docker, workspace, and temp files)
         if: always()
@@ -119,6 +149,7 @@ jobs:
           sudo rm -rf "$AGENT_TOOLSDIRECTORY" || true
 
           echo "Cleanup complete."
+
   deploy:
     needs: build-scan-push
     uses: ./.github/workflows/chainlit-cd.yaml
