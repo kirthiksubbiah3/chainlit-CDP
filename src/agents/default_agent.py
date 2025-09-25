@@ -6,7 +6,6 @@ from llm import get_llm
 from mcp_tools import mcp_tools
 from rag.rag_search import rag_search
 from tools import generate_docx, generate_pdf, read_attachment, generate_mermaid_diagram
-from agents.supervisor_agent import SupervisorAgent
 from utils import get_logger
 
 logger = get_logger(__name__)
@@ -32,9 +31,8 @@ class DefaultAgents:
             self.profiles_agents = {}
             for profile in profiles:
                 llm = get_llm(profile)
-                tools = self.tools + [SupervisorAgent(llm).as_tool()]
                 self.profiles_agents[profile] = create_react_agent(
-                    llm, tools, checkpointer=memory
+                    llm, self.tools, checkpointer=memory
                 )
         logger.info("Loaded profiles agents: %s", self.profiles_agents.keys())
 

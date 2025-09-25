@@ -60,9 +60,15 @@ class AppConfig:
             for conf_key in conf.keys():
                 if "chainlit_command" not in conf[conf_key]:
                     continue
+                if conf is self.mcp_servers_config:
+                    button_value = True
+                elif conf_key == "rag":
+                    button_value = True
+                else:
+                    button_value = False
                 cmd = conf[conf_key]["chainlit_command"]
                 cmd = cmd | {
-                    "button": False,
+                    "button": button_value,
                     "persistent": True,
                 }
                 self.commands.append(cmd)

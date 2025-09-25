@@ -15,7 +15,7 @@ in namespace ai-demo in the sftp-eks cluster.
 
 - Create new react repo in GitHub with name test1d3gg
 
-### o11y
+### Observability
 
 Get details about Pods without Memory limit in Slack. Give list of affected resources.
 Recommend a solution to fix the alert. Fix the alert after getting user confirmation

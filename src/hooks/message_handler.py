@@ -22,12 +22,17 @@ from utils import (
 )
 
 from agents.default_agent import default_agent
+from agents.cryptowallet_agent import Cryptowallet
+from agents.observability_agent import Observability
 from agents.supervisor_agent import SupervisorAgent
 from mcp_tools import MCPServerSession
 from utils.serializer import _custom_msgpack_default
 from data_layer import CustomDataLayer
 
 jsonplus._msgpack_default = _custom_msgpack_default
+
+obs = Observability()
+crypto = Cryptowallet()
 
 logger = get_logger(__name__)
 
@@ -146,6 +151,10 @@ async def on_message(msg: cl.Message):
             target_server = "playwright"
         elif msg.command == "Supervisor":
             session_type = "supervisor"
+        elif msg.command == "Observability":
+            session_type = "observability"
+        elif msg.command == "cryptowallet":
+            session_type = "cryptowallet"
         messages.append(
             SystemMessage(content=f"Forward this to {target_server} mcp server")
         )
@@ -163,6 +172,10 @@ async def on_message(msg: cl.Message):
     llm = get_llm(chat_profile_name)
     if session_type == "tools":
         usage_totals = await invoke_agent(profiles_agent, messages, thread_id)
+    elif session_type == "observability":
+        usage_totals = await obs.custom_graph_agent(messages, llm, thread_id)
+    elif session_type == "cryptowallet":
+        usage_totals = await crypto.custom_graph_agent(messages, llm, thread_id)
     elif session_type == "supervisor":
         user_name = cl.user_session.get("user").identifier
         collection_name = "chat_history_" + user_name

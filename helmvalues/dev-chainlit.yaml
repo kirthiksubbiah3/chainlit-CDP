@@ -285,14 +285,14 @@ llmConfig: |-
         command: npx
         transport: stdio
   agents:
-    supervisor:
+    # supervisor:
+    #   chainlit_command:
+    #     id: Supervisor
+    #     icon: shapes
+    Observability:
       chainlit_command:
-        id: Supervisor
-        icon: shapes
-    #o11y:
-    # chainlit_command:
-    #   id: o11y
-    #   icon: git-graph
+        id: Observability
+        icon: git-graph
     #new_repo:
     # chainlit_command:
     #   id: NewRepo
@@ -301,10 +301,10 @@ llmConfig: |-
     # chainlit_command:
     #   id: PodRestart
     #   icon: list-restart
-    #cryptowallet:
-    # chainlit_command:
-    #   id: cryptowallet
-    #   icon: bar-chart-2
+    cryptowallet:
+      chainlit_command:
+        id: cryptowallet
+        icon: bar-chart-2
     rag:
       chainlit_command:
         description: Search through rag

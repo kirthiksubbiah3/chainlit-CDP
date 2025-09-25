@@ -134,9 +134,6 @@ mcp:
       command: python3
       transport: stdio
     github:
-      chainlit_command:
-        icon: github
-        id: GitHub
       transport: streamable_http
       url: https://api.githubcopilot.com/mcp
     gitlab:
@@ -170,10 +167,14 @@ mcp:
       command: npx
       transport: stdio
 agents:
-  supervisor:
+  Observability:
     chainlit_command:
-      id: Supervisor
-      icon: shapes
+      id: Observability
+      icon: git-graph
+  cryptowallet:
+    chainlit_command:
+      id: cryptowallet
+      icon: bar-chart-2
   rag:
     chainlit_command:
       description: Search through rag
