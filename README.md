@@ -97,3 +97,25 @@ flowchart TD
   handler for it.
 - Verify the request URL by pressing verify button.
 - Start chatting.
+
+## Running with Docker
+
+You can run the Sentinel Mind application directly using Docker:
+
+```bash
+docker run \
+  --env-file .env \
+  -v $(pwd)/config.yaml:/app/config.yaml \
+  -v $(pwd)/secrets.yaml:/app/secrets.yaml \
+  <docker-image-name>:<tag>
+```
+
+### Notes
+
+- Replace `<docker-image-name>:<tag>` with your actual Docker image name and tag
+- Make sure your `.env` file contains all required environment variables
+- Ensure `config.yaml` exists in your current directory
+- Create a `secrets.yaml` file (you can copy from `secrets.example.yaml`
+  and modify as needed)
+- You can add `-p 8000:8000` to expose the web interface (replace the first
+  port with your desired local port)
