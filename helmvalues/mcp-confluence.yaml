@@ -1,0 +1,28 @@
+appName: confluence-mcp
+namespace: mcp-servers
+replicas: 1
+
+image:
+  repository: ghcr.io/sooperset/mcp-atlassian
+  tag: latest
+  pullPolicy: IfNotPresent
+
+containerPort: 9000
+args:
+  - "--transport"
+  - "streamable-http"
+  - "--port"
+  - "9000"
+
+envFromSecret:
+  - confluence-secrets
+
+service:
+  name: confluence-mcp-service
+  type: ClusterIP
+  protocol: TCP
+  port: 9000
+  targetPort: 9000
+
+pvc:
+  enabled: false

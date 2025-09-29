@@ -3,7 +3,7 @@ namespace: dev-sentinel-mind
 replicas: 1
 image:
   repository: 442426895473.dkr.ecr.us-east-1.amazonaws.com/sentinelmind/chainlit
-  tag: 5ffaed3-2025-09-23
+  tag: 33e1a70-2025-09-25
   pullPolicy: IfNotPresent
 
 resources:
@@ -249,9 +249,6 @@ llmConfig: |-
         command: python3
         transport: stdio
       github:
-        chainlit_command:
-          icon: github
-          id: GitHub
         transport: streamable_http
         url: https://api.githubcopilot.com/mcp
       #gitlab:
