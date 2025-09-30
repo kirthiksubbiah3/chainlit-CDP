@@ -6,7 +6,7 @@ Includes logging and mapping of server commands to chat profile starters.
 import chainlit as cl
 
 from logging import getLogger
-# from utils import get_username
+
 from .get_username import get_username
 
 logger = getLogger(__name__)

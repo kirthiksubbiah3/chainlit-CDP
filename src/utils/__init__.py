@@ -33,6 +33,7 @@ from .git import (
     get_git_details_from_input,
     BOILER_PLATES,
     TEMPL_WORKSPACE,
+
 )
 
 __all__ = [
@@ -70,5 +71,4 @@ __all__ = [
     "get_git_details_from_input",
     "BOILER_PLATES",
     "TEMPL_WORKSPACE",
-    "GitCommandError",
 ]
