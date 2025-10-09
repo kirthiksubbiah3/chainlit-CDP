@@ -1,4 +1,4 @@
-appName: chromadb
+appName: dev-chromadb
 namespace: mcp-servers
 replicas: 1
 podSecurityContext:
@@ -12,16 +12,16 @@ image:
 containerPort: 8000
 
 volumeMounts:
-  - name: chromadb-data
+  - name: dev-chromadb-data
     mountPath: /data
 
 volumes:
-  - name: chromadb-data
+  - name: dev-chromadb-data
     persistentVolumeClaim:
-      claimName: chromadb-data
+      claimName: dev-chromadb-data
 
 service:
-  name: chromadb
+  name: dev-chromadb
   type: ClusterIP
   protocol: TCP
   port: 8000
@@ -29,6 +29,6 @@ service:
 
 pvc:
   enabled: true
-  name: chromadb-data
+  name: dev-chromadb-data
   accessMode: ReadWriteOnce
   storage: 20Gi
