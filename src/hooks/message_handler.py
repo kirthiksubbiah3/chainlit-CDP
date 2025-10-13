@@ -13,7 +13,7 @@ from config import app_config
 from invoke_agent import invoke_agent
 from llm import get_llm
 from rag.rag_file_manager import RagFileManager
-from rag.update_sidebar import update_sidebar
+# from rag.update_sidebar import update_sidebar
 from utils import (
     get_time_taken_message,
     get_logger,
@@ -85,7 +85,7 @@ async def on_message(msg: cl.Message):
             await rag_manager.upload_and_store_file(filepath, filename)
             rag_filenames.append(filename)
 
-    await update_sidebar(rag_filenames)
+    # await update_sidebar(rag_filenames)
 
     start_time = time.perf_counter()
     thread_id = cl.context.session.thread_id
