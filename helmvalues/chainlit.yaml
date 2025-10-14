@@ -3,13 +3,13 @@ namespace: sentinel-mind
 replicas: 1
 image:
   repository: 442426895473.dkr.ecr.us-east-1.amazonaws.com/sentinelmind/chainlit
-  tag: 3b70384-2025-09-30 
+  tag: f2cf82d-2025-10-13 
   pullPolicy: IfNotPresent
 
 resources:
   requests:
-    cpu: "750m"
-    memory: "1.5Gi"
+    cpu: "1"
+    memory: "2Gi"
   limits:
     cpu: "1"
     memory: "2Gi"

@@ -53,7 +53,7 @@ RUN groupadd -g 1001 appuser && useradd -m -u 1001 -g appuser appuser \
 WORKDIR /app
 
 USER appuser
-
+COPY .python-version ./
 # Copy Python dependency files and install dependencies with uv (as appuser)
 COPY --chown=appuser:appuser pyproject.toml uv.lock ./
 RUN uv sync
@@ -71,6 +71,5 @@ ENV PIP_DISABLE_PIP_VERSION_CHECK=on \
     PYTHONUNBUFFERED=1 \
     PLAYWRIGHT_BROWSERS_PATH=/ms-playwright \
     DISPLAY=:1
-
 
 ENTRYPOINT ["uv", "run", "chainlit", "run", "src/app.py", "--host=0.0.0.0", "--port=8000"]
