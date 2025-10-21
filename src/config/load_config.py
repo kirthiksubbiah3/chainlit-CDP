@@ -62,7 +62,7 @@ class AppConfig:
                     continue
                 if conf is self.mcp_servers_config:
                     button_value = True
-                elif conf_key == "rag":
+                elif conf_key == "rag" or conf_key == "sflabs-docs":
                     button_value = True
                 else:
                     button_value = False

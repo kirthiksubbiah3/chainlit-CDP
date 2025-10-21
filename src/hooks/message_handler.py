@@ -155,6 +155,10 @@ async def on_message(msg: cl.Message):
             session_type = "observability"
         elif msg.command == "cryptowallet":
             session_type = "cryptowallet"
+        elif msg.command == "sflabs-docs":
+            messages.append(
+                SystemMessage(content="Always use readme_rag_search tool for this prompt.")
+            )
         messages.append(
             SystemMessage(content=f"Forward this to {target_server} mcp server")
         )
