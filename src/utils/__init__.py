@@ -35,6 +35,7 @@ from .git import (
     TEMPL_WORKSPACE,
 
 )
+from .fastapi_endpoint import sentinelmind_api_get, sentinelmind_api_post
 
 __all__ = [
     # Config functions
@@ -71,4 +72,6 @@ __all__ = [
     "get_git_details_from_input",
     "BOILER_PLATES",
     "TEMPL_WORKSPACE",
+    "sentinelmind_api_get",
+    "sentinelmind_api_post",
 ]

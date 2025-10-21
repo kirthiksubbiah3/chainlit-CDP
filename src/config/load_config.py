@@ -19,6 +19,8 @@ class AppConfig:
         self.path = os.getenv("CHROMADB_PERSISTENT_PATH", ".chromadb")
 
         self.env = os.getenv("ENV", "dev").lower()
+        self.sentinelmind_base_url = os.getenv("SENTINELMIND_API_BASE_URL", "http://localhost:8000")    
+        self.sentinelmind_api_agent = os.getenv("SENTINELMIND_API_AGENT", "default-agent")
 
         self.local_username = os.getenv("LOCAL_USERNAME")
         self.local_password = os.getenv("LOCAL_PASSWORD")

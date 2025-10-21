@@ -1,6 +1,6 @@
 [project]
 name = "sflabs-ai-assistant"
-version = "1.19.0"
+version = "1.20.0"
 description = "SFLabs AI assistant with agents for DevOps and SRE tasks."
 readme = "README.md"
 requires-python = ">=3.12"
