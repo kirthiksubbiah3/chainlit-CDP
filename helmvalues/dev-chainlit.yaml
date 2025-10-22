@@ -3,7 +3,7 @@ namespace: dev-sentinel-mind
 replicas: 1
 image:
   repository: 442426895473.dkr.ecr.us-east-1.amazonaws.com/sentinelmind/chainlit
-  tag: 3b70384-2025-09-30
+  tag: e1a54fc-2025-10-21
   pullPolicy: IfNotPresent
 
 resources:
@@ -215,7 +215,7 @@ llmConfig: |-
     servers:
       cloudwatch_logs:
         args:
-        - awslabs.cloudwatch-logs-mcp-server@latest
+        - awslabs.cloudwatch-mcp-server@latest
         command: uvx
         env:
           AWS_REGION: us-east-1
@@ -260,9 +260,9 @@ llmConfig: |-
       grafana:
         transport: streamable_http
         url: http://grafana-mcp-service.mcp-servers.svc.cluster.local:8000/mcp
-      atlassian:
-        transport: streamable_http
-        url: http://confluence-mcp-service.mcp-servers.svc.cluster.local:9000/mcp
+      # atlassian:
+      #   transport: streamable_http
+      #   url: http://confluence-mcp-service.mcp-servers.svc.cluster.local:9000/mcp
       jenkins:
         transport: sse
         url: https://app.ustpace.io/visioncheckout/jenkins/mcp-server/sse
@@ -282,22 +282,10 @@ llmConfig: |-
         command: npx
         transport: stdio
   agents:
-    # supervisor:
-    #   chainlit_command:
-    #     id: Supervisor
-    #     icon: shapes
     Observability:
       chainlit_command:
         id: Observability
         icon: git-graph
-    #new_repo:
-    # chainlit_command:
-    #   id: NewRepo
-    #   icon: workflow
-    #pod_restart:
-    # chainlit_command:
-    #   id: PodRestart
-    #   icon: list-restart
     cryptowallet:
       chainlit_command:
         id: cryptowallet
@@ -307,3 +295,14 @@ llmConfig: |-
         description: Search through rag
         icon: file
         id: rag_search
+    fast-api:
+      chainlit_command:
+        description: Search through fast-api endpoint
+        icon: server
+        id: agent's_api
+        
+    sflabs-docs:
+      chainlit_command:
+        description: Search sflabs docs through rag
+        id: sflabs-docs
+        icon: github

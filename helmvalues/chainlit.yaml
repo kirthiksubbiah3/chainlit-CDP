@@ -3,9 +3,8 @@ namespace: sentinel-mind
 replicas: 1
 image:
   repository: 442426895473.dkr.ecr.us-east-1.amazonaws.com/sentinelmind/chainlit
-  tag: f2cf82d-2025-10-13 
+  tag: f2cf82d-2025-10-13
   pullPolicy: IfNotPresent
-
 resources:
   requests:
     cpu: "1"
@@ -215,7 +214,7 @@ llmConfig: |-
     servers:
       cloudwatch_logs:
         args:
-        - awslabs.cloudwatch-logs-mcp-server@latest
+        - awslabs.cloudwatch-mcp-server@latest
         command: uvx
         env:
           AWS_REGION: us-east-1
@@ -282,22 +281,10 @@ llmConfig: |-
         command: npx
         transport: stdio
   agents:
-    # supervisor:
-    #   chainlit_command:
-    #     id: Supervisor
-    #     icon: shapes
     Observability:
       chainlit_command:
         id: Observability
         icon: git-graph
-    #new_repo:
-    # chainlit_command:
-    #   id: NewRepo
-    #   icon: workflow
-    #pod_restart:
-    # chainlit_command:
-    #   id: PodRestart
-    #   icon: list-restart
     cryptowallet:
       chainlit_command:
         id: cryptowallet
@@ -307,3 +294,14 @@ llmConfig: |-
         description: Search through rag
         icon: file
         id: rag_search
+    fast-api:
+      chainlit_command:
+        description: Search through fast-api endpoint
+        icon: server
+        id: agent's_api
+
+    sflabs-docs:
+      chainlit_command:
+        description: Search sflabs docs through rag
+        id: sflabs-docs
+        icon: github

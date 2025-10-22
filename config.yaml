@@ -100,7 +100,7 @@ mcp:
   servers:
     cloudwatch_logs:
       args:
-      - awslabs.cloudwatch-logs-mcp-server@latest
+      - awslabs.cloudwatch-mcp-server@latest
       command: uvx
       env:
         AWS_REGION: us-east-1
