@@ -5,7 +5,7 @@ from langchain.tools import tool
 
 
 @tool
-async def generate_mermaid_diagram(content: str, filename:str) -> str:
+async def generate_mermaid_diagram(content: str, filename: str) -> str:
     """
     Use this tool when the user wants to generate a Mermaid graph image from chart or pipeline and
     show the image in the chat. The content should be the Mermaid syntax for the diagram.

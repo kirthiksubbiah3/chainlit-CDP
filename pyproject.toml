@@ -1,6 +1,6 @@
 [project]
 name = "sflabs-ai-assistant"
-version = "1.20.0"
+version = "1.21.0"
 description = "SFLabs AI assistant with agents for DevOps and SRE tasks."
 readme = "README.md"
 requires-python = ">=3.12"
@@ -31,7 +31,8 @@ dependencies = [
     "uv==0.7.19",
     "weasyprint==65.1",
     "pandas==2.3.2",
-    "matplotlib==3.10.6"
+    "matplotlib==3.10.6",
+    "google-cloud-speech>=2.33.0",
 ]
 [dependency-groups]
 code_check = [

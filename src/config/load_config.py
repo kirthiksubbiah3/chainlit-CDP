@@ -30,6 +30,8 @@ class AppConfig:
         self.loki_username = os.getenv("LOKI_USERNAME")
         self.loki_password = os.getenv("LOKI_PASSWORD")
 
+        self.gcp_credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+
         logger.info("Loading config")
         config = load_yaml_file("config.yaml")
 

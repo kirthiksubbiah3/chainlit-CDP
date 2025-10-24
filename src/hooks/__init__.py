@@ -8,6 +8,7 @@ from . import chat_session
 from . import message_handler
 from . import data_layer_hooks
 from . import action_callbacks
+from . import audio_handler
 
 # Setup authentication hooks
 auth.setup_auth_hooks()
@@ -19,4 +20,5 @@ __all__ = [
     "message_handler",
     "data_layer_hooks",
     "action_callbacks",
+    "audio_handler",
 ]

@@ -157,9 +157,7 @@ async def invoke_agent(
         logger.info(f"x_axis extracted: {x_axis}")
         fig, ax = plt.subplots(figsize=(12, 6))
         ax.plot(x_axis, y_axis, marker="o", linestyle="-")
-        elements = [
-            cl.Pyplot(name="plot", figure=fig, display="inline")
-        ]
+        elements = [cl.Pyplot(name="plot", figure=fig, display="inline")]
         await cl.Message(
             content=f"Simple graph with respect to {operation}",
             elements=elements,

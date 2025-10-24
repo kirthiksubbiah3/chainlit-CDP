@@ -107,7 +107,9 @@ class Cryptowallet(BaseAgent):
             state["operation"] = "creation"
         state["time_range"] = eval_result.date_range
         state["is_detailed_report"] = eval_result.is_detailed_report
-        self.logger.info(f"is_detailed_report in the eval: {eval_result.is_detailed_report}")
+        self.logger.info(
+            f"is_detailed_report in the eval: {eval_result.is_detailed_report}"
+        )
         self.logger.info(f"Operation extracted: {eval_result.operation}")
         return state
 
@@ -278,47 +280,55 @@ class Cryptowallet(BaseAgent):
 
     def group_by_date(self, state: State) -> State:
         df = self.wallet_df
-        df['Date'] = pd.to_datetime(df['Date'])  # Convert to datetime
+        df["Date"] = pd.to_datetime(df["Date"])  # Convert to datetime
 
-        if df['Date'].dt.date.nunique() == 1:
+        if df["Date"].dt.date.nunique() == 1:
             # All entries on the same day -> group by 4-hour bucket
-            df['Bucket'] = df['Date'].dt.floor('4H')  # Round down to nearest 4 hours
-            grouped = df.groupby('Bucket').size().reset_index(name='count')
+            df["Bucket"] = df["Date"].dt.floor("4H")  # Round down to nearest 4 hours
+            grouped = df.groupby("Bucket").size().reset_index(name="count")
 
             # Create full 4-hour range for the day
-            day = df['Date'].dt.date.iloc[0]
-            time_range = pd.date_range(start=pd.Timestamp(f"{day} 00:00:00"),
-                                       end=pd.Timestamp(f"{day} 23:59:59"),
-                                       freq='4H')
+            day = df["Date"].dt.date.iloc[0]
+            time_range = pd.date_range(
+                start=pd.Timestamp(f"{day} 00:00:00"),
+                end=pd.Timestamp(f"{day} 23:59:59"),
+                freq="4H",
+            )
 
             # Reindex to fill missing buckets
-            grouped = (grouped.set_index('Bucket')
-                       .reindex(time_range, fill_value=0)
-                       .rename_axis('Bucket')
-                       .reset_index())
-
-            # Format x and y axes
-            grouped['x_axis'] = grouped['Bucket'].dt.strftime('%Y-%m-%d %H:%M')
-            x_axis = grouped['x_axis'].tolist()
-            y_axis = grouped['count'].tolist()
-
-        else:
-            df['DateOnly'] = df['Date'].dt.normalize()  # Keep it in datetime64, not Python date
-
-            # Group by day
-            grouped = df.groupby('DateOnly').size().reset_index(name='count')
-
-            # Fill in missing dates
-            date_range = pd.date_range(start=df['DateOnly'].min(), end=df['DateOnly'].max())
-
             grouped = (
-                grouped.set_index('DateOnly')
-                .reindex(date_range, fill_value=0)
-                .rename_axis('DateOnly')
+                grouped.set_index("Bucket")
+                .reindex(time_range, fill_value=0)
+                .rename_axis("Bucket")
                 .reset_index()
             )
-            x_axis = grouped['DateOnly'].dt.strftime('%Y-%m-%d').tolist()
-            y_axis = grouped['count'].tolist()
+
+            # Format x and y axes
+            grouped["x_axis"] = grouped["Bucket"].dt.strftime("%Y-%m-%d %H:%M")
+            x_axis = grouped["x_axis"].tolist()
+            y_axis = grouped["count"].tolist()
+
+        else:
+            df["DateOnly"] = df[
+                "Date"
+            ].dt.normalize()  # Keep it in datetime64, not Python date
+
+            # Group by day
+            grouped = df.groupby("DateOnly").size().reset_index(name="count")
+
+            # Fill in missing dates
+            date_range = pd.date_range(
+                start=df["DateOnly"].min(), end=df["DateOnly"].max()
+            )
+
+            grouped = (
+                grouped.set_index("DateOnly")
+                .reindex(date_range, fill_value=0)
+                .rename_axis("DateOnly")
+                .reset_index()
+            )
+            x_axis = grouped["DateOnly"].dt.strftime("%Y-%m-%d").tolist()
+            y_axis = grouped["count"].tolist()
         cl.user_session.set("x_axis", x_axis)
         cl.user_session.set("y_axis", y_axis)
         cl.user_session.set("operation", state["operation"])
