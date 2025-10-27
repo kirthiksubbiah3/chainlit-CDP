@@ -3,7 +3,7 @@ namespace: sentinel-mind
 replicas: 1
 image:
   repository: 442426895473.dkr.ecr.us-east-1.amazonaws.com/sentinelmind/chainlit
-  tag: f2cf82d-2025-10-13
+  tag: 06c76bd-2025-10-24 
   pullPolicy: IfNotPresent
 resources:
   requests:
@@ -75,6 +75,10 @@ volumeMounts:
     subPath: config.yaml
   - name: secrets-store-inline
     mountPath: "/mnt/secrets-store"
+    readOnly: true
+  - name: config-secrets-inline
+    mountPath: /app/sa.json
+    subPath: sa.json
     readOnly: true
 # Add a VNC browser sidecar
 # extraContainers:

@@ -3,7 +3,7 @@ namespace: dev-sentinel-mind
 replicas: 1
 image:
   repository: 442426895473.dkr.ecr.us-east-1.amazonaws.com/sentinelmind/chainlit
-  tag: e1a54fc-2025-10-21
+  tag: 06c76bd-2025-10-24
   pullPolicy: IfNotPresent
 
 resources:
@@ -76,6 +76,10 @@ volumeMounts:
     subPath: config.yaml
   - name: secrets-store-inline
     mountPath: "/mnt/secrets-store"
+    readOnly: true
+  - name: config-secrets-inline
+    mountPath: /app/sa.json
+    subPath: sa.json
     readOnly: true
 # Add a VNC browser sidecar
 # extraContainers:
@@ -229,6 +233,8 @@ llmConfig: |-
         transport: stdio
       eks:
         args:
+          #- --with
+          #- mcp==1.18.0
           - awslabs.eks-mcp-server@latest
           - --allow-write
           - --allow-sensitive-data-access
