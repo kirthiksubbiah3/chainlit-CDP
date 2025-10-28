@@ -82,6 +82,7 @@ async def on_audio_end():
     await cl.Message(
         content=f"{transcription}",
         author="user",
+        type="user_message"
     ).send()
 
     await generate_response(
