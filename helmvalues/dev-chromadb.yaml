@@ -10,7 +10,18 @@ image:
   pullPolicy: IfNotPresent
 
 containerPort: 8000
-
+resources:
+  requests:
+    cpu: "500m"
+    memory: "1Gi"
+  limits:
+    cpu: "1"
+    memory: "2Gi"
+env:
+  - name: CHROMADB_POOL_SIZE
+    value: "20"
+  - name: CHROMADB_MAX_CONNECTIONS
+    value: "50"
 volumeMounts:
   - name: dev-chromadb-data
     mountPath: /data

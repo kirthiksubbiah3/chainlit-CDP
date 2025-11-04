@@ -263,9 +263,9 @@ llmConfig: |-
       grafana:
         transport: streamable_http
         url: http://grafana-mcp-service.mcp-servers.svc.cluster.local:8000/mcp
-      atlassian:
-        transport: streamable_http
-        url: http://confluence-mcp-service.mcp-servers.svc.cluster.local:9000/mcp
+      #atlassian:
+      # transport: streamable_http
+      # url: http://confluence-mcp-service.mcp-servers.svc.cluster.local:9000/mcp
       jenkins:
         transport: sse
         url: https://app.ustpace.io/visioncheckout/jenkins/mcp-server/sse

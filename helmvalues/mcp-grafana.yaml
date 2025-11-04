@@ -12,7 +12,7 @@ args:
   - "streamable-http"
 env:
   GRAFANA_URL: "https://sflabs.grafana.net"
-  GRAFANA_API_KEY:
+  GRAFANA_SERVICE_ACCOUNT_TOKEN:
     secretKeyRef:
       name: grafana-secrets
       key: api-key

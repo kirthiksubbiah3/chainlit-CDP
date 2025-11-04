@@ -38,16 +38,17 @@ spec:
             {{- toYaml .Values.resources | nindent 12 }}
           {{- if .Values.env }}
           env:
-            {{- range $key, $value := .Values.env }}
-              {{- if kindIs "string" $value }}
-              - name: {{ $key }}
-                value: "{{ $value }}"
-              {{- else }}
-              - name: {{ $key }}
-                valueFrom:
-                  {{- toYaml $value | nindent 18 }}
+            {{- if kindIs "slice" .Values.env }}
+              {{- range .Values.env }}
+                - name: {{ .name }}
+                  value: "{{ .value }}"
               {{- end }}
-            {{- end }}
+            {{- else }}
+              {{- range $key, $value := .Values.env }}
+                - name: {{ $key }}
+                  value: "{{ $value }}"
+              {{- end }}
+            {{- end }}  
           {{- end }}
           {{- if .Values.envFromSecret }}
           envFrom:
