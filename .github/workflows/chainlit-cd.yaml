@@ -40,6 +40,21 @@ jobs:
           else
             echo "AWS CLI already installed."
           fi
+      - name: Ensure SSH client and nc (netcat) are installed
+        run: |
+          if ! command -v ssh &> /dev/null; then
+            echo "ssh not found. Installing openssh-client..."
+            sudo apt-get update
+            sudo apt-get install -y openssh-client
+          else
+            echo "ssh client already installed."
+          fi
+          if ! command -v nc &> /dev/null; then
+            echo "nc (netcat) not found. Installing netcat-openbsd..."
+            sudo apt-get install -y netcat-openbsd
+          else
+            echo "nc (netcat) is already installed."
+          fi
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2

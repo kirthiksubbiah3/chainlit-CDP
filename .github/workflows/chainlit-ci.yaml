@@ -67,54 +67,17 @@ jobs:
           echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
 
-      # Uncomment and enable Trivy steps if you want to scan your image for vulnerabilities
-      # - name: Install Trivy (if not installed)
-      #   run: |
-      #     if ! command -v trivy &> /dev/null; then
-      #       sudo apt-get update -y
-      #       sudo apt-get install -y wget curl
-      #       wget -qO- https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo tee /usr/share/keyrings/trivy-keyring.asc
-      #       echo "deb [signed-by=/usr/share/keyrings/trivy-keyring.asc] https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/trivy.list
-      #       sudo apt-get update -y
-      #       sudo apt-get install -y trivy
-      #     fi
-      #     echo "Trivy installed at: $(which trivy)"
-
-      # - name: Build Docker Image
-      #   env:
-      #     ECR_REGISTRY: 442426895473.dkr.ecr.us-east-1.amazonaws.com
-      #     ECR_REPOSITORY: sentinelmind/chainlit
-      #   run: |
-      #     docker build --no-cache -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f Dockerfile .
-
-      # - name: Scan built Docker image with Trivy (table output, enforce fail on HIGH/CRITICAL)
-      #   env:
-      #     ECR_REGISTRY: 442426895473.dkr.ecr.us-east-1.amazonaws.com
-      #     ECR_REPOSITORY: sentinelmind/chainlit
-      #   run: |
-      #     trivy image --exit-code 1 --severity HIGH,CRITICAL --timeout 20m \
-      #       --skip-dirs /root/.cache/uv/archive-v0 \
-      #       --skip-dirs /root/.npm/_cacache \
-      #       $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-
-      # - name: Scan built Docker image with Trivy (JSON output, always)
-      #   if: always()
-      #   env:
-      #     ECR_REGISTRY: 442426895473.dkr.ecr.us-east-1.amazonaws.com
-      #     ECR_REPOSITORY: sentinelmind/chainlit
-      #   run: |
-      #     trivy image --exit-code 0 --severity HIGH,CRITICAL --format json -o trivy-report.json \
-      #       --timeout 20m \
-      #       --skip-dirs /root/.cache/uv/archive-v0 \
-      #       --skip-dirs /root/.npm/_cacache \
-      #       $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-
-      # - name: Upload Trivy Scan Report
-      #   if: always()
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: trivy-report
-      #     path: trivy-report.json
+      - name: Install Trivy (if not installed)
+        run: |
+          if ! command -v trivy &> /dev/null; then
+            sudo apt-get update -y
+            sudo apt-get install -y wget curl
+            wget -qO- https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo tee /usr/share/keyrings/trivy-keyring.asc
+            echo "deb [signed-by=/usr/share/keyrings/trivy-keyring.asc] https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/trivy.list
+            sudo apt-get update -y
+            sudo apt-get install -y trivy
+          fi
+          echo "Trivy installed at: $(which trivy)"
 
       - name: Build Docker Image
         env:
@@ -122,6 +85,39 @@ jobs:
           ECR_REPOSITORY: sentinelmind/chainlit
         run: |
           docker build --no-cache -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f Dockerfile .
+
+      - name: Scan built Docker image with Trivy (table output, enforce fail on HIGH/CRITICAL)
+        env:
+          ECR_REGISTRY: 442426895473.dkr.ecr.us-east-1.amazonaws.com
+          ECR_REPOSITORY: sentinelmind/chainlit
+        run: |
+          trivy image --exit-code 1 --severity HIGH,CRITICAL \
+            --ignorefile .trivyignore.yaml \
+            --timeout 20m \
+            --skip-dirs /root/.cache/uv/archive-v0 \
+            --skip-dirs /root/.npm/_cacache \
+            $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+      - name: Scan built Docker image with Trivy (JSON output, always)
+        if: always()
+        env:
+          ECR_REGISTRY: 442426895473.dkr.ecr.us-east-1.amazonaws.com
+          ECR_REPOSITORY: sentinelmind/chainlit
+        run: |
+          trivy image --exit-code 0 --severity HIGH,CRITICAL \
+            --ignorefile .trivyignore.yaml \
+            --format json -o trivy-report.json \
+            --timeout 20m \
+            --skip-dirs /root/.cache/uv/archive-v0 \
+            --skip-dirs /root/.npm/_cacache \
+            $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+      - name: Upload Trivy Scan Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-report
+          path: trivy-report.json
 
       - name: Push Docker Image to ECR
         if: ${{ success() }}
@@ -151,6 +147,7 @@ jobs:
           echo "Cleanup complete."
 
   deploy:
+    if: github.ref_name == 'main'
     needs: build-scan-push
     uses: ./.github/workflows/chainlit-cd.yaml
     secrets: inherit
