@@ -3,7 +3,7 @@ namespace: sentinel-mind
 replicas: 1
 image:
   repository: 442426895473.dkr.ecr.us-east-1.amazonaws.com/sentinelmind/chainlit
-  tag: 06c76bd-2025-10-24 
+  tag: 471065d-2025-11-03
   pullPolicy: IfNotPresent
 resources:
   requests:
@@ -154,10 +154,10 @@ llmConfig: |-
       starters:
       - github
       #- gitlab
-    Claude_Sonnet_3.7:
+    Claude_Sonnet_4.5:
       config:
         max_tokens: 2000
-        model: us.anthropic.claude-3-7-sonnet-20250219-v1:0
+        model: us.anthropic.claude-sonnet-4-5-20250929-v1:0
         model_provider: bedrock_converse
         temperature: 0.0
       cost:

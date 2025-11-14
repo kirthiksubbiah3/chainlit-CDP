@@ -36,10 +36,10 @@ chainlit_profiles:
     starters:
     - github
     - gitlab
-  Claude_Sonnet_3.7:
+  Claude_Sonnet_4.5:
     config:
       max_tokens: 2000
-      model: us.anthropic.claude-3-7-sonnet-20250219-v1:0
+      model: us.anthropic.claude-sonnet-4-5-20250929-v1:0
       model_provider: bedrock_converse
       temperature: 0.0
     cost:
