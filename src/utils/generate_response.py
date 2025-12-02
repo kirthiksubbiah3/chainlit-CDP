@@ -76,8 +76,31 @@ def _setup_imports():  # lazy import to avoid circular import
         app_config = imported_app_config
 
 
+async def fetch_chat_history_for_thread(thread_id: str) -> list:
+    """
+    Fetch chat history for a given thread ID from the CustomDataLayer.
+
+    Args:
+        thread_id: The thread ID to fetch history for
+
+    Returns:
+        List of HumanMessage objects representing the chat history messages for the thread
+        where each message is converted from the document content string to HumanMessage format.
+    """
+    _setup_imports()
+    cdl = CustomDataLayer()
+    documents = await cdl.get_document(thread_id)
+
+    # Extract human documents (every even index)
+    human_docs = [doc for i, doc in enumerate(documents) if i % 2 == 0]
+    human_msgs = [HumanMessage(content=doc) for doc in human_docs]
+
+    logger.info(f"Retrieved {len(human_msgs)} chat history messages for thread {thread_id}")
+    return human_msgs
+
+
 async def generate_response(
-    msg: str, 
+    msg: str,
     mcp_servers_config_to_pass: dict,
     mcp_service_config: dict,
     profiles: dict,
@@ -188,28 +211,26 @@ async def generate_response(
            else:
                 logger.info("Using sentinelmind_api_tool for agents_api command with endpoint as %s", app_config.sentinelmind_api_agent )
                 promptmsg = msg.content
-                json_payload = [ {"role": "user", "content": promptmsg} ] 
+                json_payload = [ {"role": "user", "content": promptmsg} ]
                 endpoint = f"{app_config.sentinelmind_base_url}/{app_config.sentinelmind_api_agent}/"
                 apiresponse = sentinelmind_api_post(url=endpoint, json_data=json_payload)
                 logger.info("SentinelMind API response: %s", apiresponse)
-            
+
                 logger.info("Response content: %s", apiresponse.get("content", "No content field in response"))
                 await cl.Message(content=apiresponse.get("content", "No content field in response")).send()
                 usage_totals = {"input_tokens": apiresponse.get("input_tokens", 0), "output_tokens": apiresponse.get("output_tokens", 0), "total_tokens": apiresponse.get("input_tokens", 0) + apiresponse.get("output_tokens", 0)}
-          
+
         elif session_type == "observability":
+            human_msgs = await fetch_chat_history_for_thread(thread_id)
+            messages.extend(human_msgs)
             usage_totals = await obs.custom_graph_agent(messages, llm, thread_id)
         elif session_type == "cryptowallet":
+            human_msgs = await fetch_chat_history_for_thread(thread_id)
+            messages.extend(human_msgs)
             usage_totals = await crypto.custom_graph_agent(messages, llm, thread_id)
         elif session_type == "supervisor":
-            user_name = cl.user_session.get("user").identifier
-            collection_name = "chat_history_" + user_name
-            logger.info(f"Collection name in user session: {collection_name}")
-            cdl = CustomDataLayer()
-            documents = await cdl.get_document(thread_id)
-            human_docs = [doc for i, doc in enumerate(documents) if i % 2 == 0]
-            human_msgs = [HumanMessage(content=doc) for doc in human_docs]
-            messages.append(HumanMessage(content=f"{human_msgs}"))
+            human_msgs = await fetch_chat_history_for_thread(thread_id)
+            messages.extend(human_msgs)
             usage_totals = await SupervisorAgent(llm).run(messages, thread_id)
         else:
             mcp_server_session = MCPServerSession(
