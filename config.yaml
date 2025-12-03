@@ -191,3 +191,9 @@ agents:
       description: Search sflabs docs through rag
       id: sflabs-docs
       icon: github
+
+  Confluence:
+    chainlit_command:
+      description: Search Confluence documentation
+      id: Confluence
+      icon: file-search

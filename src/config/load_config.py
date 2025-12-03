@@ -32,6 +32,11 @@ class AppConfig:
 
         self.gcp_credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 
+        self.confluence_base_url = os.getenv("CONFLUENCE_BASE_URL", "https://ust-pace.atlassian.net/wiki")
+        self.confluence_username = os.getenv("CONFLUENCE_USERNAME","")
+        self.confluence_api_token = os.getenv("CONFLUENCE_API_TOKEN","")
+
+
         logger.info("Loading config")
         config = load_yaml_file("config.yaml")
 
@@ -66,7 +71,7 @@ class AppConfig:
                     continue
                 if conf is self.mcp_servers_config:
                     button_value = True
-                elif conf_key == "rag" or conf_key == "sflabs-docs":
+                elif conf_key in ["rag", "sflabs-docs", "confluence-doc-search"]:
                     button_value = True
                 else:
                     button_value = False

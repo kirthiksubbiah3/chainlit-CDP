@@ -189,6 +189,19 @@ async def generate_response(
                 messages.append(
                     SystemMessage(content="Always use readme_rag_search tool for this prompt.")
                 )
+            elif msg_command == "Confluence":
+                messages.append(
+                    SystemMessage(
+                        content=(
+                            "Always use the confluence_rag_search tool for this query. "
+                            "Do NOT use any other tools or sources. "
+                            "Search strictly within the Confluence documentation embeddings "
+                            "stored in the vector database. "
+                            "Return only content found in those Confluence pages, "
+                            "and include the source page name for reference."
+                        )
+                    )
+                )
             messages.append(
                 SystemMessage(content=f"Forward this to {target_server} mcp server")
             )

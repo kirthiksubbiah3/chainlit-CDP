@@ -36,6 +36,19 @@ jobs:
         curl -LsSf https://astral.sh/uv/install.sh | sh
         uv sync --only-group code_check
 
+    # Ensure Python is available and Install
+    - name: Ensure Python is available and Install
+      run: |
+        if ! command -v python &> /dev/null; then
+          echo "Python not found, installing..."
+          sudo apt-get update -y
+          sudo apt-get install -y python3 python3-pip
+          sudo ln -sf /usr/bin/python3 /usr/bin/python
+        else
+          echo "Python already installed:"
+          python --version
+        fi
+
     # Run ruff (lint), skipping $EXCLUDE_DIR
     - name: Run ruff (excluding ${{ env.EXCLUDE_DIR }})
       run: uv run ruff check . --exclude "${{ env.EXCLUDE_DIR }}"
