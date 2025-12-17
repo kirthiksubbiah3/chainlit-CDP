@@ -3,7 +3,7 @@ namespace: dev-sentinel-mind
 replicas: 1
 image:
   repository: 442426895473.dkr.ecr.us-east-1.amazonaws.com/sentinelmind/chainlit
-  tag: 471065d-2025-11-03
+  tag: 6ac9a51-2025-12-15
   pullPolicy: IfNotPresent
 
 resources:
