@@ -104,7 +104,10 @@ jobs:
           ECR_REGISTRY: 442426895473.dkr.ecr.us-east-1.amazonaws.com
           ECR_REPOSITORY: sentinelmind/chainlit
         run: |
-          trivy image --exit-code 0 --severity CRITICAL \
+          # Include HIGH in the JSON report so HIGH vulnerabilities are visible,
+          # but this step never fails (exit-code 0). Enforcement is done by the
+          # earlier step which fails only on CRITICAL.
+          trivy image --exit-code 0 --severity HIGH,CRITICAL \
             --ignorefile .trivyignore.yaml \
             --format json -o trivy-report.json \
             --timeout 20m \
