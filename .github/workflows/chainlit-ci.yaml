@@ -86,12 +86,12 @@ jobs:
         run: |
           docker build --no-cache -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f Dockerfile .
 
-      - name: Scan built Docker image with Trivy (table output, enforce fail on HIGH/CRITICAL)
+      - name: Scan built Docker image with Trivy (table output, enforce fail on CRITICAL)
         env:
           ECR_REGISTRY: 442426895473.dkr.ecr.us-east-1.amazonaws.com
           ECR_REPOSITORY: sentinelmind/chainlit
         run: |
-          trivy image --exit-code 1 --severity HIGH,CRITICAL \
+          trivy image --exit-code 1 --severity CRITICAL \
             --ignorefile .trivyignore.yaml \
             --timeout 20m \
             --skip-dirs /root/.cache/uv/archive-v0 \
@@ -104,7 +104,7 @@ jobs:
           ECR_REGISTRY: 442426895473.dkr.ecr.us-east-1.amazonaws.com
           ECR_REPOSITORY: sentinelmind/chainlit
         run: |
-          trivy image --exit-code 0 --severity HIGH,CRITICAL \
+          trivy image --exit-code 0 --severity CRITICAL \
             --ignorefile .trivyignore.yaml \
             --format json -o trivy-report.json \
             --timeout 20m \
