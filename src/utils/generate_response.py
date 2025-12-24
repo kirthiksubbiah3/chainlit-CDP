@@ -3,7 +3,7 @@ import time
 from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage, SystemMessage
 from langgraph.checkpoint.serde import jsonplus
-from .fastapi_endpoint import sentinelmind_api_post
+# from .fastapi_endpoint import sentinelmind_api_post
 
 from . import (
     get_time_taken_message,
@@ -219,19 +219,19 @@ async def generate_response(
 
         llm = get_llm(chat_profile_name)
         if session_type == "tools":
-           if not msg_command == "agent's_api":
-                usage_totals = await invoke_agent(profiles_agent, messages, thread_id)
-           else:
-                logger.info("Using sentinelmind_api_tool for agents_api command with endpoint as %s", app_config.sentinelmind_api_agent )
-                promptmsg = msg.content
-                json_payload = [ {"role": "user", "content": promptmsg} ]
-                endpoint = f"{app_config.sentinelmind_base_url}/{app_config.sentinelmind_api_agent}/"
-                apiresponse = sentinelmind_api_post(url=endpoint, json_data=json_payload)
-                logger.info("SentinelMind API response: %s", apiresponse)
+        #    if not msg_command == "agent's_api":
+            usage_totals = await invoke_agent(profiles_agent, messages, thread_id)
+        #    else:
+        #         logger.info("Using sentinelmind_api_tool for agents_api command with endpoint as %s", app_config.sentinelmind_api_agent )
+        #         promptmsg = msg.content
+        #         json_payload = [ {"role": "user", "content": promptmsg} ]
+        #         endpoint = f"{app_config.sentinelmind_base_url}/{app_config.sentinelmind_api_agent}/"
+        #         apiresponse = sentinelmind_api_post(url=endpoint, json_data=json_payload)
+        #         logger.info("SentinelMind API response: %s", apiresponse)
 
-                logger.info("Response content: %s", apiresponse.get("content", "No content field in response"))
-                await cl.Message(content=apiresponse.get("content", "No content field in response")).send()
-                usage_totals = {"input_tokens": apiresponse.get("input_tokens", 0), "output_tokens": apiresponse.get("output_tokens", 0), "total_tokens": apiresponse.get("input_tokens", 0) + apiresponse.get("output_tokens", 0)}
+        #         logger.info("Response content: %s", apiresponse.get("content", "No content field in response"))
+        #         await cl.Message(content=apiresponse.get("content", "No content field in response")).send()
+        #         usage_totals = {"input_tokens": apiresponse.get("input_tokens", 0), "output_tokens": apiresponse.get("output_tokens", 0), "total_tokens": apiresponse.get("input_tokens", 0) + apiresponse.get("output_tokens", 0)}
 
         elif session_type == "observability":
             human_msgs = await fetch_chat_history_for_thread(thread_id)

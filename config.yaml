@@ -180,12 +180,12 @@ agents:
       description: Search through rag
       icon: file
       id: rag_search
-  fast-api:
-    chainlit_command:
-      description: Search through fast-api endpoint
-      icon: server
-      id: agent's_api
-      
+  # fast-api:
+  #   chainlit_command:
+  #     description: Search through fast-api endpoint
+  #     icon: server
+  #     id: agent's_api
+
   sflabs-docs:
     chainlit_command:
       description: Search sflabs docs through rag
