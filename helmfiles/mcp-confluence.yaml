@@ -1,7 +1,0 @@
-releases:
-  - name: mcp-confluence
-    chart: ../helmchart
-    namespace: mcp-servers
-    values:
-      - ../helmvalues/mcp-confluence.yaml
-    installed: true
