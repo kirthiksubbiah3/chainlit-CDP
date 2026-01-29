@@ -153,7 +153,8 @@ mcp:
     #   url: https://app.ustpace.io/visioncheckout/jenkins/mcp-server/sse
     playwright:
       args:
-      - mcp-playwright-network@latest
+        #- mcp-playwright-network@latest
+      - "@playwright/mcp@v0.0.53"
       - --ignore-https-errors
       - --headless
       - --browser
