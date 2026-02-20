@@ -86,15 +86,20 @@ async def create_jira_project(payload: Dict[str, Any]) -> Dict[str, Any]:
         "Content-Type": "application/json",
     }
 
-    auth = HTTPBasicAuth(ATLASSIAN_USERNAME, ATLASSIAN_API_TOKEN)
-    data = json.dumps(payload)
+    auth = (ATLASSIAN_USERNAME, ATLASSIAN_API_TOKEN)
+    url = f"{ATLASSIAN_BASE_URL}/rest/api/3/project"
 
-    resp = requests.post(
-        f"{ATLASSIAN_BASE_URL}/rest/api/3/project",
-        headers=headers,
-        auth=auth,
-        data=data,
-    )
+    try:
+        async with httpx.AsyncClient(timeout=30, auth=auth) as client:
+            resp = await client.post(url, json=payload, headers=headers)
+            resp.raise_for_status()
+        return resp.json()
+    except httpx.HTTPStatusError as e:
+        return {
+            "error": "Jira project creation failed",
+            "status_code": e.response.status_code,
+            "details": e.response.text,
+        }
 
     return resp.json()
 
