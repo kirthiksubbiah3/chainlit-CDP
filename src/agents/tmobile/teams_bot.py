@@ -5,7 +5,7 @@ from botbuilder.core import (
 )
 from botbuilder.schema import Activity, ActivityTypes
 from fastapi.responses import JSONResponse
-from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
+from langchain_core.messages import HumanMessage, AIMessage
 
 from .mcp_client import get_mcp_client
 from utils import get_logger

@@ -29,9 +29,6 @@ class MCPManager:
         if config_content is None:
             # Fallback to empty config
             self.config = {"mcp": {"servers": {}}}
-            print(
-                f"Warning: No config.yaml file found. Using empty MCP config."
-            )
         else:
             self.config = config_content
             # Update Atlassian URL if present and environment variable exists
