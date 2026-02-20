@@ -242,13 +242,14 @@ async def generate_response(
                         )
                     )
                 )
-            elif msg_command == "Atlassian":
+            elif msg_command == "atlassian":
                 access_prompt = app_config.get_helpdesk_prompt()
+                print(f"Access prompt: {access_prompt}")
                 messages.append(HumanMessage(content=access_prompt))
                 messages.append(
                     SystemMessage(
                         content=(
-                            "You are a atlassian assistant.\n"
+                            "You are a Atlassian assistant.\n"
                             "Default behavior:\n"
                             "- Respond ONLY with a concise natural-language summary.\n"
                             "- Do NOT output raw JSON, objects, arrays, or field names.\n"
@@ -270,7 +271,7 @@ async def generate_response(
                 session_type,
                 msg_command,
             )
-
+        print(f"Final message {messages}")
         chat_profile_name = cl.user_session.get("chat_profile")
         # Condition for Slack messages
         if (not chat_profile_name) and (

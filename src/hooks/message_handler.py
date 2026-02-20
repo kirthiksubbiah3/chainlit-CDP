@@ -22,7 +22,7 @@ jsonplus._msgpack_default = _custom_msgpack_default
 logger = get_logger(__name__)
 
 mcp_servers_config_to_pass = app_config.mcp_servers_config_to_pass
-mcp_service_config = app_config.mcp_service_config
+mcp_service_config = app_config.mcp_service_config or {}
 profiles = app_config.profiles
 starters = app_config.starters
 env = app_config.env

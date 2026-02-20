@@ -74,14 +74,20 @@ class AppConfig:
         logger.info("Loading config")
         config = load_yaml_file("config.yaml")
         logger.info("Loading secrets")
-        secrets = load_yaml_file("secrets.yaml")
+        try:
+          secrets = load_yaml_file("secrets.yaml")
+        except FileNotFoundError:
+            logger.warning("secrets.yaml not found, proceeding without it")
+            secrets = {}
         # Merge secrets into config
         self.config = merge_dict(config, secrets)
         self.profiles = config["chainlit_profiles"]
         self.starters = config["chainlit_starters"]
         self.llm_agent_config = config["llm"]["agent"]
         self.mcp_servers_config = config["mcp"]["servers"]
-        self.mcp_service_config = config["mcp"]["url_secrets"]
+        self.mcp_service_config = (
+           config.get("mcp", {}).get("url_secrets", {})
+        )
         agents_config = config["agents"]
         self.mcp_servers_config_to_pass = {
             srv: {k: v for k, v in cfg.items() if k != "chainlit_command"}
