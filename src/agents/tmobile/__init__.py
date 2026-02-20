@@ -1,4 +1,3 @@
-
 # Import only the modules that don't cause circular imports
 from .mcp_manager import MCPManager
 
@@ -9,5 +8,3 @@ from .mcp_manager import MCPManager
 __all__ = [
     "MCPManager",
 ]
-
-

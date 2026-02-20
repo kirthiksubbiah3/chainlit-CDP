@@ -27,8 +27,14 @@ invoke_agent = get_llm = RagFileManager = update_sidebar = react_repo_agent = (
     CustomDataLayer
 ) = Cryptowallet = app_config = None
 
+
 def _setup_agent_imports():
-    global react_repo_agent, Observability, PodRestartAgent, SupervisorAgent, Cryptowallet
+    global \
+        react_repo_agent, \
+        Observability, \
+        PodRestartAgent, \
+        SupervisorAgent, \
+        Cryptowallet
     if (
         react_repo_agent is None
         or Observability is None
@@ -39,10 +45,18 @@ def _setup_agent_imports():
         from agents.react_repo_agent import (
             react_repo_agent as imported_react_repo_agent,
         )
-        from agents.observability_agent import Observability as imported_Observability
-        from agents.cryptowallet_agent import Cryptowallet as imported_Cryptowallet
-        from agents.pod_restart_agent import PodRestartAgent as imported_PodRestartAgent
-        from agents.supervisor_agent import SupervisorAgent as imported_SupervisorAgent
+        from agents.observability_agent import (
+            Observability as imported_Observability,
+        )
+        from agents.cryptowallet_agent import (
+            Cryptowallet as imported_Cryptowallet,
+        )
+        from agents.pod_restart_agent import (
+            PodRestartAgent as imported_PodRestartAgent,
+        )
+        from agents.supervisor_agent import (
+            SupervisorAgent as imported_SupervisorAgent,
+        )
 
         react_repo_agent = imported_react_repo_agent
         Observability = imported_Observability
@@ -52,7 +66,15 @@ def _setup_agent_imports():
 
 
 def _setup_imports():  # lazy import to avoid circular import
-    global invoke_agent, get_llm, RagFileManager, update_sidebar, default_agent, MCPServerSession, CustomDataLayer, app_config
+    global \
+        invoke_agent, \
+        get_llm, \
+        RagFileManager, \
+        update_sidebar, \
+        default_agent, \
+        MCPServerSession, \
+        CustomDataLayer, \
+        app_config
     if (
         invoke_agent is None
         or get_llm is None
@@ -65,9 +87,15 @@ def _setup_imports():  # lazy import to avoid circular import
     ):
         from invoke_agent import invoke_agent as imported_invoke_agent
         from llm import get_llm as imported_get_llm
-        from rag.rag_file_manager import RagFileManager as imported_RagFileManager
-        from rag.update_sidebar import update_sidebar as imported_update_sidebar
-        from agents.default_agent import default_agent as imported_default_agent
+        from rag.rag_file_manager import (
+            RagFileManager as imported_RagFileManager,
+        )
+        from rag.update_sidebar import (
+            update_sidebar as imported_update_sidebar,
+        )
+        from agents.default_agent import (
+            default_agent as imported_default_agent,
+        )
         from mcp_tools import MCPServerSession as imported_MCPServerSession
         from data_layer import CustomDataLayer as imported_CustomDataLayer
         from config import app_config as imported_app_config
@@ -101,7 +129,9 @@ async def fetch_chat_history_for_thread(thread_id: str) -> list:
     human_docs = [doc for i, doc in enumerate(documents) if i % 2 == 0]
     human_msgs = [HumanMessage(content=doc) for doc in human_docs]
 
-    logger.info(f"Retrieved {len(human_msgs)} chat history messages for thread {thread_id}")
+    logger.info(
+        f"Retrieved {len(human_msgs)} chat history messages for thread {thread_id}"
+    )
     return human_msgs
 
 
@@ -117,7 +147,6 @@ async def generate_response(
     _setup_imports()
     logger.info(f"Profiles is {profiles}")
     set_profiles_agent(profiles)
-
 
     start_time = time.perf_counter()
     thread_id = cl.context.session.thread_id
@@ -196,7 +225,9 @@ async def generate_response(
                 session_type = "cryptowallet"
             elif msg_command == "sflabs-docs":
                 messages.append(
-                    SystemMessage(content="Always use readme_rag_search tool for this prompt.")
+                    SystemMessage(
+                        content="Always use readme_rag_search tool for this prompt."
+                    )
                 )
             elif msg_command == "Confluence":
                 messages.append(
@@ -217,7 +248,7 @@ async def generate_response(
                 messages.append(
                     SystemMessage(
                         content=(
-                           "You are a atlassian assistant.\n"
+                            "You are a atlassian assistant.\n"
                             "Default behavior:\n"
                             "- Respond ONLY with a concise natural-language summary.\n"
                             "- Do NOT output raw JSON, objects, arrays, or field names.\n"
@@ -230,9 +261,15 @@ async def generate_response(
                     )
                 )
             messages.append(
-                SystemMessage(content=f"Forward this to {target_server} mcp server")
+                SystemMessage(
+                    content=f"Forward this to {target_server} mcp server"
+                )
             )
-            logger.info("Using %s session agent for %s command", session_type, msg_command)
+            logger.info(
+                "Using %s session agent for %s command",
+                session_type,
+                msg_command,
+            )
             print("Upated promts are ", messages)
 
         chat_profile_name = cl.user_session.get("chat_profile")
@@ -247,8 +284,10 @@ async def generate_response(
 
         llm = get_llm(chat_profile_name)
         if session_type == "tools":
-        #    if not msg_command == "agent's_api":
-            usage_totals = await invoke_agent(profiles_agent, messages, thread_id)
+            #    if not msg_command == "agent's_api":
+            usage_totals = await invoke_agent(
+                profiles_agent, messages, thread_id
+            )
         #    else:
         #         logger.info("Using sentinelmind_api_tool for agents_api command with endpoint as %s", app_config.sentinelmind_api_agent )
         #         promptmsg = msg.content
@@ -264,11 +303,15 @@ async def generate_response(
         elif session_type == "observability":
             human_msgs = await fetch_chat_history_for_thread(thread_id)
             messages.extend(human_msgs)
-            usage_totals = await obs.custom_graph_agent(messages, llm, thread_id)
+            usage_totals = await obs.custom_graph_agent(
+                messages, llm, thread_id
+            )
         elif session_type == "cryptowallet":
             human_msgs = await fetch_chat_history_for_thread(thread_id)
             messages.extend(human_msgs)
-            usage_totals = await crypto.custom_graph_agent(messages, llm, thread_id)
+            usage_totals = await crypto.custom_graph_agent(
+                messages, llm, thread_id
+            )
         elif session_type == "supervisor":
             human_msgs = await fetch_chat_history_for_thread(thread_id)
             messages.extend(human_msgs)
@@ -284,9 +327,10 @@ async def generate_response(
 
         if not thread_title:
             if isinstance(msg_text, str) and len(msg_text.split()) > 2:
-                thread_title, usage_data_title = await generate_chat_title_from_input(
-                    llm, msg
-                )
+                (
+                    thread_title,
+                    usage_data_title,
+                ) = await generate_chat_title_from_input(llm, msg)
                 cl.user_session.set("thread_title", thread_title)
 
         if "slack" not in cl.user_session.get("user").identifier:
@@ -300,7 +344,9 @@ async def generate_response(
             usage_totals["output_tokens"] += usage_data_title["output_tokens"]
             usage_totals["total_tokens"] += usage_data_title["total_tokens"]
 
-        await log_and_show_usage_details(profiles, usage_totals, chat_profile_name, env)
+        await log_and_show_usage_details(
+            profiles, usage_totals, chat_profile_name, env
+        )
 
 
 def set_profiles_agent(profiles: dict):

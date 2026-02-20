@@ -2,6 +2,7 @@ from dotenv import load_dotenv
 from langchain.chat_models import init_chat_model
 
 from config import app_config
+
 ANTHROPIC_MODEL = app_config.ANTHROPIC_MODEL
 BEDROCK_MODEL_ID = app_config.BEDROCK_MODEL_ID
 AWS_REGION = app_config.AWS_REGION

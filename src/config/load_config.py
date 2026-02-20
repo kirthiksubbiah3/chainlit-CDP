@@ -15,16 +15,24 @@ class AppConfig:
 
         self.client_type = os.getenv("CHROMADB_CLIENT_TYPE", "http").lower()
         self.host = os.getenv("CHROMADB_HOST")
-        self.port_str = os.getenv("CHROMADB_PORT", "8000")  # Default to 8000 if not set
+        self.port_str = os.getenv(
+            "CHROMADB_PORT", "8000"
+        )  # Default to 8000 if not set
         self.path = os.getenv("CHROMADB_PERSISTENT_PATH", ".chromadb")
 
         self.env = os.getenv("ENV", "dev").lower()
-        self.sentinelmind_base_url = os.getenv("SENTINELMIND_API_BASE_URL", "http://localhost:8000")
-        self.sentinelmind_api_agent = os.getenv("SENTINELMIND_API_AGENT", "default-agent")
+        self.sentinelmind_base_url = os.getenv(
+            "SENTINELMIND_API_BASE_URL", "http://localhost:8000"
+        )
+        self.sentinelmind_api_agent = os.getenv(
+            "SENTINELMIND_API_AGENT", "default-agent"
+        )
 
         self.local_username = os.getenv("LOCAL_USERNAME")
         self.local_password = os.getenv("LOCAL_PASSWORD")
-        self.oauth_enabled = os.getenv("OAUTH_ENABLED", "false").lower() == "true"
+        self.oauth_enabled = (
+            os.getenv("OAUTH_ENABLED", "false").lower() == "true"
+        )
         self.cluster_name = os.getenv("CLUSTER_NAME", "sftp-eks")
         self.loki_url = os.getenv("LOKI_URL")
         self.loki_username = os.getenv("LOKI_USERNAME")
@@ -32,13 +40,15 @@ class AppConfig:
 
         self.gcp_credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 
-        self.confluence_base_url = os.getenv("CONFLUENCE_BASE_URL", "https://ust-pace.atlassian.net/wiki")
-        self.confluence_username = os.getenv("CONFLUENCE_USERNAME","")
-        self.confluence_api_token = os.getenv("CONFLUENCE_API_TOKEN","")
+        self.confluence_base_url = os.getenv(
+            "CONFLUENCE_BASE_URL", "https://ust-pace.atlassian.net/wiki"
+        )
+        self.confluence_username = os.getenv("CONFLUENCE_USERNAME", "")
+        self.confluence_api_token = os.getenv("CONFLUENCE_API_TOKEN", "")
 
-        #t-mobile specific variables
+        # t-mobile specific variables
         self.ATLASSIAN_API_BASE = os.getenv(
-         "ATLASSIAN_API_BASE", "https://api.atlassian.com"
+            "ATLASSIAN_API_BASE", "https://api.atlassian.com"
         )
         self.ATLASSIAN_ACCESS_KEY = os.getenv("ATLASSIAN_ACCESS_KEY")
         self.ATLASSIAN_ORG_ID = os.getenv("ATLASSIAN_ORG_ID")
@@ -58,7 +68,9 @@ class AppConfig:
         self.MICROSOFT_APP_TENANT_ID = os.getenv("MICROSOFT_APP_TENANT_ID")
         self.JIRA_ISSUE_TYPE = os.getenv("JIRA_ISSUE_TYPE")
         self.JIRA_PROJKEY = os.getenv("JIRA_PROJKEY")
-        self.ALLOWED_ATLASSIAN_SCOPES = os.getenv("ALLOWED_ATLASSIAN_SCOPES", "")
+        self.ALLOWED_ATLASSIAN_SCOPES = os.getenv(
+            "ALLOWED_ATLASSIAN_SCOPES", ""
+        )
         logger.info("Loading config")
         config = load_yaml_file("config.yaml")
         logger.info("Loading secrets")
@@ -89,7 +101,11 @@ class AppConfig:
                     continue
                 if conf is self.mcp_servers_config:
                     button_value = True
-                elif conf_key in ["rag", "sflabs-docs", "confluence-doc-search"]:
+                elif conf_key in [
+                    "rag",
+                    "sflabs-docs",
+                    "confluence-doc-search",
+                ]:
                     button_value = True
                 else:
                     button_value = False
@@ -99,7 +115,6 @@ class AppConfig:
                     "persistent": True,
                 }
                 self.commands.append(cmd)
-
 
     def get_helpdesk_prompt(self):
         access_prompt = f"""
@@ -179,5 +194,6 @@ class AppConfig:
           final user-facing response.
           """
         return access_prompt
+
 
 app_config = AppConfig()
