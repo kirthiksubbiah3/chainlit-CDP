@@ -21,48 +21,10 @@ jsonplus._msgpack_default = _custom_msgpack_default
 # Load environment variables
 load_dotenv()
 logger = get_logger(__name__)
-invoke_agent = get_llm = RagFileManager = update_sidebar = react_repo_agent = (
-    default_agent
-) = Observability = PodRestartAgent = MCPServerSession = SupervisorAgent = (
+invoke_agent = get_llm = RagFileManager = update_sidebar = default_agent = (
     CustomDataLayer
-) = Cryptowallet = app_config = None
+) = app_config = None
 
-
-def _setup_agent_imports():
-    global \
-        react_repo_agent, \
-        Observability, \
-        PodRestartAgent, \
-        SupervisorAgent, \
-        Cryptowallet
-    if (
-        react_repo_agent is None
-        or Observability is None
-        or PodRestartAgent is None
-        or SupervisorAgent is None
-        or Cryptowallet is None
-    ):
-        from agents.react_repo_agent import (
-            react_repo_agent as imported_react_repo_agent,
-        )
-        from agents.observability_agent import (
-            Observability as imported_Observability,
-        )
-        from agents.cryptowallet_agent import (
-            Cryptowallet as imported_Cryptowallet,
-        )
-        from agents.pod_restart_agent import (
-            PodRestartAgent as imported_PodRestartAgent,
-        )
-        from agents.supervisor_agent import (
-            SupervisorAgent as imported_SupervisorAgent,
-        )
-
-        react_repo_agent = imported_react_repo_agent
-        Observability = imported_Observability
-        PodRestartAgent = imported_PodRestartAgent
-        SupervisorAgent = imported_SupervisorAgent
-        Cryptowallet = imported_Cryptowallet
 
 
 def _setup_imports():  # lazy import to avoid circular import
@@ -72,7 +34,6 @@ def _setup_imports():  # lazy import to avoid circular import
         RagFileManager, \
         update_sidebar, \
         default_agent, \
-        MCPServerSession, \
         CustomDataLayer, \
         app_config
     if (
@@ -81,7 +42,6 @@ def _setup_imports():  # lazy import to avoid circular import
         or RagFileManager is None
         or update_sidebar is None
         or default_agent is None
-        or MCPServerSession is None
         or CustomDataLayer is None
         or app_config is None
     ):
@@ -96,7 +56,6 @@ def _setup_imports():  # lazy import to avoid circular import
         from agents.default_agent import (
             default_agent as imported_default_agent,
         )
-        from mcp_tools import MCPServerSession as imported_MCPServerSession
         from data_layer import CustomDataLayer as imported_CustomDataLayer
         from config import app_config as imported_app_config
 
@@ -105,7 +64,6 @@ def _setup_imports():  # lazy import to avoid circular import
         RagFileManager = imported_RagFileManager
         update_sidebar = imported_update_sidebar
         default_agent = imported_default_agent
-        MCPServerSession = imported_MCPServerSession
         CustomDataLayer = imported_CustomDataLayer
         app_config = imported_app_config
 
@@ -205,70 +163,26 @@ async def generate_response(
         messages.append(HumanMessage(content=msg_text))
 
         profiles_agent = cl.user_session.get("profiles_agent")
-        session_type = "tools"
-        # s msg_lower = msg.lower()
-        if msg_command:
+
+        if msg_command == "atlassian":
             logger.info("Command received: %s", msg_command)
-            target_server = msg_command
-            if msg_command in ["Browser", "Browser-HL", "Sentinel-Mind"]:
-                session_type = "server"
-                target_server = "playwright"
-            elif msg_command == "supervisor":
-                session_type = "supervisor"
-            elif msg_command == "Observability":
-                _setup_agent_imports()
-                obs = Observability()
-                session_type = "observability"
-            elif msg_command == "cryptowallet":
-                _setup_agent_imports()
-                crypto = Cryptowallet()
-                session_type = "cryptowallet"
-            elif msg_command == "sflabs-docs":
-                messages.append(
-                    SystemMessage(
-                        content="Always use readme_rag_search tool for this prompt."
-                    )
-                )
-            elif msg_command == "Confluence":
-                messages.append(
-                    SystemMessage(
-                        content=(
-                            "Always use the confluence_rag_search tool for this query. "
-                            "Do NOT use any other tools or sources. "
-                            "Search strictly within the Confluence documentation embeddings "
-                            "stored in the vector database. "
-                            "Return only content found in those Confluence pages, "
-                            "and include the source page name for reference."
-                        )
-                    )
-                )
-            elif msg_command == "atlassian":
-                access_prompt = app_config.get_helpdesk_prompt()
-                messages.append(HumanMessage(content=access_prompt))
-                messages.append(
-                    SystemMessage(
-                        content=(
-                            "You are a Atlassian assistant.\n"
-                            "Default behavior:\n"
-                            "- Respond ONLY with a concise natural-language summary.\n"
-                            "- Do NOT output raw JSON, objects, arrays, or field names.\n"
-                            "- Do NOT include explanations, steps, or metadata.\n"
-                            "- Use bullet points only if necessary.\n\n"
-                            "Only provide detailed or step-by-step information"
-                            "IF the user explicitly asks "
-                            "for details, explanation, or raw data."
-                        )
-                    )
-                )
+            access_prompt = app_config.get_helpdesk_prompt()
+            messages.append(HumanMessage(content=access_prompt))
             messages.append(
-                SystemMessage(content=f"Forward this to {target_server} mcp server")
+                SystemMessage(
+                    content=(
+                        "You are a Atlassian assistant.\n"
+                        "Default behavior:\n"
+                        "- Respond ONLY with a concise natural-language summary.\n"
+                        "- Do NOT output raw JSON, objects, arrays, or field names.\n"
+                        "- Do NOT include explanations, steps, or metadata.\n"
+                        "- Use bullet points only if necessary.\n\n"
+                        "Only provide detailed or step-by-step information"
+                        "IF the user explicitly asks "
+                        "for details, explanation, or raw data."
+                    )
+                )
             )
-            logger.info(
-                "Using %s session agent for %s command",
-                session_type,
-                msg_command,
-            )
-        print(f"Final message {messages}")
         chat_profile_name = cl.user_session.get("chat_profile")
         # Condition for Slack messages
         if (not chat_profile_name) and (
@@ -276,42 +190,9 @@ async def generate_response(
         ):
             chat_profile_name = next(iter(profiles))
             cl.user_session.set("chat_profile", chat_profile_name)
-            # TODO Added this session_type for slack messages. Change if required
-            session_type = "tools"
 
         llm = get_llm(chat_profile_name)
-        if session_type == "tools":
-            #    if not msg_command == "agent's_api":
-            usage_totals = await invoke_agent(profiles_agent, messages, thread_id)
-        #    else:
-        #         logger.info("Using sentinelmind_api_tool for agents_api command with endpoint as %s", app_config.sentinelmind_api_agent )
-        #         promptmsg = msg.content
-        #         json_payload = [ {"role": "user", "content": promptmsg} ]
-        #         endpoint = f"{app_config.sentinelmind_base_url}/{app_config.sentinelmind_api_agent}/"
-        #         apiresponse = sentinelmind_api_post(url=endpoint, json_data=json_payload)
-        #         logger.info("SentinelMind API response: %s", apiresponse)
-
-        #         logger.info("Response content: %s", apiresponse.get("content", "No content field in response"))
-        #         await cl.Message(content=apiresponse.get("content", "No content field in response")).send()
-        #         usage_totals = {"input_tokens": apiresponse.get("input_tokens", 0), "output_tokens": apiresponse.get("output_tokens", 0), "total_tokens": apiresponse.get("input_tokens", 0) + apiresponse.get("output_tokens", 0)}
-
-        elif session_type == "observability":
-            human_msgs = await fetch_chat_history_for_thread(thread_id)
-            messages.extend(human_msgs)
-            usage_totals = await obs.custom_graph_agent(messages, llm, thread_id)
-        elif session_type == "cryptowallet":
-            human_msgs = await fetch_chat_history_for_thread(thread_id)
-            messages.extend(human_msgs)
-            usage_totals = await crypto.custom_graph_agent(messages, llm, thread_id)
-        elif session_type == "supervisor":
-            human_msgs = await fetch_chat_history_for_thread(thread_id)
-            messages.extend(human_msgs)
-            usage_totals = await SupervisorAgent(llm).run(messages, thread_id)
-        else:
-            mcp_server_session = MCPServerSession(
-                target_server, messages, llm, thread_id, buffer=False
-            )
-            usage_totals = await mcp_server_session.client_session_per_server()
+        usage_totals = await invoke_agent(profiles_agent, messages, thread_id)
 
         # Setting thread title
         thread_title = cl.user_session.get("thread_title")
