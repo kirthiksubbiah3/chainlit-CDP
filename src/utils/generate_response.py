@@ -27,36 +27,47 @@ invoke_agent = get_llm = RagFileManager = update_sidebar = react_repo_agent = (
     CustomDataLayer
 ) = Cryptowallet = app_config = None
 
+def _setup_agent_imports():
+    global react_repo_agent, Observability, PodRestartAgent, SupervisorAgent, Cryptowallet
+    if (
+        react_repo_agent is None
+        or Observability is None
+        or PodRestartAgent is None
+        or SupervisorAgent is None
+        or Cryptowallet is None
+    ):
+        from agents.react_repo_agent import (
+            react_repo_agent as imported_react_repo_agent,
+        )
+        from agents.observability_agent import Observability as imported_Observability
+        from agents.cryptowallet_agent import Cryptowallet as imported_Cryptowallet
+        from agents.pod_restart_agent import PodRestartAgent as imported_PodRestartAgent
+        from agents.supervisor_agent import SupervisorAgent as imported_SupervisorAgent
+
+        react_repo_agent = imported_react_repo_agent
+        Observability = imported_Observability
+        PodRestartAgent = imported_PodRestartAgent
+        SupervisorAgent = imported_SupervisorAgent
+        Cryptowallet = imported_Cryptowallet
+
 
 def _setup_imports():  # lazy import to avoid circular import
-    global invoke_agent, get_llm, RagFileManager, update_sidebar, react_repo_agent, default_agent, Observability, PodRestartAgent, MCPServerSession, SupervisorAgent, CustomDataLayer, Cryptowallet, app_config
+    global invoke_agent, get_llm, RagFileManager, update_sidebar, default_agent, MCPServerSession, CustomDataLayer, app_config
     if (
         invoke_agent is None
         or get_llm is None
         or RagFileManager is None
         or update_sidebar is None
-        or react_repo_agent is None
         or default_agent is None
-        or Observability is None
-        or PodRestartAgent is None
         or MCPServerSession is None
-        or SupervisorAgent is None
         or CustomDataLayer is None
-        or Cryptowallet is None
         or app_config is None
     ):
         from invoke_agent import invoke_agent as imported_invoke_agent
         from llm import get_llm as imported_get_llm
         from rag.rag_file_manager import RagFileManager as imported_RagFileManager
         from rag.update_sidebar import update_sidebar as imported_update_sidebar
-        from agents.react_repo_agent import (
-            react_repo_agent as imported_react_repo_agent,
-        )
         from agents.default_agent import default_agent as imported_default_agent
-        from agents.observability_agent import Observability as imported_Observability
-        from agents.cryptowallet_agent import Cryptowallet as imported_Cryptowallet
-        from agents.pod_restart_agent import PodRestartAgent as imported_PodRestartAgent
-        from agents.supervisor_agent import SupervisorAgent as imported_SupervisorAgent
         from mcp_tools import MCPServerSession as imported_MCPServerSession
         from data_layer import CustomDataLayer as imported_CustomDataLayer
         from config import app_config as imported_app_config
@@ -65,14 +76,9 @@ def _setup_imports():  # lazy import to avoid circular import
         get_llm = imported_get_llm
         RagFileManager = imported_RagFileManager
         update_sidebar = imported_update_sidebar
-        react_repo_agent = imported_react_repo_agent
         default_agent = imported_default_agent
-        Observability = imported_Observability
-        PodRestartAgent = imported_PodRestartAgent
-        SupervisorAgent = imported_SupervisorAgent
         MCPServerSession = imported_MCPServerSession
         CustomDataLayer = imported_CustomDataLayer
-        Cryptowallet = imported_Cryptowallet
         app_config = imported_app_config
 
 
@@ -111,8 +117,7 @@ async def generate_response(
     _setup_imports()
     logger.info(f"Profiles is {profiles}")
     set_profiles_agent(profiles)
-    obs = Observability()
-    crypto = Cryptowallet()
+
 
     start_time = time.perf_counter()
     thread_id = cl.context.session.thread_id
@@ -182,8 +187,12 @@ async def generate_response(
             elif msg_command == "supervisor":
                 session_type = "supervisor"
             elif msg_command == "Observability":
+                _setup_agent_imports()
+                obs = Observability()
                 session_type = "observability"
             elif msg_command == "cryptowallet":
+                _setup_agent_imports()
+                crypto = Cryptowallet()
                 session_type = "cryptowallet"
             elif msg_command == "sflabs-docs":
                 messages.append(
@@ -202,10 +211,29 @@ async def generate_response(
                         )
                     )
                 )
+            elif msg_command == "Atlassian":
+                access_prompt = app_config.get_helpdesk_prompt()
+                messages.append(HumanMessage(content=access_prompt))
+                messages.append(
+                    SystemMessage(
+                        content=(
+                           "You are a atlassian assistant.\n"
+                            "Default behavior:\n"
+                            "- Respond ONLY with a concise natural-language summary.\n"
+                            "- Do NOT output raw JSON, objects, arrays, or field names.\n"
+                            "- Do NOT include explanations, steps, or metadata.\n"
+                            "- Use bullet points only if necessary.\n\n"
+                            "Only provide detailed or step-by-step information"
+                            "IF the user explicitly asks "
+                            "for details, explanation, or raw data."
+                        )
+                    )
+                )
             messages.append(
                 SystemMessage(content=f"Forward this to {target_server} mcp server")
             )
             logger.info("Using %s session agent for %s command", session_type, msg_command)
+            print("Upated promts are ", messages)
 
         chat_profile_name = cl.user_session.get("chat_profile")
         # Condition for Slack messages

@@ -34,7 +34,9 @@ dependencies = [
     "matplotlib==3.10.6",
     "google-cloud-speech>=2.33.0",
     "requests==2.32.4",
-    "beautifulsoup4==4.13.4"
+    "beautifulsoup4==4.13.4",
+    "botbuilder-core>=4.17.1",
+    "botbuilder-schema>=4.17.1",
 ]
 [dependency-groups]
 code_check = [

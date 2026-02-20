@@ -7,7 +7,19 @@ from mcp_tools import mcp_tools
 from rag.rag_search import rag_search
 from rag.sftp_rag_tool import readme_rag_search
 from rag.confluence_rag_tool import confluence_rag_search
-from tools import generate_docx, generate_pdf, read_attachment, generate_mermaid_diagram
+from tools import (
+    get_atlassian_org_users_or_accounts,
+    get_atlassian_user_role_assignments,
+    create_jira_project,
+    create_confluence_space,
+    get_jsm_project_portals,
+    get_jsm_request_types,
+    get_jsm_forms,
+    generate_docx,
+    generate_pdf,
+    read_attachment,
+    generate_mermaid_diagram
+)
 from utils import get_logger
 
 logger = get_logger(__name__)
@@ -24,7 +36,10 @@ class DefaultAgents:
         if not self.tools:
             self.tools = await mcp_tools.get_tools()
             self.tools += [generate_docx, generate_pdf, rag_search, read_attachment,
-                           generate_mermaid_diagram, readme_rag_search, confluence_rag_search]
+                           generate_mermaid_diagram, readme_rag_search, confluence_rag_search,
+                           get_atlassian_org_users_or_accounts, get_atlassian_user_role_assignments,
+                           create_jira_project, create_confluence_space, get_jsm_project_portals,
+                           get_jsm_request_types, get_jsm_forms]
             logger.info("Loaded tools: %s", [tool.name for tool in self.tools])
 
     async def get_profiles_agents(self):
