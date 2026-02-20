@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 from langchain_core.messages import (
     HumanMessage,
     SystemMessage,
+    AIMessage
 )
 
 from .mcp_client import get_mcp_client
@@ -19,7 +20,7 @@ MICROSOFT_APP_PASSWORD = app_config.MICROSOFT_APP_PASSWORD
 MICROSOFT_APP_TENANT_ID = app_config.MICROSOFT_APP_TENANT_ID
 get_helpdesk_prompt = app_config.get_helpdesk_prompt()
 
-
+# breakpoint()
 logger = get_logger(__name__)
 settings = BotFrameworkAdapterSettings(
     app_id=MICROSOFT_APP_ID,
@@ -48,8 +49,14 @@ async def run_agent_and_get_answer(
     # --- call MCP agent ---
     try:
         mcp_client = await get_mcp_client()
-        access_prompt = get_helpdesk_prompt()
-        final_messages = [SystemMessage(content=access_prompt)] + messages
+        access_prompt = get_helpdesk_prompt
+        combined_content = f"""
+        {access_prompt}
+
+        User Question:
+        {messages}
+        """
+        final_messages = [HumanMessage(content=combined_content)]
         # run MCP
         _agent = mcp_client.agent
         #
@@ -61,15 +68,18 @@ async def run_agent_and_get_answer(
             {"configurable": {"thread_id": thread_id}},
             stream_mode="updates",
         ):
-            for msg in event["model"]["messages"]:
-                try:
-                    final_answer += msg.content
-                except Exception as exc:
-                    logger.error(
-                        f"Error while processing model message {msg}: {exc}",
-                        exc_info=True,
-                    )
+            for node_data in event.values():
+                if not isinstance(node_data, dict):
                     continue
+
+                msgs = node_data.get("messages", [])
+
+                for msg in msgs:
+                    if isinstance(msg, AIMessage):
+                        content = getattr(msg, "content", "")
+                        if content:
+                            final_answer += content
+
         return final_answer.strip()
     except Exception as e:
         logger.error(f"Exception:{e}")

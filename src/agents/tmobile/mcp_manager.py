@@ -3,7 +3,7 @@ import yaml
 
 
 class MCPManager:
-    def __init__(self, config_path="config.yaml"):
+    def __init__(self, config_path="config-tmobile.yaml"):
         # Since we run from root path, construct path relative to project root
         # Get the project root (3 levels up from src/agents/tmobile/)
         project_root = os.path.join(os.path.dirname(__file__), "..", "..", "..")
