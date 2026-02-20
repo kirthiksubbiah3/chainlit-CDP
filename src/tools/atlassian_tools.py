@@ -76,9 +76,8 @@ async def get_atlassian_user_role_assignments(
 
     return resp.json()
 
-
 @tool("create_jira_project")
-async def create_jira_project(payload: str) -> Dict[str, Any]:
+async def create_jira_project(payload: Dict[str, Any]) -> Dict[str, Any]:
     """
     Create a new Jira project using the provided payload.
     """
@@ -88,43 +87,33 @@ async def create_jira_project(payload: str) -> Dict[str, Any]:
     }
 
     auth = HTTPBasicAuth(ATLASSIAN_USERNAME, ATLASSIAN_API_TOKEN)
-    payload = json.dumps(payload)
-    url = f"{ATLASSIAN_BASE_URL}/rest/api/2/project"
-    resp = requests.request(
-        "POST", url, data=payload, headers=headers, auth=auth
+    data = json.dumps(payload)
+
+    resp = requests.post(
+        f"{ATLASSIAN_BASE_URL}/rest/api/3/project",
+        headers=headers,
+        auth=auth,
+        data=data,
     )
 
-    if resp.status_code != 200:
-        return {
-            "error": "Failed to create project",
-            "status_code": resp.status_code,
-            "response": resp.text,
-        }
     return resp.json()
 
-
 @tool("create_confluence_space")
-async def create_confluence_space(payload: str) -> Dict[str, Any]:
+async def create_confluence_space(payload: Dict[str, Any]) -> Dict[str, Any]:
     """
     Create a new Confluence space using the provided payload.
     """
-    headers = {
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-    }
-    auth = HTTPBasicAuth(ATLASSIAN_USERNAME, ATLASSIAN_API_TOKEN)
     url = f"{ATLASSIAN_BASE_URL}/wiki/api/v2/spaces"
-    payload = json.dumps(payload)
-    resp = requests.request(
-        "POST", url, data=payload, headers=headers, auth=auth
-    )
 
-    if resp.status_code != 200:
-        return {
-            "error": "Failed to create project",
-            "status_code": resp.status_code,
-            "response": resp.text,
-        }
+    async with httpx.AsyncClient() as client:
+        resp = await client.post(
+            url,
+            headers={"Accept": "application/json"},
+            auth=(ATLASSIAN_USERNAME, ATLASSIAN_API_TOKEN),
+            json=payload, 
+        )
+
+    resp.raise_for_status()
     return resp.json()
 
 
@@ -133,19 +122,17 @@ async def get_jsm_project_portals() -> Dict[str, Any]:
     """
     Get Jira Service Management projects.
     """
-    headers = {
-        "Accept": "application/json",
-    }
-    auth = HTTPBasicAuth(ATLASSIAN_USERNAME, ATLASSIAN_API_TOKEN)
-    url = f"{ATLASSIAN_BASE_URL}/rest/servicedeskapi/servicedesk"
-    resp = requests.request("GET", url, headers=headers, auth=auth)
 
-    if resp.status_code != 200:
-        return {
-            "error": "Failed to fetch JSM project portals",
-            "status_code": resp.status_code,
-            "response": resp.text,
-        }
+    url = f"{ATLASSIAN_BASE_URL}/rest/servicedeskapi/servicedesk"
+
+    async with httpx.AsyncClient() as client:
+        resp = await client.get(
+            url,
+            headers={"Accept": "application/json"},
+            auth=(ATLASSIAN_USERNAME, ATLASSIAN_API_TOKEN),
+        )
+
+    resp.raise_for_status()
     return resp.json()
 
 
@@ -154,19 +141,16 @@ async def get_jsm_request_types(service_desk_id: str) -> Dict[str, Any]:
     """
     Get Jira Service Management request types for a given project.
     """
-    headers = {
-        "Accept": "application/json",
-    }
-    auth = HTTPBasicAuth(ATLASSIAN_USERNAME, ATLASSIAN_API_TOKEN)
     url = f"{ATLASSIAN_BASE_URL}/rest/servicedeskapi/servicedesk/{service_desk_id}/requesttype"
-    resp = requests.request("GET", url, headers=headers, auth=auth)
 
-    if resp.status_code != 200:
-        return {
-            "error": "Failed to fetch JSM request types",
-            "status_code": resp.status_code,
-            "response": resp.text,
-        }
+    async with httpx.AsyncClient() as client:
+        resp = await client.get(
+            url,
+            headers={"Accept": "application/json"},
+            auth=(ATLASSIAN_USERNAME, ATLASSIAN_API_TOKEN),
+        )
+
+    resp.raise_for_status()
     return resp.json()
 
 
@@ -177,20 +161,17 @@ async def get_jsm_forms(
     """
     Get Jira Service Management forms for a given project and request type.
     """
-    headers = {
-        "Accept": "application/json",
-    }
-    auth = HTTPBasicAuth(ATLASSIAN_USERNAME, ATLASSIAN_API_TOKEN)
     url = (
         f"{ATLASSIAN_BASE_URL}/rest/servicedeskapi/servicedesk/"
         f"{service_desk_id}/requesttype/{request_type_id}/field"
     )
-    resp = requests.request("GET", url, headers=headers, auth=auth)
 
-    if resp.status_code != 200:
-        return {
-            "error": "Failed to fetch JSM forms",
-            "status_code": resp.status_code,
-            "response": resp.text,
-        }
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        resp = await client.get(
+            url,
+            headers={"Accept": "application/json"},
+            auth=(ATLASSIAN_USERNAME, ATLASSIAN_API_TOKEN),
+        )
+
+    resp.raise_for_status()
     return resp.json()
