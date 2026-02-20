@@ -20,7 +20,6 @@ MICROSOFT_APP_PASSWORD = app_config.MICROSOFT_APP_PASSWORD
 MICROSOFT_APP_TENANT_ID = app_config.MICROSOFT_APP_TENANT_ID
 get_helpdesk_prompt = app_config.get_helpdesk_prompt()
 
-# breakpoint()
 logger = get_logger(__name__)
 settings = BotFrameworkAdapterSettings(
     app_id=MICROSOFT_APP_ID,
