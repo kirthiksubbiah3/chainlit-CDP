@@ -31,4 +31,6 @@ source .venv/bin/activate  # On Windows: venv\Scripts\activate
 
 uv sync
 uv run chainlit run src/app.py -w
+
+chainlit create-secret #To create secret
 ```

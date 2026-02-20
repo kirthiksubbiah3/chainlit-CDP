@@ -16,7 +16,6 @@ from tools import (
     get_jsm_request_types,
     get_jsm_forms,
     generate_docx,
-    generate_pdf,
     read_attachment,
     generate_mermaid_diagram,
 )
@@ -37,7 +36,6 @@ class DefaultAgents:
             self.tools = await mcp_tools.get_tools()
             self.tools += [
                 generate_docx,
-                generate_pdf,
                 rag_search,
                 read_attachment,
                 generate_mermaid_diagram,

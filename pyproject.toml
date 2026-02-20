@@ -29,7 +29,6 @@ dependencies = [
     "reportlab==4.4.2",
     "slack-bolt==1.23.0",
     "uv==0.7.19",
-    "weasyprint==65.1",
     "pandas==2.3.2",
     "matplotlib==3.10.6",
     "google-cloud-speech>=2.33.0",
