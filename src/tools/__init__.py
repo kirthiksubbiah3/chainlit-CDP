@@ -10,7 +10,7 @@ from .atlassian_tools import (
     create_confluence_space,
     get_jsm_project_portals,
     get_jsm_request_types,
-    get_jsm_forms
+    get_jsm_forms,
 )
 
 __all__ = [

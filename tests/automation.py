@@ -111,7 +111,9 @@ async def run_tests_from_file(file_path):
                         else:
                             status = "unknown"
                     else:
-                        print("⚠️ No message found in response. Skipping status check.")
+                        print(
+                            "⚠️ No message found in response. Skipping status check."
+                        )
                         status = "unknown"
                 except Exception as e:
                     print(f"❌ Error during Test {i}: {e}")

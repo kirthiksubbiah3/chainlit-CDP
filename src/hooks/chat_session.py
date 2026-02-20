@@ -8,6 +8,7 @@ from langgraph.checkpoint.memory import MemorySaver
 from agents import default_agents
 from config import app_config
 from rag.rag_file_manager import RagFileManager
+
 # from rag.update_sidebar import update_sidebar
 from utils import get_username, get_logger, log_and_show_usage_details
 
@@ -30,7 +31,7 @@ async def on_chat_resume():
     rag_filenames = await rag_manager.get_all_documents()
     logger.info("%d RAG filenames found", len(rag_filenames))
 
-    #await update_sidebar(rag_filenames)
+    # await update_sidebar(rag_filenames)
 
 
 @cl.on_chat_start
@@ -57,7 +58,7 @@ async def on_chat_start():
     # Setting graph state as empty
     cl.user_session.set("graph_state", {})
 
-    #await update_sidebar(rag_filenames)
+    # await update_sidebar(rag_filenames)
 
 
 @cl.on_chat_end

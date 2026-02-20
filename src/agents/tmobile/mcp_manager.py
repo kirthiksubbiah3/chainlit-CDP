@@ -6,9 +6,7 @@ class MCPManager:
     def __init__(self, config_path="config.yaml"):
         # Since we run from root path, construct path relative to project root
         # Get the project root (3 levels up from src/agents/tmobile/)
-        project_root = os.path.join(
-            os.path.dirname(__file__), "..", "..", ".."
-        )
+        project_root = os.path.join(os.path.dirname(__file__), "..", "..", "..")
         project_root = os.path.abspath(project_root)
 
         # Primary config path from project root - only use main config.yaml
@@ -40,9 +38,7 @@ class MCPManager:
                     and "servers" in self.config["mcp"]
                     and "atlassian" in self.config["mcp"]["servers"]
                 ):
-                    self.config["mcp"]["servers"]["atlassian"]["url"] = (
-                        atlassian_url
-                    )
+                    self.config["mcp"]["servers"]["atlassian"]["url"] = atlassian_url
 
     def get_enabled_mcps(self):
         # Get all servers from mcp.servers structure

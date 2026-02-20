@@ -83,9 +83,7 @@ class AtlassianMCPClient:
         ]
 
         self.tools = [
-            t
-            for t in all_tools
-            if getattr(t, "name", None) != "add_inline_policy"
+            t for t in all_tools if getattr(t, "name", None) != "add_inline_policy"
         ]
 
         logger.info(f"✅ Loaded {len(self.tools)} tools")
@@ -111,9 +109,7 @@ class AtlassianMCPClient:
                 "request_id": request_id,
             },
         }
-        result = await self.agent.ainvoke(
-            {"messages": messages}, runnable_config
-        )
+        result = await self.agent.ainvoke({"messages": messages}, runnable_config)
         return result["messages"][-1].content
 
     async def stream(

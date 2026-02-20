@@ -18,7 +18,7 @@ from tools import (
     generate_docx,
     generate_pdf,
     read_attachment,
-    generate_mermaid_diagram
+    generate_mermaid_diagram,
 )
 from utils import get_logger
 
@@ -35,11 +35,22 @@ class DefaultAgents:
     async def get_tools(self):
         if not self.tools:
             self.tools = await mcp_tools.get_tools()
-            self.tools += [generate_docx, generate_pdf, rag_search, read_attachment,
-                           generate_mermaid_diagram, readme_rag_search, confluence_rag_search,
-                           get_atlassian_org_users_or_accounts, get_atlassian_user_role_assignments,
-                           create_jira_project, create_confluence_space, get_jsm_project_portals,
-                           get_jsm_request_types, get_jsm_forms]
+            self.tools += [
+                generate_docx,
+                generate_pdf,
+                rag_search,
+                read_attachment,
+                generate_mermaid_diagram,
+                readme_rag_search,
+                confluence_rag_search,
+                get_atlassian_org_users_or_accounts,
+                get_atlassian_user_role_assignments,
+                create_jira_project,
+                create_confluence_space,
+                get_jsm_project_portals,
+                get_jsm_request_types,
+                get_jsm_forms,
+            ]
             logger.info("Loaded tools: %s", [tool.name for tool in self.tools])
 
     async def get_profiles_agents(self):

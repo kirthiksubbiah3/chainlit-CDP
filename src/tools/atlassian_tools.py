@@ -11,6 +11,7 @@ ATLASSIAN_BASE_URL = app_config.ATLASSIAN_BASE_URL
 ATLASSIAN_USERNAME = app_config.ATLASSIAN_USERNAME
 ATLASSIAN_API_TOKEN = app_config.ATLASSIAN_API_TOKEN
 
+
 @tool("get_atlassian_org_users_or_accounts")
 async def get_atlassian_org_users_or_accounts() -> Dict[str, Any]:
     """
@@ -73,6 +74,7 @@ async def get_atlassian_user_role_assignments(
 
     return resp.json()
 
+
 @tool("create_jira_project")
 async def create_jira_project(payload: Dict[str, Any]) -> Dict[str, Any]:
     """
@@ -100,6 +102,7 @@ async def create_jira_project(payload: Dict[str, Any]) -> Dict[str, Any]:
 
     return resp.json()
 
+
 @tool("create_confluence_space")
 async def create_confluence_space(payload: Dict[str, Any]) -> Dict[str, Any]:
     """
@@ -112,7 +115,7 @@ async def create_confluence_space(payload: Dict[str, Any]) -> Dict[str, Any]:
             url,
             headers={"Accept": "application/json"},
             auth=(ATLASSIAN_USERNAME, ATLASSIAN_API_TOKEN),
-            json=payload, 
+            json=payload,
         )
 
     resp.raise_for_status()
@@ -157,9 +160,7 @@ async def get_jsm_request_types(service_desk_id: str) -> Dict[str, Any]:
 
 
 @tool("get_jsm_forms")
-async def get_jsm_forms(
-    service_desk_id: str, request_type_id: str
-) -> Dict[str, Any]:
+async def get_jsm_forms(service_desk_id: str, request_type_id: str) -> Dict[str, Any]:
     """
     Get Jira Service Management forms for a given project and request type.
     """

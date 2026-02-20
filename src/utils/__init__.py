@@ -33,7 +33,6 @@ from .git import (
     get_git_details_from_input,
     BOILER_PLATES,
     TEMPL_WORKSPACE,
-
 )
 from .generate_response import generate_response
 

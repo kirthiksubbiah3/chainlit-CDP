@@ -2,6 +2,7 @@
 This is the main entry point for the Sentinel Mind application.
 It imports the hooks module and the utils module
 """
+
 from fastapi import Request
 from chainlit.server import app
 
@@ -23,8 +24,8 @@ if not hasattr(config.features, "audio") or config.features.audio is None:
 config.features.audio.enabled = True
 config.features.audio.sample_rate = 24000
 
+
 @app.post("/api/messages")
 async def teams_messages(request: Request):
     response = await process_teams_message(request)
     return response
-

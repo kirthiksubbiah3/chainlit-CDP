@@ -23,9 +23,11 @@ async def confluence_rag_search(query: str) -> str:
     manager = ConfluenceRagManager()
     results = await manager.query(question=query, k=3)
 
-    formatted = "\n\n---\n\n".join([
-        f"{doc.page_content}\n(source: {doc.metadata.get('source', 'Unknown')})"
-        for doc in results
-    ])
+    formatted = "\n\n---\n\n".join(
+        [
+            f"{doc.page_content}\n(source: {doc.metadata.get('source', 'Unknown')})"
+            for doc in results
+        ]
+    )
 
     return formatted

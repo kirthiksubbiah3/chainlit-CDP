@@ -17,7 +17,12 @@ class ConfluenceRagManager:
             region_name=AWS_REGION,
         )
 
-    async def query(self, question: str, k: int = 3, collection_name: str = "confluence_rag_collection"):
+    async def query(
+        self,
+        question: str,
+        k: int = 3,
+        collection_name: str = "confluence_rag_collection",
+    ):
         """
         Query the Confluence vector store for semantically similar chunks.
         """
@@ -29,6 +34,8 @@ class ConfluenceRagManager:
 
         results = vectorstore.similarity_search(question, k=k)
         for i, res in enumerate(results, 1):
-            logger.debug(f"Result {i}: {res.page_content[:120]}... (source: {res.metadata.get('source')})")
+            logger.debug(
+                f"Result {i}: {res.page_content[:120]}... (source: {res.metadata.get('source')})"
+            )
 
         return results

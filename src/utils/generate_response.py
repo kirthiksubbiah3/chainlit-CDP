@@ -244,7 +244,6 @@ async def generate_response(
                 )
             elif msg_command == "atlassian":
                 access_prompt = app_config.get_helpdesk_prompt()
-                print(f"Access prompt: {access_prompt}")
                 messages.append(HumanMessage(content=access_prompt))
                 messages.append(
                     SystemMessage(
@@ -262,9 +261,7 @@ async def generate_response(
                     )
                 )
             messages.append(
-                SystemMessage(
-                    content=f"Forward this to {target_server} mcp server"
-                )
+                SystemMessage(content=f"Forward this to {target_server} mcp server")
             )
             logger.info(
                 "Using %s session agent for %s command",
@@ -285,9 +282,7 @@ async def generate_response(
         llm = get_llm(chat_profile_name)
         if session_type == "tools":
             #    if not msg_command == "agent's_api":
-            usage_totals = await invoke_agent(
-                profiles_agent, messages, thread_id
-            )
+            usage_totals = await invoke_agent(profiles_agent, messages, thread_id)
         #    else:
         #         logger.info("Using sentinelmind_api_tool for agents_api command with endpoint as %s", app_config.sentinelmind_api_agent )
         #         promptmsg = msg.content
@@ -303,15 +298,11 @@ async def generate_response(
         elif session_type == "observability":
             human_msgs = await fetch_chat_history_for_thread(thread_id)
             messages.extend(human_msgs)
-            usage_totals = await obs.custom_graph_agent(
-                messages, llm, thread_id
-            )
+            usage_totals = await obs.custom_graph_agent(messages, llm, thread_id)
         elif session_type == "cryptowallet":
             human_msgs = await fetch_chat_history_for_thread(thread_id)
             messages.extend(human_msgs)
-            usage_totals = await crypto.custom_graph_agent(
-                messages, llm, thread_id
-            )
+            usage_totals = await crypto.custom_graph_agent(messages, llm, thread_id)
         elif session_type == "supervisor":
             human_msgs = await fetch_chat_history_for_thread(thread_id)
             messages.extend(human_msgs)
@@ -344,9 +335,7 @@ async def generate_response(
             usage_totals["output_tokens"] += usage_data_title["output_tokens"]
             usage_totals["total_tokens"] += usage_data_title["total_tokens"]
 
-        await log_and_show_usage_details(
-            profiles, usage_totals, chat_profile_name, env
-        )
+        await log_and_show_usage_details(profiles, usage_totals, chat_profile_name, env)
 
 
 def set_profiles_agent(profiles: dict):

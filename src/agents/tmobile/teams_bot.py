@@ -93,9 +93,7 @@ async def on_turn(turn_context: TurnContext):
     user_id = turn_context.activity.from_property.id
     channel_id = turn_context.activity.channel_id  # usually "msteams"
     safe_thread_id = thread_id.replace(":", "_")
-    logger.info(
-        f"thread:{safe_thread_id}, user:{user_id},channel_id:{channel_id}"
-    )
+    logger.info(f"thread:{safe_thread_id}, user:{user_id},channel_id:{channel_id}")
 
     try:
         agent_reply = await run_agent_and_get_answer(

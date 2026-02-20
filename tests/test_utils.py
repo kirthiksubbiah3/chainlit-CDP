@@ -117,7 +117,9 @@ class TestGenerateChatTitle(unittest.IsolatedAsyncioTestCase):
         mock_llm.invoke = Mock(return_value=mock_response)
 
         conversation = "This is a test conversation"
-        title, metadata = await generate_chat_title_from_input(mock_llm, conversation)
+        title, metadata = await generate_chat_title_from_input(
+            mock_llm, conversation
+        )
 
         # Debug info (always shown)
         self.addCleanup(
@@ -140,7 +142,9 @@ class TestGenerateChatTitle(unittest.IsolatedAsyncioTestCase):
         mock_llm.invoke = Mock(return_value=mock_response)
 
         conversation = "Another conversation"
-        title, metadata = await generate_chat_title_from_input(mock_llm, conversation)
+        title, metadata = await generate_chat_title_from_input(
+            mock_llm, conversation
+        )
 
         # Debug info (always shown)
         self.addCleanup(
@@ -320,7 +324,9 @@ class TestFileUtils(unittest.TestCase):
             self.assertTrue(is_text_file("file.txt"))
 
     def test_is_text_file_false(self):
-        with patch("mimetypes.guess_type", return_value=("application/pdf", None)):
+        with patch(
+            "mimetypes.guess_type", return_value=("application/pdf", None)
+        ):
             self.assertFalse(is_text_file("file.pdf"))
 
     def test_is_text_file_none(self):
@@ -338,7 +344,10 @@ class TestFileUtils(unittest.TestCase):
     @patch("src.utils.summarizer.DocxDocument")
     def test_read_docx_file(self, mock_docx):
         mock_doc = MagicMock()
-        mock_doc.paragraphs = [MagicMock(text="Para1"), MagicMock(text="Para2")]
+        mock_doc.paragraphs = [
+            MagicMock(text="Para1"),
+            MagicMock(text="Para2"),
+        ]
         mock_docx.return_value = mock_doc
 
         content = read_docx_file("dummy.docx")
@@ -390,17 +399,22 @@ class TestFileUtils(unittest.TestCase):
 
     @patch("src.utils.summarizer.is_text_file", return_value=True)
     @patch(
-        "src.utils.summarizer.read_txt_file", return_value="X" * (MAX_INPUT_CHARS + 10)
+        "src.utils.summarizer.read_txt_file",
+        return_value="X" * (MAX_INPUT_CHARS + 10),
     )
     @patch("os.path.exists", return_value=True)
-    def test_read_attachment_truncates(self, mock_exists, mock_read, mock_is_text):
+    def test_read_attachment_truncates(
+        self, mock_exists, mock_read, mock_is_text
+    ):
         result = read_attachment("file.txt")
         self.assertEqual(len(result), MAX_INPUT_CHARS)
 
     @patch("src.utils.summarizer.is_text_file", return_value=True)
     @patch("src.utils.summarizer.read_txt_file", side_effect=Exception("Boom"))
     @patch("os.path.exists", return_value=True)
-    def test_read_attachment_handles_errors(self, mock_exists, mock_read, mock_is_text):
+    def test_read_attachment_handles_errors(
+        self, mock_exists, mock_read, mock_is_text
+    ):
         result = read_attachment("file.txt")
         self.assertIsNone(result)
 
@@ -428,7 +442,9 @@ class TestCleanXMLTagParser(unittest.TestCase):
         self.assertEqual(result, "Hidden Visible")
 
     def test_parser_removes_multiple_tags(self):
-        text = "<thinking>Step 1</thinking> then <thinking>Step 2</thinking> Done"
+        text = (
+            "<thinking>Step 1</thinking> then <thinking>Step 2</thinking> Done"
+        )
         result = self.parser.parse(text)
         self.assertEqual(result, "Step 1 then Step 2 Done")
 
@@ -481,14 +497,22 @@ class TestGetUsageCostDetails(unittest.TestCase):
     """Unit tests for usage cost calculation utility."""
 
     def test_calculates_costs_correctly(self):
-        usage = {"input_tokens": 1000, "output_tokens": 500, "total_tokens": 1500}
+        usage = {
+            "input_tokens": 1000,
+            "output_tokens": 500,
+            "total_tokens": 1500,
+        }
         result = get_usage_cost_details(usage, 0.002, 0.004)
 
         self.assertEqual(result["input_tokens"], 1000)
         self.assertEqual(result["output_tokens"], 500)
         self.assertEqual(result["total_tokens"], 1500)
-        self.assertAlmostEqual(result["input_cost"], 0.002)  # 1000/1000 * 0.002
-        self.assertAlmostEqual(result["output_cost"], 0.002)  # 500/1000 * 0.004
+        self.assertAlmostEqual(
+            result["input_cost"], 0.002
+        )  # 1000/1000 * 0.002
+        self.assertAlmostEqual(
+            result["output_cost"], 0.002
+        )  # 500/1000 * 0.004
         self.assertAlmostEqual(result["total_cost"], 0.004)
 
     def test_defaults_when_keys_missing(self):
@@ -505,7 +529,11 @@ class TestSendUsageCostMessage(unittest.TestCase):
     """Unit tests for usage cost message formatting utility."""
 
     def test_message_formatting(self):
-        usage = {"input_tokens": 2000, "output_tokens": 1000, "total_tokens": 3000}
+        usage = {
+            "input_tokens": 2000,
+            "output_tokens": 1000,
+            "total_tokens": 3000,
+        }
         msg = send_usage_cost_message(usage, 0.01, 0.02)
 
         self.assertIn("📦 Token usage", msg)
@@ -522,7 +550,11 @@ class TestLogUsageDetails(unittest.TestCase):
 
     @patch("src.utils.usage.logger")
     def test_logs_with_user(self, mock_logger):
-        usage = {"input_tokens": 100, "output_tokens": 200, "total_tokens": 300}
+        usage = {
+            "input_tokens": 100,
+            "output_tokens": 200,
+            "total_tokens": 300,
+        }
         mock_user = MagicMock()
         mock_user.id = "user123"
 
@@ -555,7 +587,9 @@ class TestLogAndShowUsageDetails(unittest.IsolatedAsyncioTestCase):
         self, mock_user_session, mock_message, mock_logger, mock_send_msg
     ):
         profiles = {
-            "default": {"cost": {"input_token_cost": 0.01, "output_token_cost": 0.02}}
+            "default": {
+                "cost": {"input_token_cost": 0.01, "output_token_cost": 0.02}
+            }
         }
         usage = {"input_tokens": 100, "output_tokens": 50, "total_tokens": 150}
 
@@ -582,7 +616,9 @@ class TestLogAndShowUsageDetails(unittest.IsolatedAsyncioTestCase):
         self, mock_user_session, mock_logger
     ):
         profiles = {
-            "default": {"cost": {"input_token_cost": 0.01, "output_token_cost": 0.02}}
+            "default": {
+                "cost": {"input_token_cost": 0.01, "output_token_cost": 0.02}
+            }
         }
         usage = {"input_tokens": 10, "output_tokens": 20, "total_tokens": 30}
         mock_user_session.get.side_effect = lambda key: {
@@ -605,7 +641,11 @@ class TestLoadChatProfiles(unittest.IsolatedAsyncioTestCase):
         user = MagicMock(spec=cl.User)
         profiles_cfg = {"default": {"icon": "🙂", "starters": ["starter1"]}}
         starters_cfg = {
-            "starter1": {"name": "Hello", "message": "Hi there!", "label": "Hello"}
+            "starter1": {
+                "name": "Hello",
+                "message": "Hi there!",
+                "label": "Hello",
+            }
         }
 
         profiles = await load_chat_profiles(user, profiles_cfg, starters_cfg)
@@ -621,15 +661,25 @@ class TestLoadChatProfiles(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(profile.starters[0].message, "Hi there!")
 
     @patch("src.utils.profile_loader.get_username", return_value="Guest")
-    async def test_load_chat_profiles_multiple_profiles(self, mock_get_username):
+    async def test_load_chat_profiles_multiple_profiles(
+        self, mock_get_username
+    ):
         user = MagicMock(spec=cl.User)
         profiles_cfg = {
             "assistant": {"icon": "🤖", "starters": ["s1", "s2"]},
             "helper": {"icon": "🧑", "starters": []},
         }
         starters_cfg = {
-            "s1": {"name": "Ask", "message": "How can I help?", "label": "Ask"},
-            "s2": {"name": "Info", "message": "Here's some info", "label": "Info"},
+            "s1": {
+                "name": "Ask",
+                "message": "How can I help?",
+                "label": "Ask",
+            },
+            "s2": {
+                "name": "Info",
+                "message": "Here's some info",
+                "label": "Info",
+            },
         }
 
         profiles = await load_chat_profiles(user, profiles_cfg, starters_cfg)
@@ -669,9 +719,13 @@ class TestGitUtils(unittest.IsolatedAsyncioTestCase):
         self.temp_src = tempfile.mkdtemp()
         self.temp_dst = tempfile.mkdtemp()
         # Create dummy files/folders
-        with open(os.path.join(self.temp_src, "file.txt"), "w", encoding="utf-8") as f:
+        with open(
+            os.path.join(self.temp_src, "file.txt"), "w", encoding="utf-8"
+        ) as f:
             f.write("test")
-        os.mkdir(os.path.join(self.temp_src, "__pycache__"))  # should be excluded
+        os.mkdir(
+            os.path.join(self.temp_src, "__pycache__")
+        )  # should be excluded
 
     def tearDown(self):
         shutil.rmtree(self.temp_src, ignore_errors=True)
@@ -703,7 +757,8 @@ class TestGitUtils(unittest.IsolatedAsyncioTestCase):
         mock_clone.assert_called_once()
 
     @patch(
-        "src.utils.git.Repo.clone_from", side_effect=GitCommandError("clone", "fail")
+        "src.utils.git.Repo.clone_from",
+        side_effect=GitCommandError("clone", "fail"),
     )
     async def test_clone_repo_failure(self, mock_clone):
         repo_url = "https://github.com/test/repo.git"
@@ -778,9 +833,7 @@ class TestGitUtils(unittest.IsolatedAsyncioTestCase):
     # ---------------- get_git_details_from_input ----------------
     async def test_get_git_details_from_input_valid_json(self):
         mock_llm = MagicMock()
-        mock_llm.invoke.return_value.content = (
-            '{"repo_name": "test", "repo_url": "https://github.com/test/repo.git"}'
-        )
+        mock_llm.invoke.return_value.content = '{"repo_name": "test", "repo_url": "https://github.com/test/repo.git"}'
         mock_llm.invoke.return_value.usage_metadata = {"tokens": 10}
 
         content, usage = await git_utils.get_git_details_from_input(
@@ -802,7 +855,9 @@ class TestGitUtils(unittest.IsolatedAsyncioTestCase):
             mock_llm, "conversation"
         )
         self.assertEqual(content["repo_name"], "demo")
-        self.assertEqual(content["repo_url"], "https://github.com/demo/repo.git")
+        self.assertEqual(
+            content["repo_url"], "https://github.com/demo/repo.git"
+        )
         self.assertEqual(usage, {"tokens": 5})
 
 

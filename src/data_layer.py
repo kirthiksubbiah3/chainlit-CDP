@@ -62,7 +62,8 @@ class ChromaDataLayer:
                     "CHROMADB_PERSISTENT_PATH is not set and no default value is provided."
                 )
             logger.warning(
-                "CHROMADB_PERSISTENT_PATH is not set. Using default path: %s", path
+                "CHROMADB_PERSISTENT_PATH is not set. Using default path: %s",
+                path,
             )
             self.chroma_client = PersistentClient(path=path)
         else:

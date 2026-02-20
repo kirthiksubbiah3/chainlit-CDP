@@ -37,6 +37,7 @@ dependencies = [
     "beautifulsoup4==4.13.4",
     "botbuilder-core>=4.17.1",
     "botbuilder-schema>=4.17.1",
+    "ruff>=0.12.0",
 ]
 [dependency-groups]
 code_check = [

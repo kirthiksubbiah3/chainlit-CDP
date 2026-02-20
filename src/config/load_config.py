@@ -15,9 +15,7 @@ class AppConfig:
 
         self.client_type = os.getenv("CHROMADB_CLIENT_TYPE", "http").lower()
         self.host = os.getenv("CHROMADB_HOST")
-        self.port_str = os.getenv(
-            "CHROMADB_PORT", "8000"
-        )  # Default to 8000 if not set
+        self.port_str = os.getenv("CHROMADB_PORT", "8000")  # Default to 8000 if not set
         self.path = os.getenv("CHROMADB_PERSISTENT_PATH", ".chromadb")
 
         self.env = os.getenv("ENV", "dev").lower()
@@ -30,9 +28,7 @@ class AppConfig:
 
         self.local_username = os.getenv("LOCAL_USERNAME")
         self.local_password = os.getenv("LOCAL_PASSWORD")
-        self.oauth_enabled = (
-            os.getenv("OAUTH_ENABLED", "false").lower() == "true"
-        )
+        self.oauth_enabled = os.getenv("OAUTH_ENABLED", "false").lower() == "true"
         self.cluster_name = os.getenv("CLUSTER_NAME", "sftp-eks")
         self.loki_url = os.getenv("LOKI_URL")
         self.loki_username = os.getenv("LOKI_USERNAME")
@@ -68,14 +64,12 @@ class AppConfig:
         self.MICROSOFT_APP_TENANT_ID = os.getenv("MICROSOFT_APP_TENANT_ID")
         self.JIRA_ISSUE_TYPE = os.getenv("JIRA_ISSUE_TYPE")
         self.JIRA_PROJKEY = os.getenv("JIRA_PROJKEY")
-        self.ALLOWED_ATLASSIAN_SCOPES = os.getenv(
-            "ALLOWED_ATLASSIAN_SCOPES", ""
-        )
+        self.ALLOWED_ATLASSIAN_SCOPES = os.getenv("ALLOWED_ATLASSIAN_SCOPES", "")
         logger.info("Loading config")
         config = load_yaml_file("config.yaml")
         logger.info("Loading secrets")
         try:
-          secrets = load_yaml_file("secrets.yaml")
+            secrets = load_yaml_file("secrets.yaml")
         except FileNotFoundError:
             logger.warning("secrets.yaml not found, proceeding without it")
             secrets = {}
@@ -85,9 +79,7 @@ class AppConfig:
         self.starters = config["chainlit_starters"]
         self.llm_agent_config = config["llm"]["agent"]
         self.mcp_servers_config = config["mcp"]["servers"]
-        self.mcp_service_config = (
-           config.get("mcp", {}).get("url_secrets", {})
-        )
+        self.mcp_service_config = config.get("mcp", {}).get("url_secrets", {})
         agents_config = config["agents"]
         self.mcp_servers_config_to_pass = {
             srv: {k: v for k, v in cfg.items() if k != "chainlit_command"}
