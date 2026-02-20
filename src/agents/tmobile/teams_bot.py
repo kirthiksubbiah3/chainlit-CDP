@@ -10,13 +10,13 @@ from langchain_core.messages import (
     SystemMessage,
 )
 
-from mcp_client import get_mcp_client
+from .mcp_client import get_mcp_client
 from utils import get_logger
 from config import app_config
 
 MICROSOFT_APP_ID = app_config.MICROSOFT_APP_ID
 MICROSOFT_APP_PASSWORD = app_config.MICROSOFT_APP_PASSWORD
-MICROSOFT_APP_TENANT_ID = app_config.MICROSOFT_APP_T
+MICROSOFT_APP_TENANT_ID = app_config.MICROSOFT_APP_TENANT_ID
 get_helpdesk_prompt = app_config.get_helpdesk_prompt()
 
 

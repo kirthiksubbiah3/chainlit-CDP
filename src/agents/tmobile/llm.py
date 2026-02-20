@@ -8,13 +8,6 @@ AWS_REGION = app_config.AWS_REGION
 ANTHROPIC_API_KEY = app_config.ANTHROPIC_API_KEY
 
 
-from vars import (
-    ANTHROPIC_MODEL,
-    BEDROCK_MODEL_ID,
-    AWS_REGION,
-    ANTHROPIC_API_KEY,
-)
-
 load_dotenv()
 
 
