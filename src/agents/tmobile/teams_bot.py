@@ -14,7 +14,7 @@ from config import app_config
 MICROSOFT_APP_ID = app_config.MICROSOFT_APP_ID
 MICROSOFT_APP_PASSWORD = app_config.MICROSOFT_APP_PASSWORD
 MICROSOFT_APP_TENANT_ID = app_config.MICROSOFT_APP_TENANT_ID
-get_helpdesk_prompt = app_config.get_helpdesk_prompt()
+helpdesk_prompt_text = app_config.get_helpdesk_prompt()
 
 logger = get_logger(__name__)
 settings = BotFrameworkAdapterSettings(
@@ -44,9 +44,8 @@ async def run_agent_and_get_answer(
     # --- call MCP agent ---
     try:
         mcp_client = await get_mcp_client()
-        access_prompt = get_helpdesk_prompt
         combined_content = f"""
-        {access_prompt}
+        {helpdesk_prompt_text}
 
         User Question:
         {messages}
@@ -129,4 +128,9 @@ async def process_teams_message(request):
         return JSONResponse(content={"status": "success"}, status_code=200)
     except Exception as e:
         logger.error(f"Bot processing error:{e}")
-        return JSONResponse(content={"error": str(e)}, status_code=500)
+        return JSONResponse(
+            content={
+                "error": "An internal error occurred while processing the bot activity."
+            },
+            status_code=500,
+        )

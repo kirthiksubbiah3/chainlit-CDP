@@ -270,7 +270,6 @@ async def generate_response(
                 session_type,
                 msg_command,
             )
-            print("Upated promts are ", messages)
 
         chat_profile_name = cl.user_session.get("chat_profile")
         # Condition for Slack messages

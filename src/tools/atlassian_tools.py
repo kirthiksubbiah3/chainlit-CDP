@@ -22,7 +22,7 @@ async def get_atlassian_org_users_or_accounts() -> Dict[str, Any]:
     if not all([ATLASSIAN_ORG_ID, ATLASSIAN_ACCESS_KEY]):
         raise ValueError(
             "Missing Atlassian API keys ATLASSIAN_ORG_ID and "
-            "ATLASSIAN_ADMIN_ACCESS_KEY. Please check your .env file."
+            "ATLASSIAN_ACCESS_KEY. Please check your .env file."
         )
 
     url = (

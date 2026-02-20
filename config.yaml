@@ -172,7 +172,7 @@ agents:
       icon: git-graph
   cryptowallet:
     chainlit_command:
-      id: Cryptowallet
+      id: cryptowallet
       icon: bar-chart-2
   rag:
     chainlit_command:

@@ -154,7 +154,7 @@ class AppConfig:
             creation.
             If the user agrees, fetch the relevant form type and its form fields,
               collect the required details using natural language,
-              create a Jira issuefollowing issue creation rule mentioned later in the prompt.
+              create a Jira issue following issue creation rule mentioned later in the prompt.
               After creation, provide the created issue ID and clickable issue link to the user.
 
           - If the user wants to create a confluence space or Jira project:
