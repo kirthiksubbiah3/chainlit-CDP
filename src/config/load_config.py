@@ -103,6 +103,7 @@ class AppConfig:
                     "rag",
                     "sflabs-docs",
                     "confluence-doc-search",
+                    "atlassian"
                 ]:
                     button_value = True
                 else:
