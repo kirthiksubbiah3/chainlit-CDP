@@ -10,7 +10,7 @@ import hooks
 from utils import get_logger
 import chainlit as cl
 
-from utils import process_teams_message
+from agents.tmobile.teams_bot import process_teams_message
 
 logger = get_logger(__name__)
 

@@ -36,7 +36,6 @@ from .git import (
 
 )
 from .generate_response import generate_response
-from .teams_bot import process_teams_message
 
 __all__ = [
     # Config functions
@@ -76,5 +75,4 @@ __all__ = [
     "GitCommandError",
     # response to message
     "generate_response",
-    "process_teams_message"
 ]

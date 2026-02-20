@@ -1,6 +1,3 @@
-from functools import lru_cache
-from logging import getLogger
-
 from botbuilder.core import (
     BotFrameworkAdapter,
     BotFrameworkAdapterSettings,
@@ -8,37 +5,30 @@ from botbuilder.core import (
 )
 from botbuilder.schema import Activity, ActivityTypes
 from fastapi.responses import JSONResponse
-from langchain_core.messages import HumanMessage, SystemMessage
-import chainlit as cl
+from langchain_core.messages import (
+    HumanMessage,
+    SystemMessage,
+)
 
-logger = getLogger(__name__)
+from mcp_client import get_mcp_client
+from utils import get_logger
+from config import app_config
 
-@lru_cache()
-def get_adapter() -> BotFrameworkAdapter:
-    """
-    Lazily create and cache the BotFrameworkAdapter.
-    Prevents circular imports and avoids recreating adapter per request.
-    """
-    from config import app_config  # Lazy import prevents circular dependency
-
-    settings = BotFrameworkAdapterSettings(
-        app_id=app_config.MICROSOFT_APP_ID,
-        app_password=app_config.MICROSOFT_APP_PASSWORD,
-        channel_auth_tenant=app_config.MICROSOFT_APP_TENANT_ID,
-        oauth_endpoint=f"https://login.microsoftonline.com/"
-                       f"{app_config.MICROSOFT_APP_TENANT_ID}/v2.0",
-    )
-
-    return BotFrameworkAdapter(settings)
+MICROSOFT_APP_ID = app_config.MICROSOFT_APP_ID
+MICROSOFT_APP_PASSWORD = app_config.MICROSOFT_APP_PASSWORD
+MICROSOFT_APP_TENANT_ID = app_config.MICROSOFT_APP_T
+get_helpdesk_prompt = app_config.get_helpdesk_prompt()
 
 
-def get_helpdesk_prompt() -> str:
-    """
-    Lazy-load helpdesk prompt from config.
-    """
-    from config import app_config
-    return app_config.get_helpdesk_prompt()
+logger = get_logger(__name__)
+settings = BotFrameworkAdapterSettings(
+    app_id=MICROSOFT_APP_ID,
+    app_password=MICROSOFT_APP_PASSWORD,
+    channel_auth_tenant=MICROSOFT_APP_TENANT_ID,
+    oauth_endpoint=f"https://login.microsoftonline.com/{MICROSOFT_APP_TENANT_ID}/v2.0",
+)
 
+adapter = BotFrameworkAdapter(settings)
 
 
 async def run_agent_and_get_answer(
@@ -47,22 +37,25 @@ async def run_agent_and_get_answer(
     user_id: str,
 ):
     """
-    Unified input for MCP agent.
-    Works for Slack and Teams.
+    Unified input for Atlassian MCP agent.
+    Works for Slack, Teams
     """
+    #
     logger.info(f"Running agent for thread_id:{thread_id}, user_id:{user_id}")
-
     if isinstance(messages, str):
         messages = [HumanMessage(content=messages)]
 
+    # --- call MCP agent ---
     try:
+        mcp_client = await get_mcp_client()
         access_prompt = get_helpdesk_prompt()
         final_messages = [SystemMessage(content=access_prompt)] + messages
-
+        # run MCP
+        _agent = mcp_client.agent
+        #
         logger.info([type(m).__name__ for m in final_messages])
-
+        #
         final_answer = ""
-
         async for event in _agent.astream(
             {"messages": final_messages},
             {"configurable": {"thread_id": thread_id}},
@@ -73,21 +66,15 @@ async def run_agent_and_get_answer(
                     final_answer += msg.content
                 except Exception as exc:
                     logger.error(
-                        f"Error processing model message {msg}: {exc}",
+                        f"Error while processing model message {msg}: {exc}",
                         exc_info=True,
                     )
                     continue
-
         return final_answer.strip()
-
     except Exception as e:
-        logger.error(f"Agent execution error: {e}", exc_info=True)
+        logger.error(f"Exception:{e}")
         return "⚠️ Something went wrong while running the agent."
 
-
-# --------------------------------------------------
-# Teams Turn Handler
-# --------------------------------------------------
 
 async def on_turn(turn_context: TurnContext):
     if turn_context.activity.type != ActivityTypes.message:
@@ -97,14 +84,13 @@ async def on_turn(turn_context: TurnContext):
     if not incoming.strip():
         return
 
+    # ---- Extract IDs (Teams equivalents) ----
     thread_id = turn_context.activity.conversation.id
     user_id = turn_context.activity.from_property.id
     channel_id = turn_context.activity.channel_id  # usually "msteams"
-
     safe_thread_id = thread_id.replace(":", "_")
-
     logger.info(
-        f"thread:{safe_thread_id}, user:{user_id}, channel:{channel_id}"
+        f"thread:{safe_thread_id}, user:{user_id},channel_id:{channel_id}"
     )
 
     try:
@@ -119,30 +105,23 @@ async def on_turn(turn_context: TurnContext):
         )
 
     except Exception as e:
-        logger.error(f"Turn processing error: {e}", exc_info=True)
+        logger.error("Agent error:", e)
         await turn_context.send_activity(
             "⚠️ Something went wrong while processing your request."
         )
 
 
-# --------------------------------------------------
-# FastAPI Endpoint
-# --------------------------------------------------
-
 async def process_teams_message(request):
-    """
-    FastAPI route handler for Microsoft Teams messages.
-    """
-    adapter = get_adapter()  # Singleton adapter
-
     body = await request.json()
     auth_header = request.headers.get("Authorization", "")
     activity = Activity().deserialize(body)
 
-    try:
-        await adapter.process_activity(activity, auth_header, on_turn)
-        return JSONResponse(content={"status": "success"}, status_code=200)
+    async def aux_func(turn_context):
+        await on_turn(turn_context)
 
+    try:
+        await adapter.process_activity(activity, auth_header, aux_func)
+        return JSONResponse(content={"status": "success"}, status_code=200)
     except Exception as e:
-        logger.error(f"Bot processing error: {e}", exc_info=True)
+        logger.error(f"Bot processing error:{e}")
         return JSONResponse(content={"error": str(e)}, status_code=500)

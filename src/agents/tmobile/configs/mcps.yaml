@@ -1,0 +1,4 @@
+mcps:
+  atlassian:
+    transport: streamable_http
+    url: $ATLASSIAN_MCP_URL
