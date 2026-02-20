@@ -26,7 +26,6 @@ invoke_agent = get_llm = RagFileManager = update_sidebar = default_agent = (
 ) = app_config = None
 
 
-
 def _setup_imports():  # lazy import to avoid circular import
     global \
         invoke_agent, \
@@ -216,7 +215,9 @@ async def generate_response(
             usage_totals["output_tokens"] += usage_data_title["output_tokens"]
             usage_totals["total_tokens"] += usage_data_title["total_tokens"]
 
-        await log_and_show_usage_details(profiles, usage_totals, chat_profile_name, env)
+        await log_and_show_usage_details(
+            profiles, usage_totals, chat_profile_name, env
+        )
 
 
 def set_profiles_agent(profiles: dict):
