@@ -3,9 +3,9 @@ Utility functions for loading and constructing chat profiles from configuration 
 Includes logging and mapping of server commands to chat profile starters.
 """
 
-import chainlit as cl
-
 from logging import getLogger
+
+import chainlit as cl
 
 from .get_username import get_username
 

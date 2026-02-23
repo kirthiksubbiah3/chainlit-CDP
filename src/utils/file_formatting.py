@@ -1,7 +1,10 @@
+"""Utilities for formatting and writing content to DOCX files."""
+
 from docx import Document as DocxDocument
 
 
 def format_docx_content(content: str, output_path: str):
+    """Write plain text content into a DOCX file, preserving line breaks."""
     lines = content.splitlines()
     doc = DocxDocument()
     for line in lines:

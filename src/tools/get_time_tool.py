@@ -1,6 +1,8 @@
+"""LangChain tool to generate Grafana-compatible time ranges."""
+
 from datetime import datetime, timedelta
-from langchain.tools import tool
 import logging
+from langchain.tools import tool
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)

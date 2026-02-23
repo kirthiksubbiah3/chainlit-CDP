@@ -1,4 +1,10 @@
-# rag_tool.py
+"""
+RAG search tool.
+
+Provides a LangChain tool that performs similarity search over
+user-uploaded documents stored in the vector database.
+"""
+
 from langchain_core.tools import tool
 from .rag_file_manager import RagFileManager
 

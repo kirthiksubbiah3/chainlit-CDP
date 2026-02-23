@@ -1,5 +1,7 @@
-import chainlit as cl
+"""Generate and dispatch LLM responses for Chainlit chat sessions."""
+
 import time
+import chainlit as cl
 from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage, SystemMessage
 from langgraph.checkpoint.serde import jsonplus
@@ -101,8 +103,11 @@ async def generate_response(
     env: str,
     filepath: str = "",
 ):
+    """
+    Generate an LLM response for a user message and handle session state.
+    """
     _setup_imports()
-    logger.info(f"Profiles is {profiles}")
+    logger.info("Profiles is %s", profiles)
     set_profiles_agent(profiles)
 
     start_time = time.perf_counter()
@@ -146,7 +151,7 @@ async def generate_response(
     # Otherwise, fall back to treating it as a string
     msg_text = getattr(msg, "content", msg)
     msg_command = getattr(msg, "command", None)
-    logger.info(f"Message command is {msg_command} for {msg_text}")
+    logger.info("Message command is %s for %s", msg_command, msg_text)
     if msg_text:  # make sure it's not None
         msg_lower = msg_text.lower()
         # Additional guidance if login mentioned
@@ -221,6 +226,9 @@ async def generate_response(
 
 
 def set_profiles_agent(profiles: dict):
+    """
+    Set the active agent for the current user session based on chat profile.
+    """
     chat_profile = cl.user_session.get("chat_profile")
     logger.info("Chat profile set in user session: %s", chat_profile)
     user = cl.user_session.get("user")

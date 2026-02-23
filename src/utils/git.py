@@ -1,10 +1,12 @@
-import re
+"""Git utility functions for cloning, copying, committing, and pushing repositories."""
+
 import json
 import os
-from git import Repo, GitCommandError
+import re
 import shutil
-
 from pathlib import Path
+
+from git import Repo, GitCommandError
 
 
 BASE_PATH = Path(__file__).resolve().parents[2]
@@ -27,6 +29,7 @@ if GIT_PATH is None:
 
 
 def ignore_patterns(src, names):
+    """Return file and directory names that should be ignored during copy."""
     return [name for name in names if name in EXCLUDE]
 
 

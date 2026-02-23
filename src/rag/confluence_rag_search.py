@@ -1,3 +1,10 @@
+"""
+Confluence RAG search module.
+
+Provides semantic search over Confluence documents stored in ChromaDB
+using Bedrock embeddings.
+"""
+
 import os
 from langchain_aws import BedrockEmbeddings
 from langchain_chroma import Chroma
@@ -35,7 +42,10 @@ class ConfluenceRagManager:
         results = vectorstore.similarity_search(question, k=k)
         for i, res in enumerate(results, 1):
             logger.debug(
-                f"Result {i}: {res.page_content[:120]}... (source: {res.metadata.get('source')})"
+                "Result %d: %s... (source: %s)",
+                i,
+                res.page_content[:120],
+                res.metadata.get("source"),
             )
 
         return results

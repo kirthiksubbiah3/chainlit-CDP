@@ -1,9 +1,10 @@
+"""HTTP helper functions for calling SentinelMind APIs via httpx."""
+
 import json
-from typing import Any, Dict, Union, List, Optional
+from logging import getLogger
+from typing import Any, Dict, List, Optional, Union
 
 import httpx
-
-from logging import getLogger
 
 logger = getLogger(__name__)
 
@@ -25,7 +26,10 @@ def sentinelmind_api_get(
     """
 
     logger.info(
-        f"Making GET request to {url} with params: {params} and headers: {headers}"
+        "Making GET request to %s with params: %s and headers: %s",
+        url,
+        params,
+        headers,
     )
     try:
         response = httpx.get(
@@ -65,8 +69,13 @@ def sentinelmind_api_post(
             or an error message.
     """
     logger.info(
-        f"Making POST request to {url} with data: {data}, json: {json_data}, headers: {headers}"
+        "Making POST request to %s with data: %s, json: %s, headers: %s",
+        url,
+        data,
+        json_data,
+        headers,
     )
+
     response = httpx.post(
         url,
         data=data,
@@ -78,19 +87,21 @@ def sentinelmind_api_post(
     response_text = response.text
 
     logger.info(
-        f"Response status code: {response.status_code} and response output is : {response_text}"
+        "Response status code: %s and response output is: %s",
+        response.status_code,
+        response_text,
     )
     if response.status_code != 200:
-        logger.error(f"Error response: {response_text}")
+        logger.error("Error response: %s", response_text)
         return f"Error response {response.status_code} while requesting {url!r}: {response_text}"
 
     try:
         json_data = [
             json.loads(line) for line in response_text.strip().splitlines() if line
         ]
-        logger.info(f"Decoded JSON data: {json_data}")
+        logger.info("Decoded JSON data: %s", parsed_lines)
         json_response = json_data[-1] if json_data else {}
-        logger.info(f"Returning JSON response: {json_response}")
+        logger.info("Returning JSON response: %s", json_response)
         return json_response
     except json.JSONDecodeError:
         logger.error("Failed to decode JSON response")

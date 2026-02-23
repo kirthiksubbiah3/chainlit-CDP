@@ -1,3 +1,5 @@
+"""LangChain tool to generate DOCX files from markdown content."""
+
 import tempfile
 from docx import Document
 from bs4 import BeautifulSoup

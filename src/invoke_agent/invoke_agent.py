@@ -1,13 +1,21 @@
+"""
+Agent invocation helper.
+
+Streams agent responses, handles tool output, file artifacts,
+token usage tracking, and optional visualization rendering.
+"""
+
 from typing import List, Dict
 
 import chainlit as cl
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 from langchain_core.runnables.config import RunnableConfig
+import matplotlib.pyplot as plt
 
 from config import app_config
 from utils import get_logger
 from utils.text import CleanXMLTagParser
-import matplotlib.pyplot as plt
+
 
 logger = get_logger(__name__)
 llm_agent_config = app_config.llm_agent_config
@@ -154,7 +162,7 @@ async def invoke_agent(
         ).send()
 
     if x_axis and y_axis:
-        logger.info(f"x_axis extracted: {x_axis}")
+        logger.info("x_axis extracted:", x_axis )
         fig, ax = plt.subplots(figsize=(12, 6))
         ax.plot(x_axis, y_axis, marker="o", linestyle="-")
         elements = [cl.Pyplot(name="plot", figure=fig, display="inline")]

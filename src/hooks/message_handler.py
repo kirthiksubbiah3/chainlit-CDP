@@ -49,7 +49,11 @@ async def on_message(msg: cl.Message):
         if isinstance(element, cl.element.File):
             filepath = element.path
             filename = element.name
-            logger.info(f"File received: {filename} at {filepath}")
+            logger.info(
+                "File received: %s at %s",
+                filename,
+                filepath,
+            )
             rag_manager = RagFileManager()
             await rag_manager.upload_and_store_file(filepath, filename)
             rag_filenames.append(filename)

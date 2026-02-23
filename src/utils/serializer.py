@@ -1,3 +1,5 @@
+"""Custom msgpack serializer extensions for LangGraph checkpoints."""
+
 from langchain_core.messages import ToolMessage
 from langgraph.checkpoint.serde import jsonplus
 
@@ -5,6 +7,9 @@ _original_default = jsonplus._msgpack_default
 
 
 def _custom_msgpack_default(obj):
+    """
+    Custom msgpack serializer for LangChain ToolMessage objects.
+    """
     if isinstance(obj, ToolMessage):
         return {
             "type": "tool",

@@ -4,13 +4,13 @@ It imports the hooks module and the utils module
 """
 
 from fastapi import Request
+
 from chainlit.server import app
+import chainlit as cl
 
 from config import app_config
 import hooks
 from utils import get_logger
-import chainlit as cl
-
 from agents.tmobile.teams_bot import process_teams_message
 
 logger = get_logger(__name__)
@@ -27,5 +27,9 @@ config.features.audio.sample_rate = 24000
 
 @app.post("/api/messages")
 async def teams_messages(request: Request):
+    """
+    Handle incoming Microsoft Teams messages and route them
+    to the Teams bot processing pipeline.
+    """
     response = await process_teams_message(request)
     return response

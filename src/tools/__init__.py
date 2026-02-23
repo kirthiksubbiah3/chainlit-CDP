@@ -1,3 +1,10 @@
+"""
+Tools package.
+
+Aggregates reusable tools exposed to agents, including document generation,
+time utilities, diagram rendering, and Atlassian integrations.
+"""
+
 from .docx_tools import generate_docx
 from .get_time_tool import get_time_range
 from .read_attachment import read_attachment

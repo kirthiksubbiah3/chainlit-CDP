@@ -1,20 +1,28 @@
-# rag_file_manager.py
+"""
+RAG file manager.
+
+Handles user-uploaded files, extracts text content,
+embeds it using Bedrock, and stores vectors in ChromaDB.
+"""
+from typing import List
 
 import chainlit as cl
+from PyPDF2 import PdfReader
 from langchain_aws import BedrockEmbeddings
 from langchain_chroma import Chroma
-from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.docstore.document import Document
-from PyPDF2 import PdfReader
-from typing import List
-from utils import get_logger
-from utils.text import get_collection_name
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+
 from data_layer import ChromaDataLayer
+from utils import get_logger
+from utils.text import get_collection_namer
 
 logger = get_logger(__name__)
 
 
 class RagFileManager(ChromaDataLayer):
+    """Manages ingestion and lifecycle of RAG documents stored in ChromaDB."""
+
     def __init__(self, collection_name=None):
         super().__init__()
         if not collection_name:
@@ -35,30 +43,37 @@ class RagFileManager(ChromaDataLayer):
         )
 
     async def upload_and_store_file(self, filepath: str, filename: str):
-        logger.info(f"Starting upload and store process for file: {filepath}")
+        """Extract text from a file and store it in the vector database."""
+
+        logger.info("Starting upload and store process for file: %s", filepath)
         text = ""
 
         # Extract text from PDF file
         try:
-            logger.debug(f"Attempting to read PDF file: {filepath}")
+            logger.debug("Attempting to read PDF file: %s", filepath)
             reader = PdfReader(filepath)
             for page in reader.pages:
                 extracted_text = page.extract_text()
                 if extracted_text:
                     text += extracted_text
             logger.info(
-                f"Extracted text from file: {filepath} (length: {len(text)} characters)"
+                "Extracted text from file: %s (length: %d characters)",
+                filepath,
+                len(text),
             )
-        except Exception as e:
+        except Exception as exc:
             logger.error(
-                f"Failed to read or extract text from PDF: {filepath}. Error: {e}"
+                "Failed to read or extract text from PDF: %s. Error: %s",
+                filepath,
+                exc,
             )
             return
 
         # Return early if no text was extracted
         if not text.strip():
             logger.warning(
-                f"No text extracted from file: {filepath}. Skipping processing."
+                "No text extracted from file: %s. Skipping processing.",
+                filepath,
             )
             return
 
@@ -66,7 +81,7 @@ class RagFileManager(ChromaDataLayer):
         logger.debug("Splitting extracted text into chunks")
         splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
         chunks = splitter.create_documents([text])
-        logger.info(f"Text split into {len(chunks)} chunks")
+        logger.info("Text split into %d chunks", len(chunks))
 
         # Create Document objects with metadata for vector storage
         docs = [
@@ -76,14 +91,19 @@ class RagFileManager(ChromaDataLayer):
             )
             for chunk in chunks
         ]
-        logger.debug(f"Created {len(docs)} Document objects for vector store ingestion")
+        logger.debug(
+            "Created %d Document objects for vector store ingestion",
+            len(docs),
+        )
         # Add documents to vector store
         logger.debug("Adding documents to vector store")
         self.vectorstore.add_documents(docs)
 
-        logger.info(f"Completed upload and store for file: {filepath}")
+        logger.info("Completed upload and store for file: %s", filepath)
 
     async def get_all_documents(self) -> List:
+        """Return a sorted list of filenames stored in the vector database."""
+
         all_docs = self.vectorstore.get(include=["metadatas"])
 
         filenames = {
@@ -94,4 +114,5 @@ class RagFileManager(ChromaDataLayer):
         return sorted(filenames)
 
     async def delete_file(self, filename):
+        """Delete all vector entries associated with a filename."""
         self.vectorstore.delete(where={"filename": filename})

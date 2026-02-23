@@ -65,6 +65,9 @@ def log_usage_details(usage_totals: dict, input_token_cost, output_token_cost, u
 async def log_and_show_usage_details(
     profiles, usage_totals, chat_profile=None, env: str = "dev"
 ):
+    """
+    Log token usage details and optionally display cost information to the user.
+    """
     if not chat_profile:
         chat_profile = cl.user_session.get("chat_profile")
     input_token_cost = profiles[chat_profile]["cost"]["input_token_cost"]

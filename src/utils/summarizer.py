@@ -1,4 +1,4 @@
-# file: attachment_reader.py
+"""Utilities for reading and extracting text from user-uploaded attachments."""
 
 from typing import Optional
 import os

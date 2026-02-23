@@ -78,6 +78,7 @@ class CustomDataLayer(ChromaDataLayer, cl_data.BaseDataLayer):
         self.collection = None
 
     def ensure_collection(self, identifier=None):
+        """Ensure a ChromaDB collection exists for the given user identifier."""
         if not identifier:
             identifier = cl.user_session.get("user").identifier
         self.collection = self.chroma_client.get_or_create_collection(
@@ -85,6 +86,7 @@ class CustomDataLayer(ChromaDataLayer, cl_data.BaseDataLayer):
         )
 
     async def get_user(self, identifier: str) -> Optional[cl.PersistedUser]:
+        """Retrieve or initialize a persisted user."""
         logger.info("User logged in: %s", identifier)
         self.ensure_collection(identifier=identifier)
         return cl.PersistedUser(
@@ -92,6 +94,7 @@ class CustomDataLayer(ChromaDataLayer, cl_data.BaseDataLayer):
         )
 
     async def create_user(self, user: cl.User) -> Optional[cl.PersistedUser]:
+        """Create a new persisted user entry."""
         logger.info("Creating user in db: %s", user.identifier)
 
         return cl.PersistedUser(
@@ -101,10 +104,12 @@ class CustomDataLayer(ChromaDataLayer, cl_data.BaseDataLayer):
         )
 
     async def delete_feedback(self, feedback_id: str) -> bool:
+        """Insert or update feedback for a thread (no-op placeholder)."""
         logger.info("Deleting feedback with id: %s", feedback_id)
         return True
 
     async def upsert_feedback(self, feedback: Feedback) -> str:
+        """Insert or update feedback for a thread (no-op placeholder)."""
         logger.info(
             "Upserting feedback for thread: %s",
             getattr(feedback, "thread_id", "unknown"),
@@ -113,22 +118,26 @@ class CustomDataLayer(ChromaDataLayer, cl_data.BaseDataLayer):
 
     @queue_until_user_message()
     async def create_element(self, element: "Element"):
+        """Create an element (not implemented)."""
         logger.debug("create_element called but not used")
         pass  # Not used
 
     async def get_element(
         self, thread_id: str, element_id: str
     ) -> Optional["ElementDict"]:
+        """Retrieve an element by ID (not implemented)."""
         logger.debug("get_element called but not used")
         return None  # Not used
 
     @queue_until_user_message()
     async def delete_element(self, element_id: str, thread_id: Optional[str] = None):
+        """Delete an element by ID (not implemented)."""
         logger.debug("delete_element called but not used")
         pass  # Not used
 
     @queue_until_user_message()
     async def create_step(self, step_dict: "StepDict"):
+        """Persist a chat step to the data store."""
         if step_dict["name"] == "on_chat_start":
             return
 
@@ -153,6 +162,7 @@ class CustomDataLayer(ChromaDataLayer, cl_data.BaseDataLayer):
 
     @queue_until_user_message()
     async def update_step(self, step_dict: "StepDict"):
+        """Update an existing chat step."""
         logger.info(
             "Updating step_id %s for thread_id %s",
             step_dict["id"],
@@ -164,6 +174,7 @@ class CustomDataLayer(ChromaDataLayer, cl_data.BaseDataLayer):
 
     @queue_until_user_message()
     async def delete_step(self, step_id: str):
+        """Delete a chat step by step ID."""
         logger.info("Deleting step with id: %s", step_id)
         self.ensure_collection()
         all_data = self.collection.get()
@@ -174,6 +185,7 @@ class CustomDataLayer(ChromaDataLayer, cl_data.BaseDataLayer):
                 break
 
     async def get_thread_author(self, thread_id: str) -> str:
+        """Return the author identifier for a thread."""
         logger.info("Getting author for thread: %s", thread_id)
         results = self.collection.get(where={"thread_id": thread_id})
         if results["metadatas"]:
@@ -181,6 +193,7 @@ class CustomDataLayer(ChromaDataLayer, cl_data.BaseDataLayer):
         return "unknown"
 
     async def delete_thread(self, thread_id: str):
+        """Delete all data associated with a thread."""
         logger.info("Deleting thread: %s", thread_id)
         all_data = self.collection.get()
         ids_to_delete = []
@@ -195,6 +208,7 @@ class CustomDataLayer(ChromaDataLayer, cl_data.BaseDataLayer):
     async def list_threads(
         self, pagination: Pagination, filters: ThreadFilter
     ) -> PaginatedResponse[ThreadDict]:
+        """List threads matching the given filters."""
 
         logger.info("Listing threads with filters: %s", filters)
         all_data = self.collection.get()
@@ -226,6 +240,7 @@ class CustomDataLayer(ChromaDataLayer, cl_data.BaseDataLayer):
         )
 
     async def get_thread(self, thread_id: str) -> Optional[ThreadDict]:
+        """Retrieve a thread and its steps by thread ID."""
         logger.info("Getting thread: %s", thread_id)
         self.ensure_collection()
         results = self.collection.get(where={"thread_id": thread_id})
@@ -254,6 +269,7 @@ class CustomDataLayer(ChromaDataLayer, cl_data.BaseDataLayer):
         }
 
     async def get_document(self, thread_id: str):
+        """Retrieve all documents for a thread."""
         self.ensure_collection()
         results = self.collection.get(where={"thread_id": thread_id})
         if not results["documents"]:
@@ -270,6 +286,7 @@ class CustomDataLayer(ChromaDataLayer, cl_data.BaseDataLayer):
         metadata: Optional[Dict] = None,
         tags: Optional[List[str]] = None,
     ):
+        """Update thread metadata and title."""
         logger.info(
             "Updating thread %s with name=%s, user_id=%s, metadata=%s, tags=%s",
             thread_id,
@@ -291,4 +308,5 @@ class CustomDataLayer(ChromaDataLayer, cl_data.BaseDataLayer):
             self.collection.update(ids=results["ids"], metadatas=new_metadatas)
 
     async def build_debug_url(self) -> str:
+        """Return a debug URL if supported (not implemented)."""
         return ""

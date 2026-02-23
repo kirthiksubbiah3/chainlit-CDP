@@ -1,4 +1,10 @@
-# s3_rag_tool.py
+"""
+S3/SFTP RAG tool.
+
+Provides a LangChain tool for performing semantic search over
+repository or SFTP-backed documents using RAG.
+"""
+
 from langchain_core.tools import tool
 
 from rag.sftp_rag_search import S3RagManager

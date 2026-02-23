@@ -14,6 +14,7 @@ logger = get_logger(__name__)
 
 @cl.action_callback("delete_file")
 async def handle_delete_file(action: cl.Action):
+    """Handle delete_file action triggered from the Chainlit UI."""
     payload = action.payload
     filename = payload.get("filename")
     if filename:

@@ -1,3 +1,10 @@
+"""
+Microsoft Teams bot integration for Atlassian MCP agent.
+
+Handles incoming Teams messages, routes them to the MCP-powered
+LangGraph agent, and returns responses to the user.
+"""
+
 from botbuilder.core import (
     BotFrameworkAdapter,
     BotFrameworkAdapterSettings,
@@ -7,16 +14,18 @@ from botbuilder.schema import Activity, ActivityTypes
 from fastapi.responses import JSONResponse
 from langchain_core.messages import HumanMessage, AIMessage
 
-from .mcp_client import get_mcp_client
 from utils import get_logger
 from config import app_config
+from .mcp_client import get_mcp_client
+
+
+logger = get_logger(__name__)
 
 MICROSOFT_APP_ID = app_config.MICROSOFT_APP_ID
 MICROSOFT_APP_PASSWORD = app_config.MICROSOFT_APP_PASSWORD
 MICROSOFT_APP_TENANT_ID = app_config.MICROSOFT_APP_TENANT_ID
 helpdesk_prompt_text = app_config.get_helpdesk_prompt()
 
-logger = get_logger(__name__)
 settings = BotFrameworkAdapterSettings(
     app_id=MICROSOFT_APP_ID,
     app_password=MICROSOFT_APP_PASSWORD,
@@ -37,7 +46,11 @@ async def run_agent_and_get_answer(
     Works for Slack, Teams
     """
     #
-    logger.info(f"Running agent for thread_id:{thread_id}, user_id:{user_id}")
+    logger.info(
+        "Running agent for thread_id:%s user_id:%s",
+        thread_id,
+        user_id,
+    )
     if isinstance(messages, str):
         messages = [HumanMessage(content=messages)]
 
@@ -76,11 +89,12 @@ async def run_agent_and_get_answer(
 
         return final_answer.strip()
     except Exception as e:
-        logger.error(f"Exception:{e}")
+        logger.error("Exception:", e)
         return "⚠️ Something went wrong while running the agent."
 
 
 async def on_turn(turn_context: TurnContext):
+    """Handle a single Teams message turn."""
     if turn_context.activity.type != ActivityTypes.message:
         return
 
@@ -93,7 +107,12 @@ async def on_turn(turn_context: TurnContext):
     user_id = turn_context.activity.from_property.id
     channel_id = turn_context.activity.channel_id  # usually "msteams"
     safe_thread_id = thread_id.replace(":", "_")
-    logger.info(f"thread:{safe_thread_id}, user:{user_id},channel_id:{channel_id}")
+    logger.info(
+        "thread:%s user:%s channel_id:%s",
+        safe_thread_id,
+        user_id,
+        channel_id,
+    )
 
     try:
         agent_reply = await run_agent_and_get_answer(
@@ -114,6 +133,7 @@ async def on_turn(turn_context: TurnContext):
 
 
 async def process_teams_message(request):
+    """Process an incoming Teams webhook request."""
     body = await request.json()
     auth_header = request.headers.get("Authorization", "")
     activity = Activity().deserialize(body)
@@ -125,7 +145,7 @@ async def process_teams_message(request):
         await adapter.process_activity(activity, auth_header, aux_func)
         return JSONResponse(content={"status": "success"}, status_code=200)
     except Exception as e:
-        logger.error(f"Bot processing error:{e}")
+        logger.error("Agent error: %s", e)
         return JSONResponse(
             content={
                 "error": "An internal error occurred while processing the bot activity."

@@ -8,6 +8,9 @@ class CleanXMLTagParser(BaseOutputParser[str]):
     """Parser to clean only <thinking> tags from LLM output."""
 
     def parse(self, text: str) -> str:
+        """
+        Remove <thinking> XML-style tags from text or list-like LLM outputs.
+        """
         # Remove <thinking>, </thinking>, or <thinking ...> tags
         if isinstance(text, list):
             text = " ".join(str(t) for t in text)

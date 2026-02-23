@@ -1,3 +1,10 @@
+"""
+Application configuration loader.
+
+Loads environment variables, YAML configuration, secrets,
+and initializes shared clients used across the application.
+"""
+
 import os
 
 from dotenv import load_dotenv
@@ -9,6 +16,7 @@ logger = get_logger(__name__)
 
 
 class AppConfig:
+    """Central application configuration container."""
     def __init__(self):
         logger.info("Loading environment variables")
         load_dotenv()
@@ -116,6 +124,8 @@ class AppConfig:
                 self.commands.append(cmd)
 
     def get_helpdesk_prompt(self):
+        """Return the system prompt used for Atlassian helpdesk interactions."""
+
         access_prompt = f"""
         You are an Atlassian assistant.
 
@@ -149,7 +159,7 @@ class AppConfig:
             create a Jira issue following issue creation rule mentioned later in the prompt.
             After creation, provide the created issue ID and clickable issue link to the user.
             OR
-            2. If access is missing or the page is not accessible,then inform the user for issue
+            3. If access is missing or the page is not accessible,then inform the user for issue
             creation.
             If the user agrees, fetch the relevant form type and its form fields,
               collect the required details using natural language,

@@ -1,3 +1,10 @@
+"""
+Default agent orchestration module.
+
+Creates and manages LangGraph ReAct agents for each configured profile
+using shared tools, memory, and MCP integrations.
+"""
+
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.prebuilt import create_react_agent
 
@@ -27,11 +34,13 @@ profiles = app_config.profiles
 
 
 class DefaultAgents:
+    """Manages default LangGraph agents per configured profile."""
     def __init__(self):
         self.profiles_agents = None
         self.tools = None
 
     async def get_tools(self):
+        """Load and cache all tools required by default agents."""
         if not self.tools:
             self.tools = await mcp_tools.get_tools()
             self.tools += [
@@ -52,6 +61,7 @@ class DefaultAgents:
             logger.info("Loaded tools: %s", [tool.name for tool in self.tools])
 
     async def get_profiles_agents(self):
+        """Initialize and return agents for all configured profiles."""
         if self.profiles_agents is None:
             await self.get_tools()
             self.profiles_agents = {}
@@ -67,5 +77,6 @@ default_agents = DefaultAgents()
 
 
 def default_agent(profile):
+    """Return the default agent for the given profile."""
     agent = default_agents.profiles_agents[profile]
     return agent

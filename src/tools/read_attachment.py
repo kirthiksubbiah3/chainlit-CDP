@@ -1,4 +1,4 @@
-# file: attachment_reader.py
+"""LangChain tool to read and extract text from attachments."""
 
 from typing import Optional
 import os

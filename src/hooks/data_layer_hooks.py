@@ -25,6 +25,7 @@ def get_data_layer():
 
 @cl.set_chat_profiles
 async def chat_profile(user: cl.User):
+    """Load and return chat profiles for the given user."""
     logger.info("Loading chat profiles for user %s", user.id)
     chat_profiles = await load_chat_profiles(user, profiles, starters)
     return chat_profiles

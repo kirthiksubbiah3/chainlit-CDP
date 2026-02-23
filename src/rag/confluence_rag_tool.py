@@ -1,4 +1,10 @@
-# confluence_rag_tool.py
+"""
+LangChain tool wrapper for Confluence RAG search.
+
+Exposes an async tool that performs semantic search over Confluence
+documentation using the ConfluenceRagManager.
+"""
+
 from langchain_core.tools import tool
 from rag.confluence_rag_search import ConfluenceRagManager
 

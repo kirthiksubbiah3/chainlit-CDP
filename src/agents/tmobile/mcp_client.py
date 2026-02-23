@@ -1,8 +1,16 @@
+"""
+Atlassian MCP client integration.
+
+Manages MCP sessions, tool loading, and LangGraph agent execution
+for Atlassian-related workflows.
+"""
+
 import asyncio
 import logging
-
 from contextlib import AsyncExitStack
+
 from fastapi import APIRouter
+
 from langgraph.prebuilt import create_react_agent
 from langchain_core.runnables.config import RunnableConfig
 from langchain_mcp_adapters.client import MultiServerMCPClient
@@ -20,7 +28,6 @@ from tools import (
 
 # Import local modules
 from utils import get_logger
-
 from .llm import llm_router
 from .mcp_manager import mcp
 
@@ -33,6 +40,7 @@ router = APIRouter()
 
 
 class AtlassianMCPClient:
+    """Client responsible for managing Atlassian MCP interactions."""
     def __init__(self):
         self.llm = None
         self.agent = None
@@ -55,6 +63,7 @@ class AtlassianMCPClient:
         self.initialized = False
 
     async def setup(self):
+        """Initialize MCP sessions, tools, and LangGraph agent."""
         server_names = ["atlassian"]
 
         if "atlassian" not in mcp.get_enabled_mcps():
@@ -102,6 +111,7 @@ class AtlassianMCPClient:
         user_id: str | None = None,
         request_id: str | None = None,
     ):
+        """Invoke the agent and return the final message content."""
         runnable_config: RunnableConfig = {
             "configurable": {"thread_id": thread_id},
             "metadata": {
@@ -119,6 +129,7 @@ class AtlassianMCPClient:
         user_id: str | None = None,
         request_id: str | None = None,
     ):
+        """Stream agent execution events."""
         runnable_config: RunnableConfig = {
             "configurable": {"thread_id": thread_id},
             "metadata": {
@@ -139,6 +150,7 @@ mcp_lock = asyncio.Lock()
 
 
 async def get_mcp_client():
+    """Return a singleton initialized MCP client."""
     global mcp_client
     async with mcp_lock:
         if mcp_client is None or not mcp_client.initialized:

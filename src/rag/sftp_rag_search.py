@@ -1,3 +1,10 @@
+"""
+SFTP/S3 RAG search module.
+
+Provides semantic search over documents stored in S3-backed
+ChromaDB collections using Bedrock embeddings.
+"""
+
 import os
 from langchain_aws import BedrockEmbeddings
 from langchain_chroma import Chroma
@@ -18,6 +25,7 @@ class S3RagManager:
         )
 
     async def query(self, question, k=3, collection_name="s3_rag_collection"):
+        """Query the vector store for semantically similar document chunks.""" 
         vectorstore = Chroma(
             collection_name=collection_name,
             embedding_function=self.embeddings,

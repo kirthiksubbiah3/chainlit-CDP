@@ -1,6 +1,7 @@
+import sys
+
 import boto3
 import yaml
-import sys
 
 
 def get_aws_credentials(profile):
@@ -14,9 +15,9 @@ def get_aws_credentials(profile):
 
 
 def update_env_file(env_path, creds):
-    with open(env_path, "r") as f:
+    with open(env_path, "r", encoding="utf-8") as f:
         lines = f.readlines()
-    with open(env_path, "w") as f:
+    with open(env_path, "w", encoding="utf-8") as f:
         for line in lines:
             for key, value in creds.items():
                 if line.startswith(key + "="):
@@ -35,12 +36,12 @@ def recursive_update(data, creds):
 
 
 def update_yaml_file(yaml_path, creds):
-    with open(yaml_path, "r") as f:
+    with open(yaml_path, "r", encoding="utf-8") as f:
         data = yaml.safe_load(f)
 
     recursive_update(data, creds)
 
-    with open(yaml_path, "w") as f:
+    with open(yaml_path, "w", encoding="utf-8") as f:
         yaml.safe_dump(data, f)
 
 

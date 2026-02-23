@@ -1,7 +1,10 @@
+"""Atlassian-related LangChain tools for Jira, Confluence, and JSM."""
+
+from typing import Any, Dict
 import httpx
-from typing import Dict, Any
 from langchain_core.tools import tool
 from config import app_config
+
 
 ATLASSIAN_API_BASE = app_config.ATLASSIAN_API_BASE
 ATLASSIAN_ACCESS_KEY = app_config.ATLASSIAN_ACCESS_KEY
@@ -47,7 +50,7 @@ async def get_atlassian_org_users_or_accounts() -> Dict[str, Any]:
 
 @tool("get_atlassian_user_role_assignments")
 async def get_atlassian_user_role_assignments(
-    accountId: str,
+    account_id: str,
 ) -> Dict[str, Any]:
     """
     Fetch role assignments for a user in Atlassian Admin.
@@ -55,7 +58,7 @@ async def get_atlassian_user_role_assignments(
 
     url = (
         f"{ATLASSIAN_API_BASE}/admin/v2/orgs/{ATLASSIAN_ORG_ID}/"
-        f"directories/{ATLASSIAN_DIRECTORY_ID}/users/{accountId}/role-assignments"
+        f"directories/{ATLASSIAN_DIRECTORY_ID}/users/{account_id}/role-assignments"
     )
     headers = {
         "Accept": "application/json",

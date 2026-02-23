@@ -1,3 +1,5 @@
+"""LangChain tool to generate and display Mermaid diagrams as images."""
+
 import os
 import chainlit as cl
 import mermaid as md
