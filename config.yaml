@@ -14,8 +14,8 @@ chainlit_profiles:
   Anthropic:
     config:
       max_tokens: 2000
-      model: us.anthropic.claude-sonnet-4-5-20250929-v1:0
-      model_provider: bedrock_converse
+      model: claude-sonnet-4-6
+      model_provider: anthropic
       temperature: 0.0
     cost:
       input_token_cost: 0.0033
@@ -35,7 +35,7 @@ mcp:
   servers:
     atlassian:
       transport: streamable_http
-      url: https://mcpgw.observex.ustpace.com/atlassian/mcp
+      url: http://localhost:9000/mcp
 agents:
   atlassian:
     chainlit_command:
