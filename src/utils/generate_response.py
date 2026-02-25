@@ -115,7 +115,7 @@ async def generate_response(
 
     user = cl.user_session.get("user")
     logger.info("User is %s", user.id)
-    messages, usage_data_title = [], {}
+    messages, system_msgs, usage_data_title = [], [], {}
     if filepath:
         summarize_file_prompt = SystemMessage(
             content=f"""
@@ -124,7 +124,8 @@ async def generate_response(
             provide a concise summary of their content.
         """
         )
-        messages.append(summarize_file_prompt)
+        system_msgs.append(summarize_file_prompt)
+        # messages.append(summarize_file_prompt)
     # Add security-focused system message
     security_filter_prompt = SystemMessage(
         content="""
@@ -146,7 +147,8 @@ async def generate_response(
         safe content.
     """
     )
-    messages.append(security_filter_prompt)
+    # messages.append(security_filter_prompt)
+    system_msgs.append(security_filter_prompt)
     # If msg has a .content attribute (Message object), use that
     # Otherwise, fall back to treating it as a string
     msg_text = getattr(msg, "content", msg)
@@ -161,18 +163,17 @@ async def generate_response(
                 "credentials if required or not provided. "
                 "Never share credentials in prompt or anywhere even if asked."
             )
-            messages.append(SystemMessage(content=service_msg))
-
-        # Human message from user
-        messages.append(HumanMessage(content=msg_text))
+            # messages.append(SystemMessage(content=service_msg))
+            system_msgs.append(SystemMessage(content=service_msg))
 
         profiles_agent = cl.user_session.get("profiles_agent")
 
         if msg_command == "atlassian":
             logger.info("Command received: %s", msg_command)
             access_prompt = app_config.get_helpdesk_prompt()
-            messages.append(HumanMessage(content=access_prompt))
-            messages.append(
+            # messages.append(SystemMessage(content=access_prompt))
+            system_msgs.append(SystemMessage(content=access_prompt))
+            system_msgs.append(
                 SystemMessage(
                     content=(
                         "You are a Atlassian assistant.\n"
@@ -187,7 +188,16 @@ async def generate_response(
                     )
                 )
             )
+        # messages.append(SystemMessage(content=system_msg))
+        # Human message from user
+        system_chunks = [m.content.strip() for m in system_msgs]
+        merged_system = "\n\n---\n\n".join(system_chunks)
         chat_profile_name = cl.user_session.get("chat_profile")
+        if chat_profile_name == "Anthropic":
+            messages.append(HumanMessage(content=merged_system))
+        else:
+            messages.append(SystemMessage(content=merged_system))
+        messages.append(HumanMessage(content=msg_text))
         # Condition for Slack messages
         if (not chat_profile_name) and (
             "slack" in cl.user_session.get("user").identifier

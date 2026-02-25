@@ -22,6 +22,8 @@ from config import app_config
 from utils import get_logger
 from utils.text import get_collection_name
 
+from chainlit.context import get_context, ChainlitContextException
+
 logger = get_logger(__name__)
 
 client_type = app_config.client_type
@@ -70,6 +72,17 @@ class ChromaDataLayer:
             raise ValueError(f"Unsupported CHROMADB_CLIENT_TYPE: {client_type}")
 
 
+def _try_get_user_identifier() -> Optional[str]:
+    try:
+        ctx = get_context()  # raises ChainlitContextException if not ready
+        if getattr(ctx, "session", None) and getattr(ctx.session, "user", None):
+            return ctx.session.user.identifier
+    except ChainlitContextException:
+        pass
+    return None
+
+
+
 class CustomDataLayer(ChromaDataLayer, cl_data.BaseDataLayer):
     """Class for custom data layer"""
 
@@ -77,10 +90,20 @@ class CustomDataLayer(ChromaDataLayer, cl_data.BaseDataLayer):
         super().__init__()
         self.collection = None
 
-    def ensure_collection(self, identifier=None):
-        """Ensure a ChromaDB collection exists for the given user identifier."""
+    def ensure_collection(self, identifier: Optional[str] = None):
+        """Ensure a ChromaDB collection exists for a given user identifier or a global fallback."""
+        # 1) Idempotent: don’t touch anything if already set
+        if self.collection is not None:
+            return
+
+        # 2) If caller didn't pass identifier, try to read it from context (only if available)
         if not identifier:
-            identifier = cl.user_session.get("user").identifier
+            identifier = _try_get_user_identifier()
+
+        # 3) Fallback when there is still no context/user (e.g., during socket connect)
+        if not identifier:
+            identifier = "public"  # or e.g. get_collection_name(suffix="app"), see below
+
         self.collection = self.chroma_client.get_or_create_collection(
             name=get_collection_name(suffix=identifier)
         )
@@ -310,3 +333,47 @@ class CustomDataLayer(ChromaDataLayer, cl_data.BaseDataLayer):
     async def build_debug_url(self) -> str:
         """Return a debug URL if supported (not implemented)."""
         return ""
+
+    async def close(self) -> None:
+        """
+        Close/release any resources. Chroma's client doesn't strictly require a close,
+        so we no-op safely here.
+        """
+        try:
+            # If your Chroma client exposes cleanup/persist hooks, call them here.
+            # e.g., self.chroma_client.persist()
+            pass
+        finally:
+            self.collection = None
+
+    async def get_favorite_steps(self, user_id: str) -> List["StepDict"]:
+        """
+        Return the user's favorite steps. Chainlit expects steps whose metadata contains
+        {"favorite": True} for the given user.
+        """
+        self.ensure_collection(identifier=user_id)
+
+        # Filter by the user's id and the 'favorite' flag set by the UI via update_step()
+        results = self.collection.get(
+            where={"user_id": user_id, "favorite": True})
+        if not results or not results.get("metadatas"):
+            return []
+
+        steps: List["StepDict"] = []
+        for doc, meta in zip(results["documents"], results["metadatas"]):
+            # Build the minimal StepDict Chainlit needs
+            steps.append({
+                "id": meta.get("step_id"),
+                "name": meta.get("name", "favorite"),
+                "type": meta.get("type", "assistant_message"),
+                "threadId": meta.get("thread_id"),
+                "input": "",  # not stored in your current scheme
+                "output": doc or "",
+                "createdAt": meta.get("createdAt"),
+                "metadata": meta or {},
+            })
+
+        # Sort newest first (optional, but matches typical UI expectations)
+        steps.sort(key=lambda s: s.get("createdAt", ""), reverse=True)
+        return steps
+

@@ -10,12 +10,12 @@ import chainlit as cl
 from PyPDF2 import PdfReader
 from langchain_aws import BedrockEmbeddings
 from langchain_chroma import Chroma
-from langchain.docstore.document import Document
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_core.documents import Document
+from langchain_text_splitters import RecursiveCharacterTextSplitte
 
 from data_layer import ChromaDataLayer
 from utils import get_logger
-from utils.text import get_collection_namer
+from utils.text import get_collection_name
 
 logger = get_logger(__name__)
 
