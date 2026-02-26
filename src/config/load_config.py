@@ -64,7 +64,6 @@ class AppConfig:
         self.llm_agent_config = config["llm"]["agent"]
         self.mcp_servers_config = config["mcp"]["servers"]
         self.mcp_service_config = config.get("mcp", {}).get("url_secrets", {})
-        agents_config = config["agents"]
         self.mcp_servers_config_to_pass = {
             srv: {k: v for k, v in cfg.items() if k != "chainlit_command"}
             for srv, cfg in self.mcp_servers_config.items()
@@ -75,7 +74,7 @@ class AppConfig:
         )
 
         self.commands = []
-        configs = [self.mcp_servers_config, agents_config]
+        configs = [self.mcp_servers_config]
 
         for conf in configs:
             for conf_key in conf.keys():

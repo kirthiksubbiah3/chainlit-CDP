@@ -154,27 +154,24 @@ async def generate_response(
             system_msgs.append(SystemMessage(content=service_msg))
 
         profiles_agent = cl.user_session.get("profiles_agent")
-
-        if msg_command == "atlassian":
-            logger.info("Command received: %s", msg_command)
-            access_prompt = app_config.get_helpdesk_prompt()
-            # messages.append(SystemMessage(content=access_prompt))
-            system_msgs.append(SystemMessage(content=access_prompt))
-            system_msgs.append(
-                SystemMessage(
-                    content=(
-                        "You are a Atlassian assistant.\n"
-                        "Default behavior:\n"
-                        "- Respond ONLY with a concise natural-language summary.\n"
-                        "- Do NOT output raw JSON, objects, arrays, or field names.\n"
-                        "- Do NOT include explanations, steps, or metadata.\n"
-                        "- Use bullet points only if necessary.\n\n"
-                        "Only provide detailed or step-by-step information"
-                        "IF the user explicitly asks "
-                        "for details, explanation, or raw data."
-                    )
+        access_prompt = app_config.get_helpdesk_prompt()
+        # messages.append(SystemMessage(content=access_prompt))
+        system_msgs.append(SystemMessage(content=access_prompt))
+        system_msgs.append(
+            SystemMessage(
+                content=(
+                    "You are a Atlassian assistant.\n"
+                    "Default behavior:\n"
+                    "- Respond ONLY with a concise natural-language summary.\n"
+                    "- Do NOT output raw JSON, objects, arrays, or field names.\n"
+                    "- Do NOT include explanations, steps, or metadata.\n"
+                    "- Use bullet points only if necessary.\n\n"
+                    "Only provide detailed or step-by-step information"
+                    "IF the user explicitly asks "
+                    "for details, explanation, or raw data."
                 )
             )
+        )
         # messages.append(SystemMessage(content=system_msg))
         # Human message from user
         system_chunks = [m.content.strip() for m in system_msgs]
