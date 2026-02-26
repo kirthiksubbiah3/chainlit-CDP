@@ -41,9 +41,6 @@ async def on_message(msg: cl.Message):
         logger.info(await fetch_slack_message_history(limit=10))
 
     rag_filenames = cl.user_session.get("rag_filenames", [])
-    cl.user_session.set("x_axis", None)
-    cl.user_session.set("y_axis", None)
-    cl.user_session.set("operation", None)
     filepath = None
     for element in msg.elements:
         if isinstance(element, cl.element.File):

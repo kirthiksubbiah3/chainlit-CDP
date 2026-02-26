@@ -145,10 +145,6 @@ async def invoke_agent(
     file_path = cl.user_session.get("file_path")
     file_name = cl.user_session.get("file_name")
 
-    x_axis = cl.user_session.get("x_axis")
-    y_axis = cl.user_session.get("y_axis")
-    operation = cl.user_session.get("operation")
-
     if file_path and file_name:
         await cl.Message(
             content="📄 Generated report is ready to download:",
@@ -159,16 +155,6 @@ async def invoke_agent(
                     display="inline",
                 )
             ],
-        ).send()
-
-    if x_axis and y_axis:
-        logger.info("x_axis extracted:", x_axis )
-        fig, ax = plt.subplots(figsize=(12, 6))
-        ax.plot(x_axis, y_axis, marker="o", linestyle="-")
-        elements = [cl.Pyplot(name="plot", figure=fig, display="inline")]
-        await cl.Message(
-            content=f"Simple graph with respect to {operation}",
-            elements=elements,
         ).send()
 
     return stream_tokens
