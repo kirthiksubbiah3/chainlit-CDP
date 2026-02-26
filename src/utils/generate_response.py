@@ -200,7 +200,7 @@ async def generate_response(
                 (
                     thread_title,
                     usage_data_title,
-                ) = await generate_chat_title_from_input(llm, msg)
+                ) = await generate_chat_title_from_input(llm, msg_text)
                 cl.user_session.set("thread_title", thread_title)
 
         if "slack" not in cl.user_session.get("user").identifier:
