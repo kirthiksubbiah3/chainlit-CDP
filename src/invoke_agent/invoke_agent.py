@@ -10,7 +10,6 @@ from typing import List, Dict
 import chainlit as cl
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 from langchain_core.runnables.config import RunnableConfig
-import matplotlib.pyplot as plt
 
 from config import app_config
 from utils import get_logger

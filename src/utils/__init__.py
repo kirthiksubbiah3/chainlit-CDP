@@ -26,14 +26,6 @@ from .generate_chat_title_from_input import generate_chat_title_from_input
 from .profile_loader import load_chat_profiles
 from .serializer import _custom_msgpack_default
 from .text import CleanXMLTagParser, get_collection_name
-from .git import (
-    clone_repo,
-    commit_and_push_code,
-    create_repo_from_boilerplate,
-    get_git_details_from_input,
-    BOILER_PLATES,
-    TEMPL_WORKSPACE,
-)
 from .generate_response import generate_response
 
 __all__ = [
@@ -54,7 +46,6 @@ __all__ = [
     "log_usage_details",
     "log_and_show_usage_details",
     # File functions
-    "generate_file_and_send",
     # Generate chat title from input
     "generate_chat_title_from_input",
     # Profile loader
@@ -64,14 +55,6 @@ __all__ = [
     # text
     "CleanXMLTagParser",
     "get_collection_name",
-    # git
-    "clone_repo",
-    "commit_and_push_code",
-    "create_repo_from_boilerplate",
-    "get_git_details_from_input",
-    "BOILER_PLATES",
-    "TEMPL_WORKSPACE",
-    "GitCommandError",
     # response to message
     "generate_response",
 ]
