@@ -56,12 +56,7 @@ class AppConfig:
         self.ALLOWED_ATLASSIAN_SCOPES = os.getenv("ALLOWED_ATLASSIAN_SCOPES", "")
         logger.info("Loading config")
         config = load_yaml_file("config.yaml")
-        logger.info("Loading secrets")
-        try:
-            secrets = load_yaml_file("secrets.yaml")
-        except FileNotFoundError:
-            logger.warning("secrets.yaml not found, proceeding without it")
-            secrets = {}
+        secrets = {}
         # Merge secrets into config
         self.config = merge_dict(config, secrets)
         self.profiles = config["chainlit_profiles"]
