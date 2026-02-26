@@ -42,7 +42,6 @@ class AppConfig:
         self.ATLASSIAN_BASE_URL = os.getenv("ATLASSIAN_BASE_URL")
         self.ATLASSIAN_USERNAME = os.getenv("ATLASSIAN_USERNAME")
         self.ATLASSIAN_API_TOKEN = os.getenv("ATLASSIAN_API_TOKEN")
-        self.AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
 
         self.ANTHROPIC_MODEL = os.getenv("ANTHROPIC_MODEL")
         self.ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")

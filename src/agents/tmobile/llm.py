@@ -12,7 +12,6 @@ from config import app_config
 
 ANTHROPIC_MODEL = app_config.ANTHROPIC_MODEL
 BEDROCK_MODEL_ID = app_config.BEDROCK_MODEL_ID
-AWS_REGION = app_config.AWS_REGION
 ANTHROPIC_API_KEY = app_config.ANTHROPIC_API_KEY
 
 
@@ -25,13 +24,6 @@ class LLMRouter:
         """
         Initialize both providers using LangChain unified loader
         """
-
-        # ---- Bedrock Claude ----
-        self.bedrock_llm = init_chat_model(
-            model=BEDROCK_MODEL_ID,
-            model_provider="bedrock",
-            region_name=AWS_REGION,
-        )
 
         # ---- Anthropic Claude API ----
         self.anthropic_llm = init_chat_model(
@@ -52,18 +44,10 @@ class LLMRouter:
         response = self.anthropic_llm.invoke(message)
         return response.content
 
-    # ---------- Router ----------
-    def chat(self, message: str, provider="bedrock") -> str:
-        """Route a message to the selected LLM provider."""
-        if provider == "anthropic":
-            return self.anthropic_chat(message)
-        return self.bedrock_chat(message)
 
-    def get_llm(self, provider="bedrock"):
+    def get_llm(self):
         """Return the raw LangChain LLM instance."""
-        if provider == "anthropic":
-            return self.anthropic_llm
-        return self.bedrock_llm
+        return self.anthropic_llm
 
 
 llm_router = LLMRouter()

@@ -7,9 +7,7 @@ import chainlit as cl
 from langgraph.checkpoint.serde import jsonplus
 
 from config import app_config
-from rag.rag_file_manager import RagFileManager
 
-# from rag.update_sidebar import update_sidebar
 from utils import (
     get_logger,
 )
@@ -40,7 +38,6 @@ async def on_message(msg: cl.Message):
     if fetch_slack_message_history:
         logger.info(await fetch_slack_message_history(limit=10))
 
-    rag_filenames = cl.user_session.get("rag_filenames", [])
     filepath = None
     for element in msg.elements:
         if isinstance(element, cl.element.File):
@@ -51,11 +48,6 @@ async def on_message(msg: cl.Message):
                 filename,
                 filepath,
             )
-            rag_manager = RagFileManager()
-            await rag_manager.upload_and_store_file(filepath, filename)
-            rag_filenames.append(filename)
-
-    # await update_sidebar(rag_filenames)
 
     user = cl.user_session.get("user")
     logger.info("User is %s", user.id)

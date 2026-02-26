@@ -11,9 +11,6 @@ from langgraph.prebuilt import create_react_agent
 from config import app_config
 from llm import get_llm
 from mcp_tools import mcp_tools
-from rag.rag_search import rag_search
-from rag.sftp_rag_tool import readme_rag_search
-from rag.confluence_rag_tool import confluence_rag_search
 from tools import (
     get_atlassian_org_users_or_accounts,
     get_atlassian_user_role_assignments,
@@ -45,11 +42,8 @@ class DefaultAgents:
             self.tools = await mcp_tools.get_tools()
             self.tools += [
                 generate_docx,
-                rag_search,
                 read_attachment,
                 generate_mermaid_diagram,
-                readme_rag_search,
-                confluence_rag_search,
                 get_atlassian_org_users_or_accounts,
                 get_atlassian_user_role_assignments,
                 create_jira_project,

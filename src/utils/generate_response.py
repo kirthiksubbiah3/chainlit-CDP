@@ -22,7 +22,7 @@ jsonplus._msgpack_default = _custom_msgpack_default
 # Load environment variables
 load_dotenv()
 logger = get_logger(__name__)
-invoke_agent = get_llm = RagFileManager = update_sidebar = default_agent = (
+invoke_agent = get_llm = default_agent = (
     CustomDataLayer
 ) = app_config = None
 
@@ -31,28 +31,18 @@ def _setup_imports():  # lazy import to avoid circular import
     global \
         invoke_agent, \
         get_llm, \
-        RagFileManager, \
-        update_sidebar, \
         default_agent, \
         CustomDataLayer, \
         app_config
     if (
         invoke_agent is None
         or get_llm is None
-        or RagFileManager is None
-        or update_sidebar is None
         or default_agent is None
         or CustomDataLayer is None
         or app_config is None
     ):
         from invoke_agent import invoke_agent as imported_invoke_agent
         from llm import get_llm as imported_get_llm
-        from rag.rag_file_manager import (
-            RagFileManager as imported_RagFileManager,
-        )
-        from rag.update_sidebar import (
-            update_sidebar as imported_update_sidebar,
-        )
         from agents.default_agent import (
             default_agent as imported_default_agent,
         )
@@ -61,8 +51,6 @@ def _setup_imports():  # lazy import to avoid circular import
 
         invoke_agent = imported_invoke_agent
         get_llm = imported_get_llm
-        RagFileManager = imported_RagFileManager
-        update_sidebar = imported_update_sidebar
         default_agent = imported_default_agent
         CustomDataLayer = imported_CustomDataLayer
         app_config = imported_app_config

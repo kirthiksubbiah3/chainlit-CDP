@@ -7,9 +7,7 @@ import chainlit as cl
 from langgraph.checkpoint.memory import MemorySaver
 from agents import default_agents
 from config import app_config
-from rag.rag_file_manager import RagFileManager
 
-# from rag.update_sidebar import update_sidebar
 from utils import get_username, get_logger, log_and_show_usage_details
 
 logger = get_logger(__name__)
@@ -26,12 +24,6 @@ async def on_chat_resume():
     """Hook for chat resume"""
     logger.debug("Chat session resumed for thread_id: %s", cl.context.session.thread_id)
     await cl.context.emitter.set_commands(commands)
-
-    rag_manager = RagFileManager()
-    rag_filenames = await rag_manager.get_all_documents()
-    logger.info("%d RAG filenames found", len(rag_filenames))
-
-    # await update_sidebar(rag_filenames)
 
 
 @cl.on_chat_start
@@ -50,10 +42,6 @@ async def on_chat_start():
 
     username = get_username(user)
     logger.info("user display name is %s", username)
-
-    rag_manager = RagFileManager()
-    rag_filenames = await rag_manager.get_all_documents()
-    logger.info("%d RAG filenames found", len(rag_filenames))
 
     # Setting graph state as empty
     cl.user_session.set("graph_state", {})
