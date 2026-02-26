@@ -19,9 +19,6 @@ from tools import (
     get_jsm_project_portals,
     get_jsm_request_types,
     get_jsm_forms,
-    generate_docx,
-    read_attachment,
-    generate_mermaid_diagram,
 )
 from utils import get_logger
 
@@ -41,9 +38,6 @@ class DefaultAgents:
         if not self.tools:
             self.tools = await mcp_tools.get_tools()
             self.tools += [
-                generate_docx,
-                read_attachment,
-                generate_mermaid_diagram,
                 get_atlassian_org_users_or_accounts,
                 get_atlassian_user_role_assignments,
                 create_jira_project,
