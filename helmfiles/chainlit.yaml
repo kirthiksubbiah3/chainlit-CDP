@@ -1,7 +1,0 @@
-releases:
-  - name: chainlit
-    chart: ../helmchart
-    namespace: sentinel-mind
-    values:
-      - ../helmvalues/chainlit.yaml
-    installed: true

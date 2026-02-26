@@ -1,7 +1,0 @@
-releases:
-  - name: mcp-grafana
-    chart: ../helmchart
-    namespace: mcp-servers
-    values:
-      - ../helmvalues/mcp-grafana.yaml
-    installed: true

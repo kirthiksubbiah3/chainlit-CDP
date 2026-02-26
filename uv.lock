@@ -4066,7 +4066,7 @@ wheels = [
 ]
 
 [[package]]
-name = "sflabs-ai-assistant"
+name = "ai-observe-assistant"
 version = "1.24.0"
 source = { virtual = "." }
 dependencies = [

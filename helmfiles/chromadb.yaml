@@ -1,7 +1,0 @@
-releases:
-  - name: chromadb
-    chart: ../helmchart
-    namespace: mcp-servers
-    values:
-      - ../helmvalues/chromadb.yaml
-    installed: true

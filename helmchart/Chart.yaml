@@ -1,6 +1,0 @@
-apiVersion: v2
-name: unified-app-chart
-description: A consolidated Helm chart for deploying multiple applications
-version: 0.1.0
-appVersion: "1.0.0"
-

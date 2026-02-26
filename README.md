@@ -1,4 +1,4 @@
-# SFLabs AI Assistant
+# AI Observe Assistant
 
 This is an AI assistant with agents and LLM built with
 

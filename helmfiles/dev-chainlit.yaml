@@ -1,7 +1,0 @@
-releases:
-  - name: dev-chainlit
-    chart: ../helmchart
-    namespace: dev-sentinel-mind
-    values:
-      - ../helmvalues/dev-chainlit.yaml
-    installed: true

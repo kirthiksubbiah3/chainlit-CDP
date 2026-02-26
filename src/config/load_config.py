@@ -30,25 +30,10 @@ class AppConfig:
         self.sentinelmind_base_url = os.getenv(
             "SENTINELMIND_API_BASE_URL", "http://localhost:8000"
         )
-        self.sentinelmind_api_agent = os.getenv(
-            "SENTINELMIND_API_AGENT", "default-agent"
-        )
 
         self.local_username = os.getenv("LOCAL_USERNAME")
         self.local_password = os.getenv("LOCAL_PASSWORD")
         self.oauth_enabled = os.getenv("OAUTH_ENABLED", "false").lower() == "true"
-        self.cluster_name = os.getenv("CLUSTER_NAME", "sftp-eks")
-        self.loki_url = os.getenv("LOKI_URL")
-        self.loki_username = os.getenv("LOKI_USERNAME")
-        self.loki_password = os.getenv("LOKI_PASSWORD")
-
-        self.gcp_credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
-
-        self.confluence_base_url = os.getenv(
-            "CONFLUENCE_BASE_URL"
-        )
-        self.confluence_username = os.getenv("CONFLUENCE_USERNAME", "")
-        self.confluence_api_token = os.getenv("CONFLUENCE_API_TOKEN", "")
 
         # t-mobile specific variables
         self.ATLASSIAN_API_BASE = os.getenv(
@@ -109,7 +94,6 @@ class AppConfig:
                     button_value = True
                 elif conf_key in [
                     "rag",
-                    "sflabs-docs",
                     "confluence-doc-search",
                     "atlassian"
                 ]:
