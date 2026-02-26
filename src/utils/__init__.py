@@ -1,5 +1,5 @@
 """
-Utils package for Sentinel-Mind
+Utils package
 
 This package contains utility functions organized into logical modules:
 - config: Configuration and YAML file handling

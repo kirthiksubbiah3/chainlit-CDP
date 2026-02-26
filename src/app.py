@@ -1,5 +1,5 @@
 """
-This is the main entry point for the Sentinel Mind application.
+This is the main entry point for the application.
 It imports the hooks module and the utils module
 """
 
@@ -15,7 +15,7 @@ from agents.tmobile.teams_bot import process_teams_message
 
 logger = get_logger(__name__)
 
-logger.info("Starting Sentinel Mind")
+logger.info("Starting the app...")
 logger.info("Imported module: %s", hooks.__name__)
 logger.info("Loaded config from %s", app_config)
 config = cl.config.load_config()
