@@ -11,7 +11,7 @@ from PyPDF2 import PdfReader
 from langchain_aws import BedrockEmbeddings
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
-from langchain_text_splitters import RecursiveCharacterTextSplitte
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from data_layer import ChromaDataLayer
 from utils import get_logger
