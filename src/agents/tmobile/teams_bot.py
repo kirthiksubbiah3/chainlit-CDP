@@ -41,35 +41,27 @@ async def run_agent_and_get_answer(
     thread_id: str,
     user_id: str,
 ):
-    """
-    Unified input for Atlassian MCP agent.
-    Works for Slack, Teams
-    """
-    #
     logger.info(
         "Running agent for thread_id:%s user_id:%s",
         thread_id,
         user_id,
     )
+
     if isinstance(messages, str):
         messages = [HumanMessage(content=messages)]
 
-    # --- call MCP agent ---
     try:
         mcp_client = await get_mcp_client()
         combined_content = f"""
-        {helpdesk_prompt_text}
-
-        User Question:
-        {messages}
-        """
+            {helpdesk_prompt_text}
+            User Question: {messages}
+            """
         final_messages = [HumanMessage(content=combined_content)]
-        # run MCP
-        _agent = mcp_client.agent
-        #
         logger.info([type(m).__name__ for m in final_messages])
-        #
+
+        _agent = mcp_client.agent
         final_answer = ""
+
         async for event in _agent.astream(
             {"messages": final_messages},
             {"configurable": {"thread_id": thread_id}},
@@ -78,18 +70,24 @@ async def run_agent_and_get_answer(
             for node_data in event.values():
                 if not isinstance(node_data, dict):
                     continue
-
                 msgs = node_data.get("messages", [])
-
                 for msg in msgs:
-                    if isinstance(msg, AIMessage):
-                        content = getattr(msg, "content", "")
-                        if content:
-                            final_answer += content
+                    if not isinstance(msg, AIMessage):
+                        continue
+                    content = getattr(msg, "content", "")
+                    if isinstance(content, str):
+                        final_answer += content
+                    elif isinstance(content, list):
+                        for block in content:
+                            if isinstance(block, dict) and block.get("type") == "text":
+                                final_answer += block.get("text", "")
+                            elif isinstance(block, str):
+                                final_answer += block
 
-        return final_answer.strip()
+        return final_answer.strip() or "⚠️ No response from agent."
+
     except Exception as e:
-        logger.error("Exception:", e)
+        logger.error("Exception: %s", e) 
         return "⚠️ Something went wrong while running the agent."
 
 
