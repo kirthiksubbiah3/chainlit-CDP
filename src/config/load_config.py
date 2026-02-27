@@ -46,8 +46,6 @@ class AppConfig:
         self.ANTHROPIC_MODEL = os.getenv("ANTHROPIC_MODEL")
         self.ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 
-        self.BEDROCK_MODEL_ID = os.getenv("BEDROCK_MODEL_ID")
-
         self.MICROSOFT_APP_ID = os.getenv("MICROSOFT_APP_ID")
         self.MICROSOFT_APP_PASSWORD = os.getenv("MICROSOFT_APP_PASSWORD")
         self.MICROSOFT_APP_TENANT_ID = os.getenv("MICROSOFT_APP_TENANT_ID")
@@ -60,9 +58,13 @@ class AppConfig:
         # Merge secrets into config
         self.config = merge_dict(config, secrets)
         self.profiles = config["chainlit_profiles"]
+        if "Anthropic" in self.profiles:
+            self.profiles["Anthropic"]["config"]["model"] = self.ANTHROPIC_MODEL
         self.starters = config["chainlit_starters"]
         self.llm_agent_config = config["llm"]["agent"]
         self.mcp_servers_config = config["mcp"]["servers"]
+        if "atlassian" in self.mcp_servers_config:
+            self.mcp_servers_config["atlassian"]["url"] = os.getenv("ATLASSIAN_MCP_URL")
         self.mcp_service_config = config.get("mcp", {}).get("url_secrets", {})
         self.mcp_servers_config_to_pass = {
             srv: {k: v for k, v in cfg.items() if k != "chainlit_command"}
