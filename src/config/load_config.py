@@ -52,6 +52,7 @@ class AppConfig:
         self.JIRA_ISSUE_TYPE = os.getenv("JIRA_ISSUE_TYPE")
         self.JIRA_PROJKEY = os.getenv("JIRA_PROJKEY")
         self.ALLOWED_ATLASSIAN_SCOPES = os.getenv("ALLOWED_ATLASSIAN_SCOPES", "")
+        self.HELPDESK_CONFLUENCE_PAGE_ID = os.getenv("HELPDESK_CONFLUENCE_PAGE_ID", "")
         logger.info("Loading config")
         config = load_yaml_file("config.yaml")
         secrets = {}
@@ -127,13 +128,11 @@ class AppConfig:
           follow steps one by one in order(go to next step only if previous one is completed):
             1.Verify whether the user has access to the relevant Atlassian product
               (e.g., Confluence or Jira).
-            2. If user has all the necessary access and the name of the user is present as active
-            in the organization's user list still not able to access and if the is page is accessible,
-            then provide some troubleshooting steps like clear browser cache,wait for 25 mins,etc.
-            if still wants to raise, create fetch the relevant
-            form type and its form fields,collect the required details using natural language,
-            create a Jira issue following issue creation rule mentioned later in the prompt.
-            After creation, provide the created issue ID and clickable issue link to the user.
+            2. If user has all the necessary access and the name of the 
+            user is present as active in the organization's user list still 
+            not able to access and if the is page is accessible,
+            then provide some troubleshooting steps provided in confluence 
+            page with id {self.HELPDESK_CONFLUENCE_PAGE_ID} to the user.
             OR
             3. If access is missing or the page is not accessible,then inform the user for issue
             creation.
