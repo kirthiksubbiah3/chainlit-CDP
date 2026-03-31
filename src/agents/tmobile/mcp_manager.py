@@ -1,27 +1,27 @@
 """
 MCP configuration manager.
-
+ 
 Loads MCP server configuration from config.yaml and exposes
 enabled MCP server definitions for use by clients.
 """
-
+ 
 import os
 import yaml
-
-
+ 
+ 
 class MCPManager:
     """Manages MCP server configuration and environment overrides."""
-
+ 
     def __init__(self, config_path="config.yaml"):
         """ Since we run from root path, construct path relative to project root
             Get the project root (3 levels up from src/agents/tmobile/)  """
-
+ 
         project_root = os.path.join(os.path.dirname(__file__), "..", "..", "..")
         project_root = os.path.abspath(project_root)
-
+ 
         # Primary config path from project root - only use main config.yaml
         main_config_path = os.path.join(project_root, config_path)
-
+ 
         config_content = None
         try:
             with open(main_config_path, encoding="utf-8") as f:
@@ -33,7 +33,7 @@ class MCPManager:
                     config_content = yaml.safe_load(f)
             except FileNotFoundError:
                 pass
-
+ 
         if config_content is None:
             # Fallback to empty config
             self.config = {"mcp": {"servers": {}}}
@@ -49,17 +49,17 @@ class MCPManager:
                     and "atlassian" in self.config["mcp"]["servers"]
                 ):
                     self.config["mcp"]["servers"]["atlassian"]["url"] = atlassian_url
-
+ 
     def get_enabled_mcps(self):
         """ Get all servers from mcp.servers structure """
         all_servers = self.config.get("mcp", {}).get("servers", {})
-
+ 
         # Return only the Atlassian MCP server
         atlassian_config = {}
         if "atlassian" in all_servers:
             atlassian_config["atlassian"] = all_servers["atlassian"]
-
+ 
         return atlassian_config
-
-
+ 
+ 
 mcp = MCPManager()

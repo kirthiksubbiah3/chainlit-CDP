@@ -2,19 +2,18 @@
 This is the main entry point for the application.
 It imports the hooks module and the utils module
 """
-
+ 
 from fastapi import Request
-
+ 
 from chainlit.server import app
 import chainlit as cl
-
+ 
 from config import app_config
 import hooks
 from utils import get_logger
-from agents.tmobile.teams_bot import process_teams_message
-
+ 
 logger = get_logger(__name__)
-
+ 
 logger.info("Starting the app...")
 logger.info("Imported module: %s", hooks.__name__)
 logger.info("Loaded config from %s", app_config)
@@ -23,13 +22,3 @@ if not hasattr(config.features, "audio") or config.features.audio is None:
     config.features.audio = type("AudioConfig", (), {})()
 config.features.audio.enabled = True
 config.features.audio.sample_rate = 24000
-
-
-@app.post("/api/messages")
-async def teams_messages(request: Request):
-    """
-    Handle incoming Microsoft Teams messages and route them
-    to the Teams bot processing pipeline.
-    """
-    response = await process_teams_message(request)
-    return response
