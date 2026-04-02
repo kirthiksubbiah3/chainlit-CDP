@@ -131,8 +131,15 @@ class AppConfig:
             2. If user has all the necessary access and the name of the 
             user is present as active in the organization's user list still 
             not able to access and if the is page is accessible,
-            then provide some troubleshooting steps provided in confluence 
-            page with id {self.HELPDESK_CONFLUENCE_PAGE_ID} to the user.
+            - You MUST call the `rag_search` tool.
+            - ALWAYS pass:
+                   query = get troubleshooting steps for access issue with
+                   page_id = {self.HELPDESK_CONFLUENCE_PAGE_ID}
+            
+            - After calling the knowledge base search, present the retrieved
+             content verbatim as fully without missing any points and without 
+             mixing in external or generic knowledge. 
+             Do NOT supplement with information not present in the retrieved content.
             OR
             3. If access is missing or the page is not accessible,then inform the user for issue
             creation.

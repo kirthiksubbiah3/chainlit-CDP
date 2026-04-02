@@ -15,6 +15,7 @@ from .atlassian_tools import (
     get_jsm_forms,
 )
 
+from .rag_tool import rag_search
 __all__ = [
     "get_atlassian_org_users_or_accounts",
     "get_atlassian_user_role_assignments",
@@ -23,4 +24,5 @@ __all__ = [
     "get_jsm_project_portals",
     "get_jsm_request_types",
     "get_jsm_forms",
+    "rag_search"
 ]
