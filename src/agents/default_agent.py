@@ -19,6 +19,7 @@ from tools import (
     get_jsm_project_portals,
     get_jsm_request_types,
     get_jsm_forms,
+    rag_search,
 )
 from utils import get_logger
 
@@ -45,6 +46,7 @@ class DefaultAgents:
                 get_jsm_project_portals,
                 get_jsm_request_types,
                 get_jsm_forms,
+                rag_search,
             ]
             logger.info("Loaded tools: %s", [tool.name for tool in self.tools])
 

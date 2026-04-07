@@ -155,7 +155,7 @@ async def generate_response(
  
         profiles_agent = cl.user_session.get("profiles_agent")
         access_prompt = app_config.get_helpdesk_prompt()
-        # messages.append(SystemMessage(content=access_prompt))
+
         system_msgs.append(SystemMessage(content=access_prompt))
         system_msgs.append(
             SystemMessage(
