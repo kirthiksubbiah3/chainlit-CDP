@@ -24,5 +24,16 @@ __all__ = [
     "get_jsm_project_portals",
     "get_jsm_request_types",
     "get_jsm_forms",
-    "rag_search"
+    "rag_search",
+    "get_gitlab_projects",
+    "get_gitlab_pipelines",
+    "get_gitlab_jobs",
+    "get_gitlab_job_logs",
 ]
+
+from .gitlab_tools import (
+    get_gitlab_projects,
+    get_gitlab_pipelines,
+    get_gitlab_jobs,
+    get_gitlab_job_logs,
+)

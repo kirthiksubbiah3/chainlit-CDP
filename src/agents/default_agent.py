@@ -20,6 +20,10 @@ from tools import (
     get_jsm_request_types,
     get_jsm_forms,
     rag_search,
+    get_gitlab_projects,
+    get_gitlab_pipelines,
+    get_gitlab_jobs,
+    get_gitlab_job_logs,
 )
 from utils import get_logger
 
@@ -47,6 +51,10 @@ class DefaultAgents:
                 get_jsm_request_types,
                 get_jsm_forms,
                 rag_search,
+                get_gitlab_projects,
+                get_gitlab_pipelines,
+                get_gitlab_jobs,
+                get_gitlab_job_logs,
             ]
             logger.info("Loaded tools: %s", [tool.name for tool in self.tools])
 

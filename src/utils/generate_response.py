@@ -160,7 +160,7 @@ async def generate_response(
         system_msgs.append(
             SystemMessage(
                 content=(
-                    "You are a Atlassian assistant.\n"
+                    "You are an Atlassian and GitLab assistant.\n"
                     "Default behavior:\n"
                     "- Respond ONLY with a concise natural-language summary.\n"
                     "- Do NOT output raw JSON, objects, arrays, or field names.\n"

@@ -49,10 +49,18 @@ class AppConfig:
         self.MICROSOFT_APP_ID = os.getenv("MICROSOFT_APP_ID")
         self.MICROSOFT_APP_PASSWORD = os.getenv("MICROSOFT_APP_PASSWORD")
         self.MICROSOFT_APP_TENANT_ID = os.getenv("MICROSOFT_APP_TENANT_ID")
-        self.JIRA_ISSUE_TYPE = os.getenv("JIRA_ISSUE_TYPE")
-        self.JIRA_PROJKEY = os.getenv("JIRA_PROJKEY")
+        # self.JIRA_ISSUE_TYPE = os.getenv("JIRA_ISSUE_TYPE")
+        # self.JIRA_PROJKEY = os.getenv("JIRA_PROJKEY")
+        raw_issue_types = os.getenv("JIRA_ISSUE_TYPES", "")
+        self.JIRA_ISSUE_TYPES = [i.strip() for i in raw_issue_types.split(",") if i.strip()]
+
+        raw_proj_keys = os.getenv("JIRA_PROJECT_KEYS", "")
+        self.JIRA_PROJECT_KEYS = [i.strip() for i in raw_proj_keys.split(",") if i.strip()]
+        
         self.ALLOWED_ATLASSIAN_SCOPES = os.getenv("ALLOWED_ATLASSIAN_SCOPES", "")
-        self.HELPDESK_CONFLUENCE_PAGE_ID = os.getenv("HELPDESK_CONFLUENCE_PAGE_ID", "")
+        # self.HELPDESK_CONFLUENCE_PAGE_ID = os.getenv("HELPDESK_CONFLUENCE_PAGE_ID", "")
+        raw_ids = os.getenv("HELPDESK_CONFLUENCE_PAGE_IDS", "")
+        self.HELPDESK_CONFLUENCE_PAGE_IDS = [i.strip() for i in raw_ids.split(",") if i.strip()]
         logger.info("Loading config")
         config = load_yaml_file("config.yaml")
         secrets = {}
@@ -117,9 +125,12 @@ class AppConfig:
           - Do not assume default scopes without confirmation.
           - You cannot access organization-wide data.
 
-          - If user query contains atlassian related queries,then proceed else say something
-              like this is not the right place to address this issue.If it again asks,
-              create a story of general category for this.
+          - If user query is related to Atlassian, handle using Atlassian tools.
+
+          - If user query is related to GitLab (projects, pipelines, jobs, logs),
+            use GitLab tools to fetch and summarize data.
+
+          - If the query is unrelated to both, respond accordingly.
           - If the user query contains text related to access or permissions such as
           create, edit, delete, access, view, or permission check, treat it as an
           access-related request.
@@ -133,8 +144,8 @@ class AppConfig:
             not able to access and if the is page is accessible,
             - You MUST call the `rag_search` tool.
             - ALWAYS pass:
-                   query = get troubleshooting steps for access issue with
-                   page_id = {self.HELPDESK_CONFLUENCE_PAGE_ID}
+                    query = get troubleshooting steps for access issue with
+                    page_id = the most relevant page_id from {self.HELPDESK_CONFLUENCE_PAGE_IDS}
             
             - After calling the knowledge base search, present the retrieved
              content verbatim as fully without missing any points and without 
@@ -175,8 +186,11 @@ class AppConfig:
           - Never submit Jira Service Management (JSM) requests or use service portal
           submission APIs.
           - JSM request types and forms may be used ONLY to discover required fields.
-          - Ask the user in which project the issue should be created and create {self.JIRA_ISSUE_TYPE} in {self.JIRA_PROJKEY} project key.
-
+          - Ask the user which project the issue should be created in.
+          - Allowed project keys: {self.JIRA_PROJECT_KEYS}, Ask the user for the issue type.
+          - Allowed issue types: {self.JIRA_ISSUE_TYPES}, If the user does not specify:
+            - Infer the most appropriate issue type based on context
+            - Default to a reasonable project if only one exists
           - If the user request is unclear or lacks required information, ask for the
           minimum clarification needed to proceed.
 

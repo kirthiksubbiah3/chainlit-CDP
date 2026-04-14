@@ -25,6 +25,10 @@ from tools import (
     get_jsm_project_portals,
     get_jsm_request_types,
     get_jsm_forms,
+    get_gitlab_projects,
+    get_gitlab_pipelines,
+    get_gitlab_jobs,
+    get_gitlab_job_logs,
 )
  
 """TO BE USED FOR GITLAB """
@@ -94,6 +98,10 @@ class AtlassianMCPClient:
             get_jsm_project_portals, #to create ticket  
             get_jsm_request_types,
             get_jsm_forms,
+            get_gitlab_projects,
+            get_gitlab_pipelines,
+            get_gitlab_jobs,
+            get_gitlab_job_logs,
         ]
         """TO BE USED FOR GITLAB """
  

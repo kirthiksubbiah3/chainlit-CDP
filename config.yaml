@@ -33,7 +33,7 @@ mcp:
   servers:
     atlassian:
       transport: streamable_http
-      url: http://localhost:9000/mcp
+      url: http://localhost:9001/mcp
 agents:
   atlassian:
     chainlit_command:

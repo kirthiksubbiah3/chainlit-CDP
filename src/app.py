@@ -49,7 +49,7 @@ async def update_rag(request: Request):
     space_id = data["space_id"]
 
     logger.info(f"Webhook received for pageId={page_id}, title={page_title}")
-    if page_id == app_config.HELPDESK_CONFLUENCE_PAGE_ID:
+    if page_id in app_config.HELPDESK_CONFLUENCE_PAGE_IDS:
         try:
             content = data["page_content"]["content"][0]["content"][0]["text"]
             rag_manager.upsert_confluence_page(
